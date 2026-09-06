@@ -1,0 +1,5 @@
+rembg>=2.0.59
+onnxruntime>=1.18.0
+Pillow>=10.3.0
+pillow-heif>=0.18.0
+tqdm>=4.66.0

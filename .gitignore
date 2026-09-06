@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# macOS
+.DS_Store
+
+# Closet photos — kept on disk / synced separately, not in git history
+/data/raw/
+/data/processed/
+*.heic
+*.HEIC
+
+# rembg model cache, if ever pointed locally
+.u2net/
+
+# local env/config
+.env
+*.local.json
