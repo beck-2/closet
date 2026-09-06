@@ -232,3 +232,7 @@ __marimo__/
 # local env/config
 .env
 *.local.json
+
+# beck's closet: metadata now lives in SQLite, not tracked JSON
+/data/closet.db
+/data/*.json.bak

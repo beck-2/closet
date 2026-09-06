@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-beck's closet — a tiny local web app over data/items.json.
+beck's closet — a tiny local web app, backed by a SQLite database
+(data/closet.db).
 
 Run it with:
     python3 app.py
@@ -9,13 +10,12 @@ Then open http://127.0.0.1:8000 in your browser.
 """
 from __future__ import annotations
 
-import json
 import logging
-import shutil
 from pathlib import Path
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
 
+import db
 from pipeline.metadata_schema import (
     COLOR_SUGGESTIONS,
     ITEM_TYPES,
@@ -28,12 +28,12 @@ from pipeline.metadata_schema import (
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
-ITEMS_PATH = DATA_DIR / "items.json"
-OUTFITS_PATH = DATA_DIR / "outfits.json"
 RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 
 app = Flask(__name__)
+app.teardown_appcontext(db.close_db)
+db.init_db()
 
 # A handful of named colors get an actual swatch dot; anything else just
 # shows as text without one.
@@ -45,32 +45,11 @@ COLOR_HEX = {
 }
 
 
-# ---------------------------------------------------------------- storage --
+# ------------------------------------------------------------- filesystem --
+# (photo storage stays on disk regardless of what holds the metadata)
 
-def load_items() -> dict:
-    with open(ITEMS_PATH) as f:
-        return json.load(f)
-
-
-def save_items(items: dict) -> None:
-    with open(ITEMS_PATH, "w") as f:
-        json.dump(items, f, indent=2, sort_keys=True)
-        f.write("\n")
-
-
-def load_outfits() -> list:
-    with open(OUTFITS_PATH) as f:
-        return json.load(f)
-
-
-def save_outfits(outfits: list) -> None:
-    with open(OUTFITS_PATH, "w") as f:
-        json.dump(outfits, f, indent=2)
-        f.write("\n")
-
-
-def next_item_id(items: dict) -> str:
-    existing = [int(k) for k in items.keys() if k.isdigit()]
+def next_item_id() -> str:
+    existing = [int(i) for i in db.existing_item_ids() if i.isdigit()]
     return f"{(max(existing) + 1) if existing else 1:03d}"
 
 
@@ -120,7 +99,7 @@ def avg_rating(item: dict):
 
 @app.context_processor
 def inject_globals():
-    total = len(load_items())
+    total = db.count_items()
     return {"total_str": f"{total:03d}" if total < 1000 else str(total)}
 
 
@@ -128,7 +107,7 @@ def inject_globals():
 
 @app.route("/")
 def closet():
-    items = load_items()
+    items = db.load_items()
     type_filter = request.args.get("type") or ""
     types_present = sorted({v.get("item_type") for v in items.values() if v.get("item_type")})
 
@@ -146,8 +125,7 @@ def closet():
 
 @app.route("/item/<item_id>")
 def item_view(item_id):
-    items = load_items()
-    item = items.get(item_id)
+    item = db.get_item(item_id)
     if item is None:
         abort(404)
     return render_template(
@@ -162,12 +140,9 @@ def item_view(item_id):
 
 @app.route("/item/<item_id>/worn", methods=["POST"])
 def mark_worn(item_id):
-    items = load_items()
-    item = items.get(item_id)
-    if item is None:
+    if db.get_item(item_id) is None:
         abort(404)
-    item["wear_count"] = int(item.get("wear_count") or 0) + 1
-    save_items(items)
+    db.increment_wear_count(item_id)
     return redirect(url_for("item_view", item_id=item_id))
 
 
@@ -227,8 +202,7 @@ def _edit_form_kwargs(item_id, item, error=None):
 
 @app.route("/item/<item_id>/edit", methods=["GET", "POST"])
 def edit_item(item_id):
-    items = load_items()
-    item = items.get(item_id)
+    item = db.get_item(item_id)
     if item is None:
         abort(404)
 
@@ -289,8 +263,7 @@ def edit_item(item_id):
         updates["wear_count"] = item.get("wear_count") or 0
         updates["images"] = kept_images + new_processed
         updates["raw_images"] = kept_raw + new_raw
-        items[item_id] = updates
-        save_items(items)
+        db.save_item(item_id, updates)
         return redirect(url_for("item_view", item_id=item_id))
 
     return render_template("item_form.html", **_edit_form_kwargs(item_id, item))
@@ -314,8 +287,6 @@ def _add_form_kwargs(error=None):
 
 @app.route("/add", methods=["GET", "POST"])
 def add_item():
-    items = load_items()
-
     if request.method == "POST":
         photo = request.files.get("photo")
         if not photo or not photo.filename:
@@ -323,7 +294,7 @@ def add_item():
                 "item_form.html", **_add_form_kwargs(error="Please choose a photo to upload.")
             ), 400
 
-        new_id = next_item_id(items)
+        new_id = next_item_id()
 
         from rembg import new_session
 
@@ -341,8 +312,7 @@ def add_item():
         new_item["wear_count"] = 0
         new_item["images"] = [processed_rel]
         new_item["raw_images"] = [raw_rel]
-        items[new_id] = new_item
-        save_items(items)
+        db.save_item(new_id, new_item)
         return redirect(url_for("item_view", item_id=new_id))
 
     return render_template("item_form.html", **_add_form_kwargs())
@@ -350,9 +320,8 @@ def add_item():
 
 @app.route("/outfits")
 def outfits_list():
-    items = load_items()
-    outfits = load_outfits()
-    outfits = sorted(outfits, key=lambda o: o.get("created_at") or "", reverse=True)
+    items = db.load_items()
+    outfits = db.load_outfits()
     for outfit in outfits:
         outfit["pieces"] = [items[i] for i in outfit.get("item_ids", []) if i in items]
     return render_template("outfits_list.html", active="outfits", outfits=outfits)
@@ -360,7 +329,7 @@ def outfits_list():
 
 @app.route("/outfits/new")
 def outfit_builder():
-    items = load_items()
+    items = db.load_items()
     tray = [{"id": i, **items[i]} for i in sorted(items.keys())]
     return render_template("outfit_builder.html", active="outfits", tray=tray)
 
@@ -374,17 +343,14 @@ def create_outfit():
     if not placements:
         return jsonify({"ok": False, "error": "no items placed"}), 400
 
-    outfits = load_outfits()
     outfit = {
-        "id": f"o{len(outfits) + 1:04d}",
+        "id": db.next_outfit_id(),
         "name": (payload.get("name") or "").strip() or "untitled outfit",
         "vibes": [v.strip() for v in (payload.get("vibes") or "").split(",") if v.strip()],
         "created_at": datetime.datetime.now().isoformat(timespec="seconds"),
-        "item_ids": [p["id"] for p in placements],
         "layout": placements,
     }
-    outfits.append(outfit)
-    save_outfits(outfits)
+    db.save_outfit(outfit)
     return jsonify({"ok": True, "id": outfit["id"]})
 
 

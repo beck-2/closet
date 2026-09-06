@@ -197,20 +197,20 @@
   },
   "008": {
     "color": [
-      "yellow"
+      "yellow",
+      "green"
     ],
     "comfort": 1,
     "condition": 3,
     "date_acquired": null,
     "fit": 2,
-    "id": "008",
     "images": [
       "data/processed/008.png"
     ],
     "item_type": "tshirt",
-    "name": null,
+    "name": "brasil!",
     "notes": "cropped",
-    "price": 0,
+    "price": 0.0,
     "raw_images": [
       "data/raw/008.jpeg"
     ],
@@ -229,14 +229,13 @@
     "condition": 2,
     "date_acquired": null,
     "fit": 2,
-    "id": "009",
     "images": [
       "data/processed/009.png"
     ],
     "item_type": "tanktop",
-    "name": null,
+    "name": "brown tank top",
     "notes": "had her forever",
-    "price": 7,
+    "price": 7.0,
     "raw_images": [
       "data/raw/009.jpeg"
     ],
@@ -249,20 +248,20 @@
   },
   "010": {
     "color": [
+      "black",
       "red"
     ],
     "comfort": 2,
     "condition": 3,
     "date_acquired": null,
     "fit": 2,
-    "id": "010",
     "images": [
       "data/processed/010.png"
     ],
     "item_type": "tshirt",
-    "name": null,
+    "name": "Chica",
     "notes": "",
-    "price": 0,
+    "price": 0.0,
     "raw_images": [
       "data/raw/010.jpeg"
     ],
@@ -281,14 +280,13 @@
     "condition": 3,
     "date_acquired": null,
     "fit": 2,
-    "id": "011",
     "images": [
       "data/processed/011.png"
     ],
     "item_type": "tanktop",
-    "name": null,
+    "name": "sparkle tank top",
     "notes": "very berlin",
-    "price": 10,
+    "price": 10.0,
     "raw_images": [
       "data/raw/011.jpeg"
     ],
@@ -301,20 +299,21 @@
   },
   "012": {
     "color": [
+      "red",
+      "blue",
       "multicolor"
     ],
     "comfort": 3,
     "condition": 3,
     "date_acquired": null,
     "fit": 3,
-    "id": "012",
     "images": [
       "data/processed/012.png"
     ],
     "item_type": "tshirt",
-    "name": null,
+    "name": "woman!",
     "notes": "got her thrifting in westwood with sonali, was able to wash off the stain",
-    "price": 3,
+    "price": 3.0,
     "raw_images": [
       "data/raw/012.jpeg"
     ],
@@ -334,14 +333,13 @@
     "condition": 3,
     "date_acquired": null,
     "fit": 3,
-    "id": "013",
     "images": [
       "data/processed/013.png"
     ],
     "item_type": "top",
-    "name": null,
+    "name": "lacey",
     "notes": "perfect basic going out top",
-    "price": 13,
+    "price": 13.0,
     "raw_images": [
       "data/raw/013.jpeg"
     ],
@@ -360,14 +358,13 @@
     "condition": 1,
     "date_acquired": null,
     "fit": 2,
-    "id": "014",
     "images": [
       "data/processed/014.png"
     ],
     "item_type": "top",
-    "name": null,
+    "name": "beaded",
     "notes": "",
-    "price": 0,
+    "price": 0.0,
     "raw_images": [
       "data/raw/014.jpeg"
     ],
@@ -381,20 +378,20 @@
   },
   "015": {
     "color": [
-      "grey"
+      "gray",
+      "blue"
     ],
     "comfort": 1,
     "condition": 3,
     "date_acquired": null,
     "fit": 1,
-    "id": "015",
     "images": [
       "data/processed/015.png"
     ],
     "item_type": "top",
-    "name": null,
+    "name": "tie top",
     "notes": "from Berlin flea market 2025!",
-    "price": 15,
+    "price": 15.0,
     "raw_images": [
       "data/raw/015.jpeg"
     ],

@@ -1,0 +1,304 @@
+"""
+SQLite storage layer for beck's closet.
+
+Items and outfits used to live in flat JSON files (data/items.json,
+data/outfits.json) that got rewritten *in full* on every save. Simple, but
+with no real transactions — two overlapping saves could clobber each other
+(and did, once, during development). This swaps that for a small SQLite
+database (data/closet.db): same data, same shape once loaded into Python,
+but every save is a real transaction that only touches the rows it's
+actually changing.
+
+The very first time the app runs against a fresh checkout (no closet.db
+yet), it transparently imports whatever is in data/items.json and
+data/outfits.json into the new database, then renames those files to
+.json.bak so they're kept as a one-time backup but don't look like the
+live data source anymore.
+"""
+from __future__ import annotations
+
+import json
+import sqlite3
+from pathlib import Path
+
+from flask import g
+
+BASE_DIR = Path(__file__).parent
+DATA_DIR = BASE_DIR / "data"
+DB_PATH = DATA_DIR / "closet.db"
+ITEMS_JSON = DATA_DIR / "items.json"
+OUTFITS_JSON = DATA_DIR / "outfits.json"
+
+SCHEMA_SQL = """
+CREATE TABLE IF NOT EXISTS items (
+    id            TEXT PRIMARY KEY,
+    name          TEXT,
+    item_type     TEXT,
+    color         TEXT NOT NULL DEFAULT '[]',
+    comfort       INTEGER,
+    fit           INTEGER,
+    condition     INTEGER,
+    vibes         TEXT NOT NULL DEFAULT '[]',
+    source        TEXT,
+    price         REAL,
+    date_acquired TEXT,
+    season        TEXT NOT NULL DEFAULT '[]',
+    wear_count    INTEGER NOT NULL DEFAULT 0,
+    notes         TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS item_images (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id  TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    path     TEXT NOT NULL,
+    raw_path TEXT,
+    position INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_item_images_item ON item_images(item_id);
+
+CREATE TABLE IF NOT EXISTS outfits (
+    id         TEXT PRIMARY KEY,
+    name       TEXT NOT NULL,
+    vibes      TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS outfit_items (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    outfit_id TEXT NOT NULL REFERENCES outfits(id) ON DELETE CASCADE,
+    item_id   TEXT NOT NULL,
+    x         REAL NOT NULL,
+    y         REAL NOT NULL,
+    w         REAL NOT NULL,
+    rot       REAL NOT NULL,
+    position  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_outfit_items_outfit ON outfit_items(outfit_id);
+"""
+
+
+def _migrate_items_json(db: sqlite3.Connection) -> int:
+    items = json.loads(ITEMS_JSON.read_text())
+    for item_id, item in items.items():
+        db.execute(
+            """INSERT INTO items (id, name, item_type, color, comfort, fit, condition,
+                                   vibes, source, price, date_acquired, season, wear_count, notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                item_id, item.get("name"), item.get("item_type"),
+                json.dumps(item.get("color") or []),
+                item.get("comfort"), item.get("fit"), item.get("condition"),
+                json.dumps(item.get("vibes") or []),
+                item.get("source"), item.get("price"), item.get("date_acquired"),
+                json.dumps(item.get("season") or []),
+                item.get("wear_count") or 0,
+                item.get("notes") or "",
+            ),
+        )
+        images = item.get("images") or []
+        raws = item.get("raw_images") or []
+        for pos, path in enumerate(images):
+            raw = raws[pos] if pos < len(raws) else None
+            db.execute(
+                "INSERT INTO item_images (item_id, path, raw_path, position) VALUES (?, ?, ?, ?)",
+                (item_id, path, raw, pos),
+            )
+    ITEMS_JSON.rename(ITEMS_JSON.with_suffix(".json.bak"))
+    return len(items)
+
+
+def _migrate_outfits_json(db: sqlite3.Connection) -> int:
+    outfits = json.loads(OUTFITS_JSON.read_text())
+    for outfit in outfits:
+        db.execute(
+            "INSERT INTO outfits (id, name, vibes, created_at) VALUES (?, ?, ?, ?)",
+            (
+                outfit["id"],
+                outfit.get("name") or "untitled outfit",
+                json.dumps(outfit.get("vibes") or []),
+                outfit.get("created_at") or "",
+            ),
+        )
+        for pos, placement in enumerate(outfit.get("layout") or []):
+            db.execute(
+                """INSERT INTO outfit_items (outfit_id, item_id, x, y, w, rot, position)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    outfit["id"], placement["id"], placement["x"], placement["y"],
+                    placement["w"], placement["rot"], pos,
+                ),
+            )
+    OUTFITS_JSON.rename(OUTFITS_JSON.with_suffix(".json.bak"))
+    return len(outfits)
+
+
+def init_db() -> None:
+    """Create the schema if it doesn't exist yet, and one-time import old
+    JSON data the first time this runs against a fresh database."""
+    is_new = not DB_PATH.exists()
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    db = sqlite3.connect(DB_PATH)
+    try:
+        db.executescript(SCHEMA_SQL)
+        if is_new:
+            if ITEMS_JSON.exists():
+                n = _migrate_items_json(db)
+                print(f"[closet] migrated {n} item(s) from data/items.json into {DB_PATH.name}")
+            if OUTFITS_JSON.exists():
+                n = _migrate_outfits_json(db)
+                print(f"[closet] migrated {n} outfit(s) from data/outfits.json into {DB_PATH.name}")
+        db.commit()
+    finally:
+        db.close()
+
+
+def get_db() -> sqlite3.Connection:
+    if "db" not in g:
+        g.db = sqlite3.connect(DB_PATH)
+        g.db.row_factory = sqlite3.Row
+        g.db.execute("PRAGMA foreign_keys = ON")
+    return g.db
+
+
+def close_db(exception=None) -> None:
+    conn = g.pop("db", None)
+    if conn is not None:
+        conn.close()
+
+
+# ---------------------------------------------------------------- items --
+
+def _item_from_row(db: sqlite3.Connection, row: sqlite3.Row) -> dict:
+    images, raw_images = [], []
+    for img in db.execute(
+        "SELECT path, raw_path FROM item_images WHERE item_id = ? ORDER BY position", (row["id"],)
+    ):
+        images.append(img["path"])
+        raw_images.append(img["raw_path"])
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "item_type": row["item_type"],
+        "color": json.loads(row["color"]),
+        "comfort": row["comfort"],
+        "fit": row["fit"],
+        "condition": row["condition"],
+        "vibes": json.loads(row["vibes"]),
+        "source": row["source"],
+        "price": row["price"],
+        "date_acquired": row["date_acquired"],
+        "season": json.loads(row["season"]),
+        "wear_count": row["wear_count"],
+        "notes": row["notes"],
+        "images": images,
+        "raw_images": raw_images,
+    }
+
+
+def load_items() -> dict:
+    db = get_db()
+    return {row["id"]: _item_from_row(db, row) for row in db.execute("SELECT * FROM items ORDER BY id")}
+
+
+def get_item(item_id: str) -> dict | None:
+    db = get_db()
+    row = db.execute("SELECT * FROM items WHERE id = ?", (item_id,)).fetchone()
+    return _item_from_row(db, row) if row else None
+
+
+def count_items() -> int:
+    return get_db().execute("SELECT COUNT(*) FROM items").fetchone()[0]
+
+
+def existing_item_ids() -> list[str]:
+    return [row["id"] for row in get_db().execute("SELECT id FROM items")]
+
+
+def save_item(item_id: str, item: dict) -> None:
+    """Insert or fully replace one item's row + its photo rows, in one
+    transaction. Doesn't touch any other item."""
+    db = get_db()
+    db.execute(
+        """INSERT INTO items (id, name, item_type, color, comfort, fit, condition, vibes,
+                               source, price, date_acquired, season, wear_count, notes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+             name=excluded.name, item_type=excluded.item_type, color=excluded.color,
+             comfort=excluded.comfort, fit=excluded.fit, condition=excluded.condition,
+             vibes=excluded.vibes, source=excluded.source, price=excluded.price,
+             date_acquired=excluded.date_acquired, season=excluded.season,
+             wear_count=excluded.wear_count, notes=excluded.notes""",
+        (
+            item_id, item.get("name"), item.get("item_type"),
+            json.dumps(item.get("color") or []),
+            item.get("comfort"), item.get("fit"), item.get("condition"),
+            json.dumps(item.get("vibes") or []),
+            item.get("source"), item.get("price"), item.get("date_acquired"),
+            json.dumps(item.get("season") or []),
+            item.get("wear_count") or 0,
+            item.get("notes") or "",
+        ),
+    )
+    db.execute("DELETE FROM item_images WHERE item_id = ?", (item_id,))
+    images = item.get("images") or []
+    raw_images = item.get("raw_images") or []
+    for pos, path in enumerate(images):
+        raw = raw_images[pos] if pos < len(raw_images) else None
+        db.execute(
+            "INSERT INTO item_images (item_id, path, raw_path, position) VALUES (?, ?, ?, ?)",
+            (item_id, path, raw, pos),
+        )
+    db.commit()
+
+
+def increment_wear_count(item_id: str) -> None:
+    """A real atomic UPDATE — no read-modify-write race like the JSON
+    version had."""
+    db = get_db()
+    db.execute("UPDATE items SET wear_count = wear_count + 1 WHERE id = ?", (item_id,))
+    db.commit()
+
+
+# -------------------------------------------------------------- outfits --
+
+def load_outfits() -> list[dict]:
+    db = get_db()
+    outfits = []
+    for row in db.execute("SELECT * FROM outfits ORDER BY created_at DESC"):
+        layout = [
+            {"id": r["item_id"], "x": r["x"], "y": r["y"], "w": r["w"], "rot": r["rot"]}
+            for r in db.execute(
+                "SELECT * FROM outfit_items WHERE outfit_id = ? ORDER BY position", (row["id"],)
+            )
+        ]
+        outfits.append({
+            "id": row["id"],
+            "name": row["name"],
+            "vibes": json.loads(row["vibes"]),
+            "created_at": row["created_at"],
+            "item_ids": [p["id"] for p in layout],
+            "layout": layout,
+        })
+    return outfits
+
+
+def next_outfit_id() -> str:
+    count = get_db().execute("SELECT COUNT(*) FROM outfits").fetchone()[0]
+    return f"o{count + 1:04d}"
+
+
+def save_outfit(outfit: dict) -> None:
+    db = get_db()
+    db.execute(
+        "INSERT INTO outfits (id, name, vibes, created_at) VALUES (?, ?, ?, ?)",
+        (outfit["id"], outfit["name"], json.dumps(outfit.get("vibes") or []), outfit["created_at"]),
+    )
+    for pos, placement in enumerate(outfit.get("layout") or []):
+        db.execute(
+            "INSERT INTO outfit_items (outfit_id, item_id, x, y, w, rot, position) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                outfit["id"], placement["id"], placement["x"], placement["y"],
+                placement["w"], placement["rot"], pos,
+            ),
+        )
+    db.commit()
