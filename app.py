@@ -74,6 +74,38 @@ def next_item_id(items: dict) -> str:
     return f"{(max(existing) + 1) if existing else 1:03d}"
 
 
+def next_photo_stub(item_id: str) -> str:
+    """First extra photo for an item is '<id>_2', then '<id>_3', etc. — picked
+    by scanning disk so it never collides with a file left over from an
+    earlier add/delete."""
+    n = 2
+    while True:
+        stub = f"{item_id}_{n}"
+        if not list(PROCESSED_DIR.glob(f"{stub}.*")) and not list(RAW_DIR.glob(f"{stub}.*")):
+            return stub
+        n += 1
+
+
+def process_upload(file_storage, stub: str, session) -> tuple[str, str]:
+    """Save an uploaded photo as data/raw/<stub><ext> and run it through the
+    background-removal/resize pipeline into data/processed/<stub>.png.
+    Returns (raw_rel_path, processed_rel_path); raises ValueError on failure."""
+    from pipeline.config import OUTPUT_EXTENSION
+    from pipeline.process_images import process_one
+
+    raw_ext = Path(file_storage.filename).suffix.lower() or ".jpg"
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    raw_path = RAW_DIR / f"{stub}{raw_ext}"
+    file_storage.save(raw_path)
+
+    result = process_one(raw_path, RAW_DIR, PROCESSED_DIR, session, overwrite=True)
+    if result.status == "error":
+        raw_path.unlink(missing_ok=True)
+        raise ValueError(result.detail)
+    return f"data/raw/{stub}{raw_ext}", f"data/processed/{stub}{OUTPUT_EXTENSION}"
+
+
 def cost_per_wear(item: dict):
     price, worn = item.get("price"), item.get("wear_count") or 0
     if price is None or not worn:
@@ -177,24 +209,8 @@ def _read_form_item(form) -> dict:
     }
 
 
-@app.route("/item/<item_id>/edit", methods=["GET", "POST"])
-def edit_item(item_id):
-    items = load_items()
-    item = items.get(item_id)
-    if item is None:
-        abort(404)
-
-    if request.method == "POST":
-        updates = _read_form_item(request.form)
-        updates["wear_count"] = item.get("wear_count") or 0
-        updates["image"] = item.get("image")
-        updates["raw_image"] = item.get("raw_image")
-        items[item_id] = updates
-        save_items(items)
-        return redirect(url_for("item_view", item_id=item_id))
-
-    return render_template(
-        "item_form.html",
+def _edit_form_kwargs(item_id, item, error=None):
+    return dict(
         active="closet",
         mode="edit",
         item_id=item_id,
@@ -205,6 +221,94 @@ def edit_item(item_id):
         sources=SOURCES,
         rating_min=RATING_MIN,
         rating_max=RATING_MAX,
+        error=error,
+    )
+
+
+@app.route("/item/<item_id>/edit", methods=["GET", "POST"])
+def edit_item(item_id):
+    items = load_items()
+    item = items.get(item_id)
+    if item is None:
+        abort(404)
+
+    if request.method == "POST":
+        existing_images = item.get("images") or []
+        existing_raw = item.get("raw_images") or []
+        while len(existing_raw) < len(existing_images):
+            existing_raw.append(None)
+
+        to_delete = set(request.form.getlist("delete_image"))
+        kept_images, kept_raw, removed, removed_raw = [], [], [], []
+        for img, raw in zip(existing_images, existing_raw):
+            if img in to_delete:
+                removed.append(img)
+                if raw:
+                    removed_raw.append(raw)
+            else:
+                kept_images.append(img)
+                kept_raw.append(raw)
+
+        new_files = [f for f in request.files.getlist("new_photos") if f and f.filename]
+
+        if not kept_images and not new_files:
+            return render_template(
+                "item_form.html",
+                **_edit_form_kwargs(
+                    item_id, item,
+                    error="An item needs at least one photo — add a new one before removing the last.",
+                ),
+            ), 400
+
+        new_processed, new_raw = [], []
+        if new_files:
+            from rembg import new_session
+
+            from pipeline.config import REMBG_MODEL
+
+            session = new_session(REMBG_MODEL)
+            try:
+                for f in new_files:
+                    stub = next_photo_stub(item_id)
+                    raw_rel, processed_rel = process_upload(f, stub, session)
+                    new_raw.append(raw_rel)
+                    new_processed.append(processed_rel)
+            except ValueError as exc:
+                for rel in new_processed:
+                    (BASE_DIR / rel).unlink(missing_ok=True)
+                return render_template(
+                    "item_form.html",
+                    **_edit_form_kwargs(item_id, item, error=f"Couldn't process a new photo: {exc}"),
+                ), 400
+
+        # Only remove files once we know the edit as a whole is going through.
+        for rel in removed + removed_raw:
+            (BASE_DIR / rel).unlink(missing_ok=True)
+
+        updates = _read_form_item(request.form)
+        updates["wear_count"] = item.get("wear_count") or 0
+        updates["images"] = kept_images + new_processed
+        updates["raw_images"] = kept_raw + new_raw
+        items[item_id] = updates
+        save_items(items)
+        return redirect(url_for("item_view", item_id=item_id))
+
+    return render_template("item_form.html", **_edit_form_kwargs(item_id, item))
+
+
+def _add_form_kwargs(error=None):
+    return dict(
+        active="add",
+        mode="add",
+        item_id=None,
+        item={},
+        item_types=ITEM_TYPES,
+        color_suggestions=COLOR_SUGGESTIONS,
+        season_suggestions=SEASON_SUGGESTIONS,
+        sources=SOURCES,
+        rating_min=RATING_MIN,
+        rating_max=RATING_MAX,
+        error=error,
     )
 
 
@@ -216,75 +320,32 @@ def add_item():
         photo = request.files.get("photo")
         if not photo or not photo.filename:
             return render_template(
-                "item_form.html",
-                active="add",
-                mode="add",
-                item_id=None,
-                item={},
-                item_types=ITEM_TYPES,
-                color_suggestions=COLOR_SUGGESTIONS,
-                season_suggestions=SEASON_SUGGESTIONS,
-                sources=SOURCES,
-                rating_min=RATING_MIN,
-                rating_max=RATING_MAX,
-                error="Please choose a photo to upload.",
+                "item_form.html", **_add_form_kwargs(error="Please choose a photo to upload.")
             ), 400
 
         new_id = next_item_id(items)
-        raw_ext = Path(photo.filename).suffix.lower() or ".jpg"
-        RAW_DIR.mkdir(parents=True, exist_ok=True)
-        PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-        raw_path = RAW_DIR / f"{new_id}{raw_ext}"
-        photo.save(raw_path)
 
-        # Background removal + resize, reusing the same pipeline used for the
-        # original batch import.
         from rembg import new_session
 
-        from pipeline.config import OUTPUT_EXTENSION, REMBG_MODEL
-        from pipeline.process_images import process_one
+        from pipeline.config import REMBG_MODEL
 
         session = new_session(REMBG_MODEL)
-        result = process_one(raw_path, RAW_DIR, PROCESSED_DIR, session, overwrite=True)
-        if result.status == "error":
-            raw_path.unlink(missing_ok=True)
+        try:
+            raw_rel, processed_rel = process_upload(photo, new_id, session)
+        except ValueError as exc:
             return render_template(
-                "item_form.html",
-                active="add",
-                mode="add",
-                item_id=None,
-                item={},
-                item_types=ITEM_TYPES,
-                color_suggestions=COLOR_SUGGESTIONS,
-                season_suggestions=SEASON_SUGGESTIONS,
-                sources=SOURCES,
-                rating_min=RATING_MIN,
-                rating_max=RATING_MAX,
-                error=f"Couldn't process that photo: {result.detail}",
+                "item_form.html", **_add_form_kwargs(error=f"Couldn't process that photo: {exc}")
             ), 400
 
         new_item = _read_form_item(request.form)
         new_item["wear_count"] = 0
-        new_item["image"] = f"data/processed/{new_id}{OUTPUT_EXTENSION}"
-        new_item["raw_image"] = f"data/raw/{new_id}{raw_ext}"
+        new_item["images"] = [processed_rel]
+        new_item["raw_images"] = [raw_rel]
         items[new_id] = new_item
         save_items(items)
         return redirect(url_for("item_view", item_id=new_id))
 
-    return render_template(
-        "item_form.html",
-        active="add",
-        mode="add",
-        item_id=None,
-        item={},
-        item_types=ITEM_TYPES,
-        color_suggestions=COLOR_SUGGESTIONS,
-        season_suggestions=SEASON_SUGGESTIONS,
-        sources=SOURCES,
-        rating_min=RATING_MIN,
-        rating_max=RATING_MAX,
-        error=None,
-    )
+    return render_template("item_form.html", **_add_form_kwargs())
 
 
 @app.route("/outfits")

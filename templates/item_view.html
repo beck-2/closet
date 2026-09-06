@@ -4,9 +4,18 @@
 <a class="backchip" href="{{ url_for('closet') }}">← back to closet</a>
 
 <div class="layout">
-  <div class="photocard">
-    {% if item.image %}
-      <img src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}">
+  <div class="photocolumn">
+    <div class="photocard">
+      {% if item.images %}
+        <img id="main-photo" src="{{ url_for('photos', filename=item.images[0].split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}">
+      {% endif %}
+    </div>
+    {% if item.images and item.images|length > 1 %}
+    <div class="photothumbs">
+      {% for img in item.images %}
+      <img class="photothumb-mini {{ 'active' if loop.first }}" data-src="{{ url_for('photos', filename=img.split('/')[-1]) }}" src="{{ url_for('photos', filename=img.split('/')[-1]) }}" alt="">
+      {% endfor %}
+    </div>
     {% endif %}
   </div>
 
@@ -83,4 +92,15 @@
     </div>
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('.photothumb-mini').forEach(function (thumb) {
+    thumb.addEventListener('click', function () {
+      document.getElementById('main-photo').src = thumb.dataset.src;
+      document.querySelectorAll('.photothumb-mini').forEach(function (t) { t.classList.remove('active'); });
+      thumb.classList.add('active');
+    });
+  });
+</script>
 {% endblock %}

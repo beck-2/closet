@@ -13,6 +13,24 @@
       <span class="subhint">background gets removed automatically once you save</span>
       <input id="photo-input" type="file" name="photo" accept="image/*" style="display:none" required>
     </label>
+    {% else %}
+    <div class="field full" style="margin-bottom: 30px;">
+      <span class="label">Photos</span>
+      <div class="photogrid">
+        {% for img in item.images %}
+        <label class="photothumb">
+          <img src="{{ url_for('photos', filename=img.split('/')[-1]) }}" alt="">
+          <span class="delcheck"><input type="checkbox" name="delete_image" value="{{ img }}"> remove 🗑</span>
+        </label>
+        {% endfor %}
+        <label class="photothumb addphoto" for="new-photos-input">
+          <span class="addicon">+</span>
+          <span class="addlabel">add photo(s)</span>
+        </label>
+      </div>
+      <input id="new-photos-input" type="file" name="new_photos" accept="image/*" multiple style="display:none">
+      <span class="subhint">an item always needs at least one photo — new ones get their background removed automatically</span>
+    </div>
     {% endif %}
 
     <div class="fieldsgrid">
@@ -103,7 +121,10 @@
       </div>
     </div>
 
-    <button type="submit" class="savebtn">{{ 'save changes ✦' if mode == 'edit' else 'save to closet ✦' }}</button>
+    <div class="formbtnrow">
+      <button type="submit" class="savebtn">{{ 'save changes ✦' if mode == 'edit' else 'save to closet ✦' }}</button>
+      <a class="cancelbtn" href="{{ url_for('item_view', item_id=item_id) if mode == 'edit' else url_for('closet') }}">Cancel</a>
+    </div>
   </form>
 </div>
 {% endblock %}
@@ -128,6 +149,23 @@
         };
         reader.readAsDataURL(input.files[0]);
       }
+    });
+  }
+
+  var newPhotos = document.getElementById('new-photos-input');
+  if (newPhotos) {
+    newPhotos.addEventListener('change', function () {
+      var grid = newPhotos.closest('.field').querySelector('.photogrid');
+      Array.prototype.forEach.call(newPhotos.files, function (file) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var thumb = document.createElement('div');
+          thumb.className = 'photothumb pending';
+          thumb.innerHTML = '<img src="' + e.target.result + '" alt=""><span class="delcheck">new</span>';
+          grid.insertBefore(thumb, grid.querySelector('.addphoto'));
+        };
+        reader.readAsDataURL(file);
+      });
     });
   }
 </script>

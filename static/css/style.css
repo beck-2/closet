@@ -146,6 +146,20 @@ a:hover { color: #a61e4d; }
 
 /* ================= item viewer ================= */
 .pg-item .layout { display: flex; gap: 44px; align-items: flex-start; flex-wrap: wrap; }
+.pg-item .photocolumn { display: flex; flex-direction: column; gap: 14px; flex-shrink: 0; }
+.pg-item .photothumbs { display: flex; gap: 10px; flex-wrap: wrap; max-width: 680px; }
+.pg-item .photothumb-mini {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  border: 2.5px solid #2b2140;
+  object-fit: contain;
+  background: #f7efe0;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.55;
+}
+.pg-item .photothumb-mini.active { opacity: 1; box-shadow: 0 0 0 2px #ff6fa5; }
 .pg-item .photocard {
   background: #f7efe0;
   border: 3px solid #2b2140;
@@ -485,6 +499,7 @@ a:hover { color: #a61e4d; }
 }
 .pg-add .chip input { margin: 0; }
 .pg-add .chip.selected { background: #c9a6ff; }
+.pg-add .chip:has(input:checked) { background: #c9a6ff; }
 .pg-add .ratinggroup { display: flex; gap: 36px; flex-wrap: wrap; }
 .pg-add .rating { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .pg-add .ratingsublabel { font-size: 11px; font-weight: 800; color: #7c7192; text-transform: uppercase; }
@@ -508,6 +523,7 @@ a:hover { color: #a61e4d; }
   width: 100%;
   resize: vertical;
 }
+.pg-add .formbtnrow { display: flex; align-items: center; gap: 16px; }
 .pg-add .savebtn {
   font-family: 'Baloo 2', cursive;
   font-weight: 700;
@@ -520,3 +536,56 @@ a:hover { color: #a61e4d; }
   box-shadow: 4px 4px 0 #2b2140;
   cursor: pointer;
 }
+.pg-add .cancelbtn {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 16px;
+  color: #2b2140;
+  background: #e4dfd2;
+  border: 3px solid #2b2140;
+  border-radius: 999px;
+  padding: 13px 28px;
+  display: inline-block;
+}
+.pg-add .cancelbtn:hover { color: #2b2140; background: #d8d2c2; }
+
+.pg-add .photogrid { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.pg-add .photothumb {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  background: #fffdf7;
+  border: 2.5px solid #2b2140;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.pg-add .photothumb img { max-width: 90%; max-height: 90%; object-fit: contain; }
+.pg-add .photothumb.pending { opacity: 0.6; border-style: dashed; }
+.pg-add .photothumb .delcheck {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.92);
+  font-size: 11px;
+  font-weight: 800;
+  color: #7a1f2b;
+  text-align: center;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.pg-add .photothumb.pending .delcheck { color: #6b6280; }
+.pg-add .photothumb .delcheck input { margin: 0; }
+.pg-add .photothumb.addphoto {
+  cursor: pointer;
+  flex-direction: column;
+  gap: 6px;
+  border-style: dashed;
+  color: #7c7192;
+}
+.pg-add .photothumb.addphoto .addicon { font-size: 28px; font-weight: 800; line-height: 1; }
+.pg-add .photothumb.addphoto .addlabel { font-size: 11px; font-weight: 800; }

@@ -8,12 +8,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "001",
-    "image": "data/processed/001.png",
+    "images": [
+      "data/processed/001.png"
+    ],
     "item_type": "longsleeve",
-    "name": null,
+    "name": "cozy striped longsleeve",
     "notes": "acquired while raining, thrifting with Elijah before fall 2025 SEP creatathon",
     "price": 10,
-    "raw_image": "data/raw/001.jpeg",
+    "raw_images": [
+      "data/raw/001.jpeg"
+    ],
     "season": [
       "spring/fall"
     ],
@@ -32,12 +36,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "002",
-    "image": "data/processed/002.png",
+    "images": [
+      "data/processed/002.png"
+    ],
     "item_type": "tshirt",
-    "name": null,
+    "name": "jersey",
     "notes": "oversized",
     "price": 0,
-    "raw_image": "data/raw/002.jpeg",
+    "raw_images": [
+      "data/raw/002.jpeg"
+    ],
     "season": [
       "all"
     ],
@@ -59,12 +67,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "003",
-    "image": "data/processed/003.png",
+    "images": [
+      "data/processed/003.png"
+    ],
     "item_type": "tshirt",
-    "name": null,
+    "name": "eyeballs",
     "notes": "",
     "price": 0,
-    "raw_image": "data/raw/003.jpeg",
+    "raw_images": [
+      "data/raw/003.jpeg"
+    ],
     "season": [],
     "source": "from mom",
     "vibes": [
@@ -83,12 +95,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "004",
-    "image": "data/processed/004.png",
+    "images": [
+      "data/processed/004.png"
+    ],
     "item_type": "tshirt",
-    "name": null,
+    "name": "racer",
     "notes": "",
     "price": 0,
-    "raw_image": "data/raw/004.jpeg",
+    "raw_images": [
+      "data/raw/004.jpeg"
+    ],
     "season": [],
     "source": "from mom",
     "vibes": [
@@ -106,12 +122,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "005",
-    "image": "data/processed/005.png",
+    "images": [
+      "data/processed/005.png"
+    ],
     "item_type": "tshirt",
-    "name": null,
+    "name": "lake austin",
     "notes": "from austin!",
     "price": 0,
-    "raw_image": "data/raw/005.jpeg",
+    "raw_images": [
+      "data/raw/005.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [
@@ -129,12 +149,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "006",
-    "image": "data/processed/006.png",
+    "images": [
+      "data/processed/006.png"
+    ],
     "item_type": "tshirt",
-    "name": null,
+    "name": "espr",
     "notes": "from ESPR 2026!",
     "price": 0,
-    "raw_image": "data/raw/006.jpeg",
+    "raw_images": [
+      "data/raw/006.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [
@@ -151,12 +175,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "007",
-    "image": "data/processed/007.png",
+    "images": [
+      "data/processed/007.png"
+    ],
     "item_type": "top",
     "name": null,
     "notes": "designer from cari borja",
     "price": 0,
-    "raw_image": "data/raw/007.jpeg",
+    "raw_images": [
+      "data/raw/007.jpeg"
+    ],
     "season": [],
     "source": "from mom",
     "vibes": [
@@ -173,12 +201,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "008",
-    "image": "data/processed/008.png",
+    "images": [
+      "data/processed/008.png"
+    ],
     "item_type": "tshirt",
     "name": null,
     "notes": "cropped",
     "price": 0,
-    "raw_image": "data/raw/008.jpeg",
+    "raw_images": [
+      "data/raw/008.jpeg"
+    ],
     "season": [],
     "source": "from sat",
     "vibes": [
@@ -195,12 +227,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "009",
-    "image": "data/processed/009.png",
+    "images": [
+      "data/processed/009.png"
+    ],
     "item_type": "tanktop",
     "name": null,
     "notes": "had her forever",
     "price": 7,
-    "raw_image": "data/raw/009.jpeg",
+    "raw_images": [
+      "data/raw/009.jpeg"
+    ],
     "season": [],
     "source": "thrifted",
     "vibes": [
@@ -217,12 +253,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "010",
-    "image": "data/processed/010.png",
+    "images": [
+      "data/processed/010.png"
+    ],
     "item_type": "tshirt",
     "name": null,
     "notes": "",
     "price": 0,
-    "raw_image": "data/raw/010.jpeg",
+    "raw_images": [
+      "data/raw/010.jpeg"
+    ],
     "season": [],
     "source": "from bauer",
     "vibes": [
@@ -239,12 +279,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "011",
-    "image": "data/processed/011.png",
+    "images": [
+      "data/processed/011.png"
+    ],
     "item_type": "tanktop",
     "name": null,
     "notes": "very berlin",
     "price": 10,
-    "raw_image": "data/raw/011.jpeg",
+    "raw_images": [
+      "data/raw/011.jpeg"
+    ],
     "season": [],
     "source": "thrifted",
     "vibes": [
@@ -261,12 +305,16 @@
     "date_acquired": null,
     "fit": 3,
     "id": "012",
-    "image": "data/processed/012.png",
+    "images": [
+      "data/processed/012.png"
+    ],
     "item_type": "tshirt",
     "name": null,
     "notes": "got her thrifting in westwood with sonali, was able to wash off the stain",
     "price": 3,
-    "raw_image": "data/raw/012.jpeg",
+    "raw_images": [
+      "data/raw/012.jpeg"
+    ],
     "season": [],
     "source": "thrifted",
     "vibes": [
@@ -284,12 +332,16 @@
     "date_acquired": null,
     "fit": 3,
     "id": "013",
-    "image": "data/processed/013.png",
+    "images": [
+      "data/processed/013.png"
+    ],
     "item_type": "top",
     "name": null,
     "notes": "perfect basic going out top",
     "price": 13,
-    "raw_image": "data/raw/013.jpeg",
+    "raw_images": [
+      "data/raw/013.jpeg"
+    ],
     "season": [],
     "source": "thrifted",
     "vibes": [
@@ -306,12 +358,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "014",
-    "image": "data/processed/014.png",
+    "images": [
+      "data/processed/014.png"
+    ],
     "item_type": "top",
     "name": null,
     "notes": "",
     "price": 0,
-    "raw_image": "data/raw/014.jpeg",
+    "raw_images": [
+      "data/raw/014.jpeg"
+    ],
     "season": [],
     "source": "from bauer",
     "vibes": [
@@ -329,12 +385,16 @@
     "date_acquired": null,
     "fit": 1,
     "id": "015",
-    "image": "data/processed/015.png",
+    "images": [
+      "data/processed/015.png"
+    ],
     "item_type": "top",
     "name": null,
     "notes": "from Berlin flea market 2025!",
     "price": 15,
-    "raw_image": "data/raw/015.jpeg",
+    "raw_images": [
+      "data/raw/015.jpeg"
+    ],
     "season": [
       "summer"
     ],
@@ -353,12 +413,16 @@
     "date_acquired": null,
     "fit": 2,
     "id": "016",
-    "image": "data/processed/016.png",
+    "images": [
+      "data/processed/016.png"
+    ],
     "item_type": "tanktop",
     "name": null,
     "notes": "lowkey see through",
     "price": 7,
-    "raw_image": "data/raw/016.jpeg",
+    "raw_images": [
+      "data/raw/016.jpeg"
+    ],
     "season": [
       "summer"
     ],
@@ -378,12 +442,16 @@
     "date_acquired": null,
     "fit": 3,
     "id": "017",
-    "image": "data/processed/017.png",
+    "images": [
+      "data/processed/017.png"
+    ],
     "item_type": "top",
     "name": null,
     "notes": "bought with Zia winter break freshman year of college",
     "price": 40,
-    "raw_image": "data/raw/017.jpeg",
+    "raw_images": [
+      "data/raw/017.jpeg"
+    ],
     "season": [],
     "source": "new",
     "vibes": [
@@ -401,12 +469,16 @@
     "date_acquired": null,
     "fit": 3,
     "id": "018",
-    "image": "data/processed/018.png",
+    "images": [
+      "data/processed/018.png"
+    ],
     "item_type": "tanktop",
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/018.jpeg",
+    "raw_images": [
+      "data/raw/018.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [
@@ -422,12 +494,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "019",
-    "image": "data/processed/019.png",
+    "images": [
+      "data/processed/019.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/019.jpeg",
+    "raw_images": [
+      "data/raw/019.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -440,12 +516,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "020",
-    "image": "data/processed/020.png",
+    "images": [
+      "data/processed/020.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/020.jpeg",
+    "raw_images": [
+      "data/raw/020.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -458,12 +538,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "021",
-    "image": "data/processed/021.png",
+    "images": [
+      "data/processed/021.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/021.jpeg",
+    "raw_images": [
+      "data/raw/021.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -476,12 +560,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "022",
-    "image": "data/processed/022.png",
+    "images": [
+      "data/processed/022.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/022.jpeg",
+    "raw_images": [
+      "data/raw/022.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -494,12 +582,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "023",
-    "image": "data/processed/023.png",
+    "images": [
+      "data/processed/023.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/023.jpeg",
+    "raw_images": [
+      "data/raw/023.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -512,12 +604,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "024",
-    "image": "data/processed/024.png",
+    "images": [
+      "data/processed/024.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/024.jpeg",
+    "raw_images": [
+      "data/raw/024.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -530,12 +626,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "025",
-    "image": "data/processed/025.png",
+    "images": [
+      "data/processed/025.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/025.jpeg",
+    "raw_images": [
+      "data/raw/025.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -548,12 +648,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "026",
-    "image": "data/processed/026.png",
+    "images": [
+      "data/processed/026.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/026.jpeg",
+    "raw_images": [
+      "data/raw/026.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -566,12 +670,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "027",
-    "image": "data/processed/027.png",
+    "images": [
+      "data/processed/027.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/027.jpeg",
+    "raw_images": [
+      "data/raw/027.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -584,12 +692,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "028",
-    "image": "data/processed/028.png",
+    "images": [
+      "data/processed/028.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/028.jpeg",
+    "raw_images": [
+      "data/raw/028.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -602,12 +714,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "029",
-    "image": "data/processed/029.png",
+    "images": [
+      "data/processed/029.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/029.jpeg",
+    "raw_images": [
+      "data/raw/029.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -620,12 +736,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "030",
-    "image": "data/processed/030.png",
+    "images": [
+      "data/processed/030.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/030.jpeg",
+    "raw_images": [
+      "data/raw/030.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -638,12 +758,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "031",
-    "image": "data/processed/031.png",
+    "images": [
+      "data/processed/031.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/031.jpeg",
+    "raw_images": [
+      "data/raw/031.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -656,12 +780,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "032",
-    "image": "data/processed/032.png",
+    "images": [
+      "data/processed/032.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/032.jpeg",
+    "raw_images": [
+      "data/raw/032.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -674,12 +802,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "033",
-    "image": "data/processed/033.png",
+    "images": [
+      "data/processed/033.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/033.jpeg",
+    "raw_images": [
+      "data/raw/033.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -692,12 +824,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "034",
-    "image": "data/processed/034.png",
+    "images": [
+      "data/processed/034.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/034.jpeg",
+    "raw_images": [
+      "data/raw/034.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -710,12 +846,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "035",
-    "image": "data/processed/035.png",
+    "images": [
+      "data/processed/035.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/035.jpeg",
+    "raw_images": [
+      "data/raw/035.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -728,12 +868,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "036",
-    "image": "data/processed/036.png",
+    "images": [
+      "data/processed/036.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/036.jpeg",
+    "raw_images": [
+      "data/raw/036.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -746,12 +890,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "037",
-    "image": "data/processed/037.png",
+    "images": [
+      "data/processed/037.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/037.jpeg",
+    "raw_images": [
+      "data/raw/037.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -764,12 +912,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "038",
-    "image": "data/processed/038.png",
+    "images": [
+      "data/processed/038.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/038.jpeg",
+    "raw_images": [
+      "data/raw/038.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -782,12 +934,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "039",
-    "image": "data/processed/039.png",
+    "images": [
+      "data/processed/039.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/039.jpeg",
+    "raw_images": [
+      "data/raw/039.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -800,12 +956,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "040",
-    "image": "data/processed/040.png",
+    "images": [
+      "data/processed/040.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/040.jpeg",
+    "raw_images": [
+      "data/raw/040.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -818,12 +978,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "041",
-    "image": "data/processed/041.png",
+    "images": [
+      "data/processed/041.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/041.jpeg",
+    "raw_images": [
+      "data/raw/041.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -836,12 +1000,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "042",
-    "image": "data/processed/042.png",
+    "images": [
+      "data/processed/042.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/042.jpeg",
+    "raw_images": [
+      "data/raw/042.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -854,12 +1022,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "043",
-    "image": "data/processed/043.png",
+    "images": [
+      "data/processed/043.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/043.jpeg",
+    "raw_images": [
+      "data/raw/043.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -872,12 +1044,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "044",
-    "image": "data/processed/044.png",
+    "images": [
+      "data/processed/044.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/044.jpeg",
+    "raw_images": [
+      "data/raw/044.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -890,12 +1066,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "045",
-    "image": "data/processed/045.png",
+    "images": [
+      "data/processed/045.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/045.jpeg",
+    "raw_images": [
+      "data/raw/045.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -908,12 +1088,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "046",
-    "image": "data/processed/046.png",
+    "images": [
+      "data/processed/046.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/046.jpeg",
+    "raw_images": [
+      "data/raw/046.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -926,12 +1110,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "047",
-    "image": "data/processed/047.png",
+    "images": [
+      "data/processed/047.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/047.jpeg",
+    "raw_images": [
+      "data/raw/047.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -944,12 +1132,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "048",
-    "image": "data/processed/048.png",
+    "images": [
+      "data/processed/048.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/048.jpeg",
+    "raw_images": [
+      "data/raw/048.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -962,12 +1154,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "049",
-    "image": "data/processed/049.png",
+    "images": [
+      "data/processed/049.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/049.jpeg",
+    "raw_images": [
+      "data/raw/049.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -980,12 +1176,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "050",
-    "image": "data/processed/050.png",
+    "images": [
+      "data/processed/050.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/050.jpeg",
+    "raw_images": [
+      "data/raw/050.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -998,12 +1198,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "051",
-    "image": "data/processed/051.png",
+    "images": [
+      "data/processed/051.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/051.jpeg",
+    "raw_images": [
+      "data/raw/051.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1016,12 +1220,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "052",
-    "image": "data/processed/052.png",
+    "images": [
+      "data/processed/052.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/052.jpeg",
+    "raw_images": [
+      "data/raw/052.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1034,12 +1242,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "053",
-    "image": "data/processed/053.png",
+    "images": [
+      "data/processed/053.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/053.jpeg",
+    "raw_images": [
+      "data/raw/053.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1052,12 +1264,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "054",
-    "image": "data/processed/054.png",
+    "images": [
+      "data/processed/054.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/054.jpeg",
+    "raw_images": [
+      "data/raw/054.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1070,12 +1286,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "055",
-    "image": "data/processed/055.png",
+    "images": [
+      "data/processed/055.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/055.jpeg",
+    "raw_images": [
+      "data/raw/055.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1088,12 +1308,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "056",
-    "image": "data/processed/056.png",
+    "images": [
+      "data/processed/056.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/056.jpeg",
+    "raw_images": [
+      "data/raw/056.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1106,12 +1330,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "057",
-    "image": "data/processed/057.png",
+    "images": [
+      "data/processed/057.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/057.jpeg",
+    "raw_images": [
+      "data/raw/057.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1124,12 +1352,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "058",
-    "image": "data/processed/058.png",
+    "images": [
+      "data/processed/058.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/058.jpeg",
+    "raw_images": [
+      "data/raw/058.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1142,12 +1374,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "059",
-    "image": "data/processed/059.png",
+    "images": [
+      "data/processed/059.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/059.jpeg",
+    "raw_images": [
+      "data/raw/059.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1160,12 +1396,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "060",
-    "image": "data/processed/060.png",
+    "images": [
+      "data/processed/060.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/060.jpeg",
+    "raw_images": [
+      "data/raw/060.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1178,12 +1418,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "061",
-    "image": "data/processed/061.png",
+    "images": [
+      "data/processed/061.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/061.jpeg",
+    "raw_images": [
+      "data/raw/061.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1196,12 +1440,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "062",
-    "image": "data/processed/062.png",
+    "images": [
+      "data/processed/062.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/062.jpeg",
+    "raw_images": [
+      "data/raw/062.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1214,12 +1462,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "063",
-    "image": "data/processed/063.png",
+    "images": [
+      "data/processed/063.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/063.jpeg",
+    "raw_images": [
+      "data/raw/063.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1232,12 +1484,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "064",
-    "image": "data/processed/064.png",
+    "images": [
+      "data/processed/064.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/064.jpeg",
+    "raw_images": [
+      "data/raw/064.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1250,12 +1506,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "065",
-    "image": "data/processed/065.png",
+    "images": [
+      "data/processed/065.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/065.jpeg",
+    "raw_images": [
+      "data/raw/065.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1268,12 +1528,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "066",
-    "image": "data/processed/066.png",
+    "images": [
+      "data/processed/066.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/066.jpeg",
+    "raw_images": [
+      "data/raw/066.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1286,12 +1550,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "067",
-    "image": "data/processed/067.png",
+    "images": [
+      "data/processed/067.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/067.jpeg",
+    "raw_images": [
+      "data/raw/067.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1304,12 +1572,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "068",
-    "image": "data/processed/068.png",
+    "images": [
+      "data/processed/068.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/068.jpeg",
+    "raw_images": [
+      "data/raw/068.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1322,12 +1594,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "069",
-    "image": "data/processed/069.png",
+    "images": [
+      "data/processed/069.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/069.jpeg",
+    "raw_images": [
+      "data/raw/069.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1340,12 +1616,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "070",
-    "image": "data/processed/070.png",
+    "images": [
+      "data/processed/070.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/070.jpeg",
+    "raw_images": [
+      "data/raw/070.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1358,12 +1638,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "071",
-    "image": "data/processed/071.png",
+    "images": [
+      "data/processed/071.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/071.jpeg",
+    "raw_images": [
+      "data/raw/071.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1376,12 +1660,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "072",
-    "image": "data/processed/072.png",
+    "images": [
+      "data/processed/072.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/072.jpeg",
+    "raw_images": [
+      "data/raw/072.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1394,12 +1682,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "073",
-    "image": "data/processed/073.png",
+    "images": [
+      "data/processed/073.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/073.jpeg",
+    "raw_images": [
+      "data/raw/073.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],
@@ -1412,12 +1704,16 @@
     "date_acquired": null,
     "fit": null,
     "id": "074",
-    "image": "data/processed/074.png",
+    "images": [
+      "data/processed/074.png"
+    ],
     "item_type": null,
     "name": null,
     "notes": "",
     "price": null,
-    "raw_image": "data/raw/074.jpeg",
+    "raw_images": [
+      "data/raw/074.jpeg"
+    ],
     "season": [],
     "source": null,
     "vibes": [],

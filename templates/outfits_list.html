@@ -12,7 +12,7 @@
     <div class="piecerow">
       {% for piece in outfit.pieces %}
       <div class="piece">
-        {% if piece.image %}<img src="{{ url_for('photos', filename=piece.image.split('/')[-1]) }}" alt="">{% endif %}
+        {% if piece.images %}<img src="{{ url_for('photos', filename=piece.images[0].split('/')[-1]) }}" alt="">{% endif %}
       </div>
       {% endfor %}
     </div>
