@@ -20,8 +20,8 @@
     <div class="traygrid" id="traygrid">
       {% for item in tray %}
         {% if item.image %}
-        <div class="trayitem" data-id="{{ item.id }}" data-type="{{ item.item_type or '' }}" data-src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" data-alt="{{ item.item_type or 'item' }}">
-          <img src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}">
+        <div class="trayitem" data-id="{{ item.id }}" data-type="{{ item.item_type or '' }}" data-src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" data-alt="{{ item.name or item.item_type or 'item' }}" title="{{ item.name or item.item_type or '' }}">
+          <img src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" alt="{{ item.name or item.item_type or 'item' }}">
         </div>
         {% endif %}
       {% endfor %}

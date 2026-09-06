@@ -11,6 +11,7 @@
   </div>
 
   <div class="meta">
+    <h2 class="itemname">{{ item.name or 'unnamed piece' }}</h2>
     <div class="typerow">
       <div class="typebadge">{{ item.item_type or 'unlabeled' }}</div>
       <a class="editbtn" href="{{ url_for('edit_item', item_id=item_id) }}">✎ Edit item</a>

@@ -43,4 +43,4 @@ REQUIRED_FIELDS = [
     "item_type", "color", "comfort", "fit", "condition",
     
 ]
-OPTIONAL_FIELDS = ["season", "wear_count", "notes","vibes", "source", "price", "date_acquired",]
+OPTIONAL_FIELDS = ["name", "season", "wear_count", "notes", "vibes", "source", "price", "date_acquired"]

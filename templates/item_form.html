@@ -16,6 +16,11 @@
     {% endif %}
 
     <div class="fieldsgrid">
+      <div class="field full">
+        <span class="label">Name</span>
+        <input class="textinput" type="text" name="name" placeholder="give this piece a name..." value="{{ item.name or '' }}">
+      </div>
+
       <div class="field">
         <span class="label">Item type</span>
         <select class="select" name="item_type">

@@ -17,6 +17,7 @@
         <img src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}">
       {% endif %}
     </div>
+    {% if item.name %}<p class="cardname">{{ item.name }}</p>{% endif %}
     <div class="caption">
       <span class="itemtype">{{ item.item_type or 'unlabeled' }}</span>
       <div class="dots">

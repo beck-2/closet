@@ -10,6 +10,7 @@ Then open http://127.0.0.1:8000 in your browser.
 from __future__ import annotations
 
 import json
+import logging
 import shutil
 from pathlib import Path
 
@@ -161,6 +162,7 @@ def _read_form_item(form) -> dict:
     vibes = [v.strip() for v in vibes_raw.split(",") if v.strip()]
 
     return {
+        "name": (form.get("name") or "").strip() or None,
         "item_type": form.get("item_type") or None,
         "color": multi("color"),
         "comfort": rating("comfort"),
@@ -331,4 +333,7 @@ def photos(filename):
 
 
 if __name__ == "__main__":
+    # Quiet down the per-request GET/POST access log lines; real errors
+    # still show.
+    logging.getLogger("werkzeug").setLevel(logging.WARNING)
     app.run(host="127.0.0.1", port=8000, debug=False)

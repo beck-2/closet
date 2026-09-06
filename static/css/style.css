@@ -122,6 +122,16 @@ a:hover { color: #a61e4d; }
   position: relative;
 }
 .pg-closet .swatch img { max-width: 84%; max-height: 84%; object-fit: contain; }
+.pg-closet .cardname {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 13px;
+  color: #2b2140;
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .pg-closet .caption { display: flex; justify-content: space-between; align-items: center; }
 .pg-closet .itemtype {
   font-family: 'Baloo 2', cursive;
@@ -153,6 +163,13 @@ a:hover { color: #a61e4d; }
 }
 .pg-item .photocard img { max-width: 98%; max-height: 98%; object-fit: contain; }
 .pg-item .meta { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 26px; }
+.pg-item .itemname {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 800;
+  font-size: 28px;
+  color: #2b2140;
+  margin: 0;
+}
 .pg-item .typerow { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .pg-item .typebadge {
   font-family: 'Baloo 2', cursive;
