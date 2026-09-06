@@ -168,24 +168,27 @@
   },
   "007": {
     "color": [
+      "beige",
       "pink"
     ],
     "comfort": 2,
     "condition": 2,
     "date_acquired": null,
     "fit": 2,
-    "id": "007",
     "images": [
       "data/processed/007.png"
     ],
     "item_type": "top",
-    "name": null,
+    "name": "cari off the shoulder",
     "notes": "designer from cari borja",
-    "price": 0,
+    "price": 0.0,
     "raw_images": [
       "data/raw/007.jpeg"
     ],
-    "season": [],
+    "season": [
+      "summer",
+      "spring/fall"
+    ],
     "source": "from mom",
     "vibes": [
       "flowy"
