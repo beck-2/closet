@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% set pageclass = "pg-outfitslist" %}
+{% block content %}
+<a class="newoutfitbtn" href="{{ url_for('outfit_builder') }}">+ new outfit</a>
+
+{% if outfits %}
+<div class="grid">
+  {% for outfit in outfits %}
+  <div class="card">
+    <p class="outfitname">{{ outfit.name }}</p>
+    <p class="outfitdate">{{ outfit.created_at[:10] }}{% if outfit.vibes %} · {{ outfit.vibes|join(', ') }}{% endif %}</p>
+    <div class="piecerow">
+      {% for piece in outfit.pieces %}
+      <div class="piece">
+        {% if piece.image %}<img src="{{ url_for('photos', filename=piece.image.split('/')[-1]) }}" alt="">{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty">no outfits saved yet ✧ build one on the board</p>
+{% endif %}
+{% endblock %}

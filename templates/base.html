@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}beck's closet{% endblock %}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="page {{ pageclass }}">
+    <div class="topbar">
+      <a href="{{ url_for('closet') }}"><h1 class="wordmark">beck's closet</h1></a>
+      <div class="hitcounter">✦ {{ total_str }} ITEMS LOGGED ✦</div>
+    </div>
+    <div class="navrow">
+      <a class="navpill {{ 'active closet' if active == 'closet' else '' }}" href="{{ url_for('closet') }}">Closet</a>
+      <a class="navpill {{ 'active outfits' if active == 'outfits' else '' }}" href="{{ url_for('outfits_list') }}">Outfits</a>
+      <a class="navpill {{ 'active add' if active == 'add' else '' }}" href="{{ url_for('add_item') }}">+ Add Item</a>
+    </div>
+    {% block content %}{% endblock %}
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

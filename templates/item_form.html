@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% set pageclass = "pg-add" %}
+{% block content %}
+{% if error %}<div class="errorbanner">{{ error }}</div>{% endif %}
+<div class="formcard">
+  <h2 class="formtitle">{{ 'edit this piece ✧' if mode == 'edit' else 'add a new piece ✧' }}</h2>
+
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('edit_item', item_id=item_id) if mode == 'edit' else url_for('add_item') }}">
+    {% if mode == 'add' %}
+    <label class="uploadzone" for="photo-input">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2b2140" stroke-width="1.8"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      <span class="hint2">drop a photo here, or click to upload</span>
+      <span class="subhint">background gets removed automatically once you save</span>
+      <input id="photo-input" type="file" name="photo" accept="image/*" style="display:none" required>
+    </label>
+    {% endif %}
+
+    <div class="fieldsgrid">
+      <div class="field">
+        <span class="label">Item type</span>
+        <select class="select" name="item_type">
+          <option value="">— choose —</option>
+          {% for t in item_types %}
+          <option value="{{ t }}" {{ 'selected' if item.item_type == t }}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <span class="label">Source</span>
+        <select class="select" name="source">
+          <option value="">— choose —</option>
+          {% for s in sources %}
+          <option value="{{ s }}" {{ 'selected' if item.source == s }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field full">
+        <span class="label">Color (pick any)</span>
+        <div class="chiprow">
+          {% for c in color_suggestions %}
+          <label class="chip {{ 'selected' if item.color and c in item.color }}">
+            <input type="checkbox" name="color" value="{{ c }}" {{ 'checked' if item.color and c in item.color }}> {{ c }}
+          </label>
+          {% endfor %}
+        </div>
+        <input class="textinput" type="text" name="color_other" placeholder="other colors, comma separated">
+      </div>
+
+      <div class="field full">
+        <span class="label">How it feels (1–3)</span>
+        <div class="ratinggroup">
+          {% for label, key in [('Comfort','comfort'), ('Fit','fit'), ('Condition','condition')] %}
+          <div class="rating">
+            <span class="ratingsublabel">{{ label }}</span>
+            <div class="dots">
+              {% for i in range(1, 4) %}
+              <label>
+                <input type="radio" name="{{ key }}" value="{{ i }}" {{ 'checked' if item.get(key) == i }}>
+                <span class="dot"></span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="field full">
+        <span class="label">Season (pick any)</span>
+        <div class="chiprow">
+          {% for s in season_suggestions %}
+          <label class="chip {{ 'selected' if item.season and s in item.season }}">
+            <input type="checkbox" name="season" value="{{ s }}" {{ 'checked' if item.season and s in item.season }}> {{ s }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="field full">
+        <span class="label">Vibes (comma separated)</span>
+        <input class="textinput" type="text" name="vibes" placeholder="grunge, daytime, going out" value="{{ (item.vibes or [])|join(', ') }}">
+      </div>
+
+      <div class="field">
+        <span class="label">Price</span>
+        <div class="pricewrap"><span class="dollar">$</span><input class="textinput" type="number" step="0.01" min="0" name="price" value="{{ item.price if item.price is not none else '' }}"></div>
+      </div>
+      <div class="field">
+        <span class="label">Date acquired</span>
+        <input class="textinput" type="month" name="date_acquired" value="{{ item.date_acquired or '' }}">
+      </div>
+
+      <div class="field full">
+        <span class="label">Notes</span>
+        <textarea class="notesarea" name="notes" placeholder="anything you want to remember about this piece...">{{ item.notes or '' }}</textarea>
+      </div>
+    </div>
+
+    <button type="submit" class="savebtn">{{ 'save changes ✦' if mode == 'edit' else 'save to closet ✦' }}</button>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  var input = document.getElementById('photo-input');
+  if (input) {
+    input.addEventListener('change', function () {
+      var zone = input.closest('.uploadzone');
+      var hint = zone.querySelector('.hint2');
+      if (input.files && input.files[0]) {
+        hint.textContent = input.files[0].name;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var img = zone.querySelector('img.preview');
+          if (!img) {
+            img = document.createElement('img');
+            img.className = 'preview';
+            zone.insertBefore(img, zone.firstChild);
+          }
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    });
+  }
+</script>
+{% endblock %}

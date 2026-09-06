@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set pageclass = "pg-closet" %}
+{% block content %}
+<div class="filterrow">
+  <a class="chip {{ 'selected' if not active_type }}" href="{{ url_for('closet') }}">All</a>
+  {% for t in types %}
+    <a class="chip {{ 'selected' if active_type == t }}" href="{{ url_for('closet', type=t) }}">{{ t }}</a>
+  {% endfor %}
+</div>
+
+{% if cards %}
+<div class="grid">
+  {% for item in cards %}
+  <a class="card" href="{{ url_for('item_view', item_id=item.id) }}">
+    <div class="swatch">
+      {% if item.image %}
+        <img src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}">
+      {% endif %}
+    </div>
+    <div class="caption">
+      <span class="itemtype">{{ item.item_type or 'unlabeled' }}</span>
+      <div class="dots">
+        {% for i in range(1, 4) %}<div class="dot {{ 'filled' if i <= item.rating }}"></div>{% endfor %}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty">nothing here yet ✧ try a different filter, or add a piece</p>
+{% endif %}
+{% endblock %}

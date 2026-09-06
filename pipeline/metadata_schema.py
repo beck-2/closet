@@ -10,11 +10,11 @@ Edit the *_OPTIONS lists as your closet reveals categories you didn't expect
 # Single-select — pick exactly one.
 ITEM_TYPES = [
     "top", "bottom", "shorts", "pants", "skirt", "dress",
-    "outerwear", "shoes", "accessory", "bag", "hat", "other",
+    "longsleeve", "tshirt", "tanktop", "jacket", "hoodie", "shoes", "accessory", "belt", "bag", "hat", "jewelry", "other",
 ]
 
 SOURCES = [
-    "thrifted", "new",
+    "thrifted", "new", "from mom", "gift", "from sat", "from bauer",
 ]
 
 # 1 (bad) - 3 (great) rating fields.
@@ -30,7 +30,7 @@ COLOR_SUGGESTIONS = [
 ]
 
 SEASON_SUGGESTIONS = [
-    "summer", "winter", "spring/fall", "all-season", "layering",
+    "summer", "winter", "spring/fall", "all", "layering",
 ]
 
 # Free-form tags — no suggested list, just an open vocabulary.
@@ -41,6 +41,6 @@ VIBES_EXAMPLES = ["grunge", "daytime", "going out"]
 # the validator flags as still-needs-filling-in.
 REQUIRED_FIELDS = [
     "item_type", "color", "comfort", "fit", "condition",
-    "vibes", "source", "price", "date_acquired",
+    
 ]
-OPTIONAL_FIELDS = ["season", "wear_count", "notes"]
+OPTIONAL_FIELDS = ["season", "wear_count", "notes","vibes", "source", "price", "date_acquired",]

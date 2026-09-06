@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% set pageclass = "pg-outfits" %}
+{% block content %}
+<p class="hint">✧ tap a piece from your closet to add it, then drag it anywhere on the board ✧</p>
+<div class="layout">
+  <div class="board" id="board">
+    <div class="boardempty" id="board-empty">the board is empty — add pieces from your closet on the right ✧</div>
+    <input class="namefield" id="outfit-name" type="text" placeholder="name this outfit...">
+  </div>
+
+  <div class="sidebar">
+    <p class="sidebartitle">your closet</p>
+    <p class="sidebarhint">tap a piece to add it to the board</p>
+    <div class="filterrow" id="tray-filters">
+      <div class="chip selected" data-type="">All</div>
+      {% for t in tray|map(attribute='item_type')|reject('none')|unique|sort %}
+      <div class="chip" data-type="{{ t }}">{{ t }}</div>
+      {% endfor %}
+    </div>
+    <div class="traygrid" id="traygrid">
+      {% for item in tray %}
+        {% if item.image %}
+        <div class="trayitem" data-id="{{ item.id }}" data-type="{{ item.item_type or '' }}" data-src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" data-alt="{{ item.item_type or 'item' }}">
+          <img src="{{ url_for('photos', filename=item.image.split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}">
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="bottomrow">
+  <input class="vibesinput" id="outfit-vibes" type="text" placeholder="vibes, comma separated (e.g. going out, daytime)">
+  <div>
+    <span class="savemsg" id="save-msg"></span>
+    <button class="savebtn" id="save-btn">save outfit ✦</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var board = document.getElementById('board');
+  var boardEmpty = document.getElementById('board-empty');
+  var items = [];
+  var uidCounter = 0;
+  var dragging = null;
+
+  function render() {
+    board.querySelectorAll('.cutout').forEach(function (el) { el.remove(); });
+    boardEmpty.style.display = items.length ? 'none' : 'flex';
+    items.forEach(function (it) {
+      var div = document.createElement('div');
+      div.className = 'cutout';
+      div.style.left = it.x + 'px';
+      div.style.top = it.y + 'px';
+      div.style.width = it.w + 'px';
+      div.style.transform = 'rotate(' + it.rot + 'deg)';
+      div.style.zIndex = dragging === it.uid ? 20 : 1;
+      div.dataset.uid = it.uid;
+
+      var img = document.createElement('img');
+      img.src = it.src;
+      img.alt = it.alt;
+      img.draggable = false;
+      div.appendChild(img);
+
+      var rm = document.createElement('div');
+      rm.className = 'remove';
+      rm.textContent = '×';
+      rm.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+      rm.addEventListener('click', function (e) {
+        e.stopPropagation();
+        items = items.filter(function (x) { return x.uid !== it.uid; });
+        render();
+      });
+      div.appendChild(rm);
+
+      div.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        dragging = it.uid;
+        render();
+      });
+
+      board.appendChild(div);
+    });
+  }
+
+  board.addEventListener('mousemove', function (e) {
+    if (!dragging) return;
+    var it = items.find(function (x) { return x.uid === dragging; });
+    if (!it) return;
+    it.x += e.movementX;
+    it.y += e.movementY;
+    var el = board.querySelector('.cutout[data-uid="' + dragging + '"]');
+    if (el) { el.style.left = it.x + 'px'; el.style.top = it.y + 'px'; }
+  });
+  function stopDrag() {
+    if (dragging) { dragging = null; render(); }
+  }
+  board.addEventListener('mouseup', stopDrag);
+  board.addEventListener('mouseleave', stopDrag);
+
+  document.getElementById('traygrid').addEventListener('click', function (e) {
+    var el = e.target.closest('.trayitem');
+    if (!el) return;
+    var n = items.length;
+    items.push({
+      uid: 'u' + (uidCounter++),
+      id: el.dataset.id,
+      src: el.dataset.src,
+      alt: el.dataset.alt,
+      x: 60 + (n * 40) % 340,
+      y: 40 + (n * 55) % 260,
+      w: 220,
+      rot: Math.round((Math.random() * 14 - 7) * 10) / 10
+    });
+    render();
+  });
+
+  document.getElementById('tray-filters').addEventListener('click', function (e) {
+    var chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('#tray-filters .chip').forEach(function (c) { c.classList.remove('selected'); });
+    chip.classList.add('selected');
+    var type = chip.dataset.type;
+    document.querySelectorAll('#traygrid .trayitem').forEach(function (t) {
+      t.style.display = (!type || t.dataset.type === type) ? 'flex' : 'none';
+    });
+  });
+
+  document.getElementById('save-btn').addEventListener('click', function () {
+    var msg = document.getElementById('save-msg');
+    if (!items.length) {
+      msg.textContent = 'add at least one piece first';
+      return;
+    }
+    var payload = {
+      name: document.getElementById('outfit-name').value,
+      vibes: document.getElementById('outfit-vibes').value,
+      items: items.map(function (it) { return { id: it.id, x: it.x, y: it.y, w: it.w, rot: it.rot }; })
+    };
+    msg.textContent = 'saving...';
+    fetch('{{ url_for("create_outfit") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.ok) {
+        window.location.href = '{{ url_for("outfits_list") }}';
+      } else {
+        msg.textContent = data.error || 'something went wrong';
+      }
+    }).catch(function () { msg.textContent = 'something went wrong'; });
+  });
+})();
+</script>
+{% endblock %}
