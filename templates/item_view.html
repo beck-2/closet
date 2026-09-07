@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% set pageclass = "pg-item" %}
 {% block content %}
-<a class="backchip" href="{{ url_for('closet') }}">← back to closet</a>
+<a class="backchip" href="{{ url_for('closet') }}#restore-scroll">← back to closet</a>
 
 <div class="layout">
   <div class="photocolumn">
@@ -102,29 +102,5 @@
       thumb.classList.add('active');
     });
   });
-
-  // "back to closet" should return to wherever you were scrolled to, not
-  // reset to the top. A plain <a href> always creates a fresh navigation
-  // with no scroll memory — going back through browser history is what
-  // lets the browser restore the closet page's scroll position, so use
-  // that when we actually got here from the closet, and fall back to the
-  // normal link otherwise (e.g. this page was opened directly).
-  (function () {
-    var backLink = document.querySelector('.backchip');
-    if (!backLink) return;
-    var cameFromCloset = false;
-    try {
-      var ref = new URL(document.referrer);
-      cameFromCloset = ref.origin === window.location.origin && ref.pathname === backLink.pathname;
-    } catch (err) {
-      cameFromCloset = false;
-    }
-    if (cameFromCloset && window.history.length > 1) {
-      backLink.addEventListener('click', function (e) {
-        e.preventDefault();
-        window.history.back();
-      });
-    }
-  })();
 </script>
 {% endblock %}

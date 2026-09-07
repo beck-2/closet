@@ -124,7 +124,7 @@
 
     <div class="formbtnrow">
       <button type="submit" class="savebtn">{{ 'save changes ✦' if mode == 'edit' else 'save to closet ✦' }}</button>
-      <a class="cancelbtn" href="{{ url_for('item_view', item_id=item_id) if mode == 'edit' else url_for('closet') }}">Cancel</a>
+      <a class="cancelbtn" href="{{ url_for('item_view', item_id=item_id) if mode == 'edit' else url_for('closet') ~ '#restore-scroll' }}">Cancel</a>
     </div>
   </form>
 </div>
@@ -219,10 +219,22 @@
       });
     });
 
-    try {
-      var saved = sessionStorage.getItem(draftKey);
-      if (saved) applyDraft(JSON.parse(saved));
-    } catch (err) {}
+    // Only ever reapply the draft when we've arrived via that exact
+    // round trip (touch-up's Cancel/Save link here with #restore-draft) —
+    // never on an ordinary visit to this page. Without that check, a
+    // draft left over from an earlier, abandoned edit (e.g. you navigated
+    // away without hitting Save or Cancel) could silently resurrect old
+    // text over freshly-loaded, current data the next time you edited
+    // this item — and saving over that would actually overwrite the
+    // backend with the old values. That's a real data-loss risk, so this
+    // only fires on the one navigation it's meant for.
+    if (window.location.hash === '#restore-draft') {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      try {
+        var saved = sessionStorage.getItem(draftKey);
+        if (saved) applyDraft(JSON.parse(saved));
+      } catch (err) {}
+    }
 
     // The draft has done its job once you actually save or deliberately
     // cancel the whole edit — clear it so a future edit of this item

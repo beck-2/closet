@@ -36,9 +36,6 @@
 <script>
 (function () {
   var STORAGE_KEY = 'closetScrollY';
-  // Let us drive scroll restoration ourselves instead of relying on the
-  // browser's own back/forward scroll restoration, which turned out to be
-  // inconsistent in testing — don't fight it.
   if ('scrollRestoration' in window.history) {
     window.history.scrollRestoration = 'manual';
   }
@@ -52,22 +49,33 @@
     }, 120);
   }, { passive: true });
 
-  // Only restore scroll when we actually arrived here via a back/forward
-  // navigation (e.g. the "back to closet" link on an item page) — a fresh
-  // visit, like clicking "Closet" in the nav bar, should start at the top
-  // like normal.
-  function restoreIfComingBack() {
-    var navEntries = performance.getEntriesByType('navigation');
-    var navType = navEntries.length ? navEntries[0].type : '';
-    if (navType !== 'back_forward') return;
-    var saved = null;
-    try { saved = sessionStorage.getItem(STORAGE_KEY); } catch (err) {}
-    if (saved !== null) window.scrollTo(0, parseInt(saved, 10));
+  // Only restore scroll when we arrive via a link that explicitly asks for
+  // it (marked with #restore-scroll — see item_view.html's "back to
+  // closet" and the add-item form's Cancel link). Detecting "came from a
+  // back button" turned out to be unreliable — the browser's own
+  // back/forward navigation type doesn't fire this way after a multi-page
+  // round trip (e.g. edit an item -> save -> back to closet), since saving
+  // creates a fresh forward navigation rather than a true history "back".
+  // A plain nav-bar click to Closet has no marker, so it still starts at
+  // the top like normal.
+  var shouldRestore = window.location.hash === '#restore-scroll';
+  var target = null;
+  if (shouldRestore) {
+    // Strip the marker right away so refreshing or revisiting this URL
+    // later doesn't keep forcing a scroll jump.
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    try {
+      var saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved !== null) target = parseInt(saved, 10);
+    } catch (err) {}
   }
-  restoreIfComingBack();
+  function applyRestore() {
+    if (target !== null) window.scrollTo(0, target);
+  }
+  applyRestore();
   // Photos loading in can shift page height after the first attempt —
   // try again once everything has settled, just in case.
-  window.addEventListener('load', restoreIfComingBack);
+  window.addEventListener('load', applyRestore);
 })();
 </script>
 {% endblock %}
