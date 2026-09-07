@@ -269,6 +269,56 @@ def edit_item(item_id):
     return render_template("item_form.html", **_edit_form_kwargs(item_id, item))
 
 
+@app.route("/item/<item_id>/photo/<int:index>/touchup", methods=["GET"])
+def touchup_photo(item_id, index):
+    item = db.get_item(item_id)
+    if item is None:
+        abort(404)
+    images = item.get("images") or []
+    raw_images = item.get("raw_images") or []
+    if index < 0 or index >= len(images):
+        abort(404)
+    raw_rel = raw_images[index] if index < len(raw_images) else None
+    return render_template(
+        "touchup.html",
+        active="closet",
+        item_id=item_id,
+        index=index,
+        processed_filename=images[index].split("/")[-1],
+        raw_url=url_for("raw_photos", filename=raw_rel.split("/")[-1]) if raw_rel else None,
+    )
+
+
+@app.route("/item/<item_id>/photo/<int:index>/touchup", methods=["POST"])
+def save_touchup(item_id, index):
+    item = db.get_item(item_id)
+    if item is None:
+        abort(404)
+    images = item.get("images") or []
+    if index < 0 or index >= len(images):
+        abort(404)
+
+    upload = request.files.get("image")
+    if not upload or not upload.filename:
+        abort(400, description="No touched-up image was sent.")
+
+    import io
+
+    from PIL import Image
+
+    data = upload.read()
+    try:
+        with Image.open(io.BytesIO(data)) as check:
+            check.verify()
+        edited = Image.open(io.BytesIO(data)).convert("RGBA")
+    except Exception:
+        abort(400, description="That didn't look like a valid image.")
+
+    target_path = BASE_DIR / images[index]
+    edited.save(target_path, format="PNG")
+    return jsonify({"ok": True})
+
+
 def _add_form_kwargs(error=None):
     return dict(
         active="add",
@@ -357,6 +407,11 @@ def create_outfit():
 @app.route("/photos/<path:filename>")
 def photos(filename):
     return send_from_directory(PROCESSED_DIR, filename)
+
+
+@app.route("/raw-photos/<path:filename>")
+def raw_photos(filename):
+    return send_from_directory(RAW_DIR, filename)
 
 
 if __name__ == "__main__":

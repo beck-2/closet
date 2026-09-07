@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% set pageclass = "pg-touchup" %}
+{% block content %}
+<div class="touchup-card">
+  <h2 class="formtitle">touch up this photo ✧</h2>
+  <p class="subhint">Erase leftover background, or paint back anything that got erased by mistake — like a sleeve.</p>
+
+  <div class="touchup-toolbar">
+    <div class="modegroup">
+      <button type="button" class="modebtn active" data-mode="erase">🧽 Erase</button>
+      <button type="button" class="modebtn" id="restoreModeBtn" data-mode="restore" {{ 'disabled' if not raw_url }}>↺ Restore</button>
+    </div>
+    <label class="brushctl">
+      brush size
+      <input type="range" id="brushSize" min="8" max="140" value="40">
+    </label>
+    <button type="button" class="toolbtn" id="undoBtn">Undo</button>
+    <button type="button" class="toolbtn" id="resetBtn">Reset to original</button>
+  </div>
+  {% if not raw_url %}
+  <p class="subhint" style="color:#a61e4d;">No original photo is on file for this item, so Restore isn't available — you can still erase leftover background.</p>
+  {% endif %}
+
+  <div class="touchup-canvaswrap">
+    <canvas id="board"></canvas>
+    <div class="brushcursor" id="brushCursor" hidden></div>
+  </div>
+
+  <div class="formbtnrow">
+    <button type="button" class="savebtn" id="saveBtn">save changes ✦</button>
+    <a class="cancelbtn" href="{{ url_for('edit_item', item_id=item_id) }}">Cancel</a>
+  </div>
+</div>
+
+<img id="processedSrc" src="{{ url_for('photos', filename=processed_filename) }}" style="display:none">
+{% if raw_url %}<img id="rawSrc" src="{{ raw_url }}" style="display:none">{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var processedImg = document.getElementById('processedSrc');
+  var rawImg = document.getElementById('rawSrc');
+  var canvas = document.getElementById('board');
+  var ctx = canvas.getContext('2d');
+  var cursor = document.getElementById('brushCursor');
+  var brushSizeInput = document.getElementById('brushSize');
+  var mode = 'erase';
+  var drawing = false;
+  var lastPoint = null;
+  var undoStack = [];
+  var MAX_UNDO = 12;
+  var rawCanvas = rawImg ? document.createElement('canvas') : null;
+  var rawCtx = rawCanvas ? rawCanvas.getContext('2d') : null;
+  var ready = { processed: false, raw: !rawImg };
+
+  function maybeInit() {
+    if (!ready.processed || !ready.raw) return;
+    canvas.width = processedImg.naturalWidth;
+    canvas.height = processedImg.naturalHeight;
+    ctx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
+    if (rawCanvas) {
+      rawCanvas.width = canvas.width;
+      rawCanvas.height = canvas.height;
+      rawCtx.drawImage(rawImg, 0, 0, canvas.width, canvas.height);
+    }
+    fitCanvas();
+    canvas.classList.add('jsready');
+  }
+
+  function fitCanvas() {
+    var wrap = canvas.parentElement;
+    var maxW = Math.min(wrap.clientWidth || 640, 640);
+    var scale = Math.min(1, maxW / canvas.width);
+    canvas.style.width = (canvas.width * scale) + 'px';
+    canvas.style.height = (canvas.height * scale) + 'px';
+  }
+
+  processedImg.addEventListener('load', function () { ready.processed = true; maybeInit(); });
+  if (processedImg.complete && processedImg.naturalWidth) { ready.processed = true; }
+  if (rawImg) {
+    rawImg.addEventListener('load', function () { ready.raw = true; maybeInit(); });
+    if (rawImg.complete && rawImg.naturalWidth) { ready.raw = true; }
+  }
+  maybeInit();
+  window.addEventListener('resize', fitCanvas);
+
+  document.querySelectorAll('.modebtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.disabled) return;
+      document.querySelectorAll('.modebtn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+    });
+  });
+
+  function canvasPoint(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function brushRadius() {
+    return parseInt(brushSizeInput.value, 10) / 2;
+  }
+
+  function dab(x, y) {
+    var r = brushRadius();
+    if (mode === 'erase' || !rawCanvas) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(rawCanvas, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  function strokeTo(pt) {
+    if (lastPoint) {
+      var dist = Math.hypot(pt.x - lastPoint.x, pt.y - lastPoint.y);
+      var steps = Math.max(1, Math.ceil(dist / Math.max(2, brushRadius() * 0.5)));
+      for (var i = 1; i <= steps; i++) {
+        var t = i / steps;
+        dab(lastPoint.x + (pt.x - lastPoint.x) * t, lastPoint.y + (pt.y - lastPoint.y) * t);
+      }
+    } else {
+      dab(pt.x, pt.y);
+    }
+    lastPoint = pt;
+  }
+
+  function pushUndo() {
+    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+  }
+
+  canvas.addEventListener('mousedown', function (e) {
+    drawing = true;
+    lastPoint = null;
+    pushUndo();
+    strokeTo(canvasPoint(e));
+  });
+  canvas.addEventListener('mousemove', function (e) {
+    var rect = canvas.getBoundingClientRect();
+    var dispScale = rect.width / canvas.width;
+    cursor.hidden = false;
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+    cursor.style.width = (brushRadius() * 2 * dispScale) + 'px';
+    cursor.style.height = (brushRadius() * 2 * dispScale) + 'px';
+    if (drawing) strokeTo(canvasPoint(e));
+  });
+  window.addEventListener('mouseup', function () { drawing = false; lastPoint = null; });
+  canvas.addEventListener('mouseleave', function () { cursor.hidden = true; });
+
+  document.getElementById('undoBtn').addEventListener('click', function () {
+    var prev = undoStack.pop();
+    if (prev) ctx.putImageData(prev, 0, 0);
+  });
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    pushUndo();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = 'saving…';
+    canvas.toBlob(function (blob) {
+      var form = new FormData();
+      form.append('image', blob, 'touchup.png');
+      fetch(window.location.pathname, { method: 'POST', body: form })
+        .then(function (res) {
+          if (!res.ok) throw new Error('save failed');
+          window.location.href = "{{ url_for('edit_item', item_id=item_id) }}";
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = 'save changes ✦';
+          alert("Couldn't save that — try again.");
+        });
+    }, 'image/png');
+  });
+})();
+</script>
+{% endblock %}

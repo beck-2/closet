@@ -589,3 +589,109 @@ a:hover { color: #a61e4d; }
 }
 .pg-add .photothumb.addphoto .addicon { font-size: 28px; font-weight: 800; line-height: 1; }
 .pg-add .photothumb.addphoto .addlabel { font-size: 11px; font-weight: 800; }
+
+/* ---- photo touch-up (fix / restore) ---- */
+.pg-add .photothumb { position: relative; }
+.pg-add .photothumb .fixlink {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #fff;
+  border: 2px solid #2b2140;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #2b2140;
+  padding: 3px 8px;
+}
+.pg-add .photothumb .fixlink:hover { background: #ffd447; color: #2b2140; }
+
+.pg-touchup .touchup-card {
+  background: #fffdf7;
+  border: 3px solid #2b2140;
+  border-radius: 20px;
+  box-shadow: 6px 6px 0 rgba(43,33,64,0.14);
+  padding: 32px 36px 36px;
+  max-width: 680px;
+}
+.pg-touchup .formtitle {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 800;
+  font-size: 28px;
+  color: #2b2140;
+  margin: 0 0 8px;
+}
+.pg-touchup .subhint { font-size: 13px; font-weight: 700; color: #7c7192; margin: 0 0 22px; }
+
+.pg-touchup .touchup-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.pg-touchup .modegroup { display: flex; gap: 8px; }
+.pg-touchup .modebtn {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 2.5px solid #2b2140;
+  background: #fff;
+  color: #2b2140;
+  cursor: pointer;
+}
+.pg-touchup .modebtn.active { background: #5ec8e8; }
+.pg-touchup .modebtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pg-touchup .brushctl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #2b2140;
+  text-transform: uppercase;
+}
+.pg-touchup .toolbtn {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 2.5px solid #2b2140;
+  background: #e4dfd2;
+  color: #2b2140;
+  cursor: pointer;
+}
+.pg-touchup .toolbtn:hover { background: #d8d2c2; }
+
+.pg-touchup .touchup-canvaswrap {
+  position: relative;
+  max-width: 640px;
+  margin: 0 0 26px;
+  display: flex;
+  justify-content: center;
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #e9e4d6 25%, transparent 25%),
+    linear-gradient(-45deg, #e9e4d6 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e9e4d6 75%),
+    linear-gradient(-45deg, transparent 75%, #e9e4d6 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  border: 3px solid #2b2140;
+  border-radius: 14px;
+  padding: 10px;
+}
+.pg-touchup #board { display: block; cursor: crosshair; touch-action: none; }
+.pg-touchup #board.jsready { cursor: none; }
+.pg-touchup .brushcursor {
+  position: fixed;
+  border: 2px solid #2b2140;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+}
