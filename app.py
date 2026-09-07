@@ -275,17 +275,14 @@ def touchup_photo(item_id, index):
     if item is None:
         abort(404)
     images = item.get("images") or []
-    raw_images = item.get("raw_images") or []
     if index < 0 or index >= len(images):
         abort(404)
-    raw_rel = raw_images[index] if index < len(raw_images) else None
     return render_template(
         "touchup.html",
         active="closet",
         item_id=item_id,
         index=index,
         processed_filename=images[index].split("/")[-1],
-        raw_url=url_for("raw_photos", filename=raw_rel.split("/")[-1]) if raw_rel else None,
     )
 
 
@@ -407,11 +404,6 @@ def create_outfit():
 @app.route("/photos/<path:filename>")
 def photos(filename):
     return send_from_directory(PROCESSED_DIR, filename)
-
-
-@app.route("/raw-photos/<path:filename>")
-def raw_photos(filename):
-    return send_from_directory(RAW_DIR, filename)
 
 
 if __name__ == "__main__":

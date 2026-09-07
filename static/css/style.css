@@ -630,20 +630,6 @@ a:hover { color: #a61e4d; }
   flex-wrap: wrap;
   margin-bottom: 18px;
 }
-.pg-touchup .modegroup { display: flex; gap: 8px; }
-.pg-touchup .modebtn {
-  font-family: 'Baloo 2', cursive;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 9px 18px;
-  border-radius: 999px;
-  border: 2.5px solid #2b2140;
-  background: #fff;
-  color: #2b2140;
-  cursor: pointer;
-}
-.pg-touchup .modebtn.active { background: #5ec8e8; }
-.pg-touchup .modebtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .pg-touchup .brushctl {
   display: flex;
   align-items: center;
@@ -694,4 +680,53 @@ a:hover { color: #a61e4d; }
   pointer-events: none;
   transform: translate(-50%, -50%);
   z-index: 50;
+}
+
+.pg-touchup .formbtnrow { display: flex; align-items: center; gap: 16px; }
+.pg-touchup .savebtn,
+.pg-touchup .cancelbtn {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.pg-touchup .savebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  color: #fff;
+  background: #ff6fa5;
+  border: 3px solid #2b2140;
+  border-radius: 999px;
+  padding: 14px 30px;
+  box-shadow: 4px 4px 0 #2b2140;
+  transform: rotate(-1deg);
+}
+.pg-touchup .savebtn .btnsparkle { color: #fff8ee; flex-shrink: 0; }
+.pg-touchup .savebtn:hover {
+  transform: rotate(0deg) translateY(-3px) scale(1.04);
+  box-shadow: 6px 7px 0 #2b2140;
+}
+.pg-touchup .savebtn:disabled {
+  opacity: 0.7;
+  cursor: default;
+  transform: none;
+  box-shadow: 4px 4px 0 #2b2140;
+}
+.pg-touchup .cancelbtn {
+  font-size: 16px;
+  color: #2b2140;
+  background: #ffe9cf;
+  border: 3px solid #2b2140;
+  border-radius: 999px;
+  padding: 13px 28px;
+  display: inline-block;
+  transform: rotate(1deg);
+}
+.pg-touchup .cancelbtn:hover {
+  color: #2b2140;
+  background: #ffdcb0;
+  transform: rotate(0deg) translateY(-3px) scale(1.04);
+  box-shadow: 4px 5px 0 rgba(43,33,64,0.35);
 }
