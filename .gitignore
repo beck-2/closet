@@ -223,6 +223,7 @@ __marimo__/
 # Closet photos — kept on disk / synced separately, not in git history
 /data/raw/
 /data/processed/
+/data/originals/
 *.heic
 *.HEIC
 
