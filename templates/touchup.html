@@ -52,6 +52,12 @@
   var MAX_UNDO = 12;
   var rawCanvas = rawImg ? document.createElement('canvas') : null;
   var rawCtx = rawCanvas ? rawCanvas.getContext('2d') : null;
+  // A persistent snapshot of the untouched processed image, taken once it
+  // first loads. Reset draws from this canvas rather than the hidden <img>
+  // itself, since some browsers stop reliably re-decoding an off-screen
+  // display:none image once it's no longer been painted for a while.
+  var originalCanvas = document.createElement('canvas');
+  var originalCtx = originalCanvas.getContext('2d');
   var ready = { processed: false, raw: !rawImg };
 
   function maybeInit() {
@@ -59,6 +65,9 @@
     canvas.width = processedImg.naturalWidth;
     canvas.height = processedImg.naturalHeight;
     ctx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
+    originalCanvas.width = canvas.width;
+    originalCanvas.height = canvas.height;
+    originalCtx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
     if (rawCanvas) {
       rawCanvas.width = canvas.width;
       rawCanvas.height = canvas.height;
@@ -170,9 +179,14 @@
     if (prev) ctx.putImageData(prev, 0, 0);
   });
   document.getElementById('resetBtn').addEventListener('click', function () {
-    pushUndo();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
+    try {
+      pushUndo();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(originalCanvas, 0, 0);
+    } catch (err) {
+      console.error('Reset to original failed:', err);
+      alert("Couldn't reset — try reloading this page.");
+    }
   });
 
   document.getElementById('saveBtn').addEventListener('click', function () {
