@@ -43,12 +43,7 @@
   var lastPoint = null;
   var undoStack = [];
   var MAX_UNDO = 12;
-  // A persistent snapshot of the untouched processed image, taken once it
-  // first loads. Reset draws from this canvas rather than the hidden <img>
-  // itself, since some browsers stop reliably re-decoding an off-screen
-  // display:none image once it hasn't been painted for a while.
-  var originalCanvas = document.createElement('canvas');
-  var originalCtx = originalCanvas.getContext('2d');
+  var originalUrl = {{ original_url | tojson }};
   var initDone = false;
 
   function init() {
@@ -58,9 +53,6 @@
     canvas.width = processedImg.naturalWidth;
     canvas.height = processedImg.naturalHeight;
     ctx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
-    originalCanvas.width = canvas.width;
-    originalCanvas.height = canvas.height;
-    originalCtx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
     fitCanvas();
     canvas.classList.add('jsready');
   }
@@ -148,16 +140,38 @@
     var prev = undoStack.pop();
     if (prev) ctx.putImageData(prev, 0, 0);
   });
-  document.getElementById('resetBtn').addEventListener('click', function () {
-    if (!initDone) return;
-    try {
-      pushUndo();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(originalCanvas, 0, 0);
-    } catch (err) {
-      console.error('Reset to original failed:', err);
-      alert("Couldn't reset — try reloading this page.");
-    }
+  var resetBtn = document.getElementById('resetBtn');
+  resetBtn.addEventListener('click', function () {
+    if (!initDone || resetBtn.disabled) return;
+    resetBtn.disabled = true;
+    var label = resetBtn.textContent;
+    resetBtn.textContent = 'resetting…';
+    // Always pull a fresh copy of the pristine upload straight from the
+    // server — never trust any in-page image/canvas that's been sitting
+    // around, since that's exactly what made Reset unreliable before.
+    // Crucially: don't touch the visible canvas until the fetch AND the
+    // decode have both succeeded, so a failure never leaves it blank.
+    fetch(originalUrl, { cache: 'no-store' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('fetch failed: ' + res.status);
+        return res.blob();
+      })
+      .then(function (blob) {
+        return createImageBitmap(blob);
+      })
+      .then(function (bitmap) {
+        pushUndo();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      })
+      .catch(function (err) {
+        console.error('Reset to original failed:', err);
+        alert("Couldn't reset — check your connection and try again.");
+      })
+      .finally(function () {
+        resetBtn.disabled = false;
+        resetBtn.textContent = label;
+      });
   });
 
   document.getElementById('saveBtn').addEventListener('click', function () {

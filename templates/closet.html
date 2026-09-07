@@ -31,3 +31,43 @@
 <p class="empty">nothing here yet ✧ try a different filter, or add a piece</p>
 {% endif %}
 {% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var STORAGE_KEY = 'closetScrollY';
+  // Let us drive scroll restoration ourselves instead of relying on the
+  // browser's own back/forward scroll restoration, which turned out to be
+  // inconsistent in testing — don't fight it.
+  if ('scrollRestoration' in window.history) {
+    window.history.scrollRestoration = 'manual';
+  }
+
+  var saveTimer = null;
+  window.addEventListener('scroll', function () {
+    if (saveTimer) return;
+    saveTimer = setTimeout(function () {
+      saveTimer = null;
+      try { sessionStorage.setItem(STORAGE_KEY, String(window.scrollY)); } catch (err) {}
+    }, 120);
+  }, { passive: true });
+
+  // Only restore scroll when we actually arrived here via a back/forward
+  // navigation (e.g. the "back to closet" link on an item page) — a fresh
+  // visit, like clicking "Closet" in the nav bar, should start at the top
+  // like normal.
+  function restoreIfComingBack() {
+    var navEntries = performance.getEntriesByType('navigation');
+    var navType = navEntries.length ? navEntries[0].type : '';
+    if (navType !== 'back_forward') return;
+    var saved = null;
+    try { saved = sessionStorage.getItem(STORAGE_KEY); } catch (err) {}
+    if (saved !== null) window.scrollTo(0, parseInt(saved, 10));
+  }
+  restoreIfComingBack();
+  // Photos loading in can shift page height after the first attempt —
+  // try again once everything has settled, just in case.
+  window.addEventListener('load', restoreIfComingBack);
+})();
+</script>
+{% endblock %}

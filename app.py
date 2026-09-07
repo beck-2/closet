@@ -30,6 +30,7 @@ BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
+ORIGINALS_DIR = DATA_DIR / "originals"
 
 app = Flask(__name__)
 app.teardown_appcontext(db.close_db)
@@ -47,6 +48,28 @@ COLOR_HEX = {
 
 # ------------------------------------------------------------- filesystem --
 # (photo storage stays on disk regardless of what holds the metadata)
+
+def original_rel_for(processed_rel: str) -> str:
+    """'data/processed/023_2.png' -> 'data/originals/023_2.png' — the
+    untouched backup lives alongside processed/ under the same stub name."""
+    return processed_rel.replace("data/processed/", "data/originals/", 1)
+
+
+def ensure_original_backup(processed_rel: str) -> None:
+    """Make sure an original-backup copy of a processed cutout exists.
+    Normally this only ever runs once, right after upload — but it's also
+    called lazily from the touch-up page so any item that predates this
+    backup (or one whose backup went missing) still gets a valid one to
+    reset to, taken from whatever's on disk right now."""
+    from PIL import Image
+
+    original_path = BASE_DIR / original_rel_for(processed_rel)
+    if original_path.exists():
+        return
+    original_path.parent.mkdir(parents=True, exist_ok=True)
+    with Image.open(BASE_DIR / processed_rel) as im:
+        im.save(original_path, format="PNG", optimize=True)
+
 
 def next_item_id() -> str:
     existing = [int(i) for i in db.existing_item_ids() if i.isdigit()]
@@ -82,7 +105,9 @@ def process_upload(file_storage, stub: str, session) -> tuple[str, str]:
     if result.status == "error":
         raw_path.unlink(missing_ok=True)
         raise ValueError(result.detail)
-    return f"data/raw/{stub}{raw_ext}", f"data/processed/{stub}{OUTPUT_EXTENSION}"
+    processed_rel = f"data/processed/{stub}{OUTPUT_EXTENSION}"
+    ensure_original_backup(processed_rel)
+    return f"data/raw/{stub}{raw_ext}", processed_rel
 
 
 def cost_per_wear(item: dict):
@@ -258,6 +283,8 @@ def edit_item(item_id):
         # Only remove files once we know the edit as a whole is going through.
         for rel in removed + removed_raw:
             (BASE_DIR / rel).unlink(missing_ok=True)
+        for rel in removed:
+            (BASE_DIR / original_rel_for(rel)).unlink(missing_ok=True)
 
         updates = _read_form_item(request.form)
         updates["wear_count"] = item.get("wear_count") or 0
@@ -277,12 +304,15 @@ def touchup_photo(item_id, index):
     images = item.get("images") or []
     if index < 0 or index >= len(images):
         abort(404)
+    processed_rel = images[index]
+    ensure_original_backup(processed_rel)
     return render_template(
         "touchup.html",
         active="closet",
         item_id=item_id,
         index=index,
-        processed_filename=images[index].split("/")[-1],
+        processed_filename=processed_rel.split("/")[-1],
+        original_url=url_for("originals", filename=original_rel_for(processed_rel).split("/")[-1]),
     )
 
 
@@ -404,6 +434,11 @@ def create_outfit():
 @app.route("/photos/<path:filename>")
 def photos(filename):
     return send_from_directory(PROCESSED_DIR, filename)
+
+
+@app.route("/originals/<path:filename>")
+def originals(filename):
+    return send_from_directory(ORIGINALS_DIR, filename)
 
 
 if __name__ == "__main__":
