@@ -703,7 +703,6 @@ a:hover { color: #a61e4d; }
   box-shadow: 4px 4px 0 #2b2140;
   transform: rotate(-1deg);
 }
-.pg-touchup .savebtn .btnsparkle { color: #fff8ee; flex-shrink: 0; }
 .pg-touchup .savebtn:hover {
   transform: rotate(0deg) translateY(-3px) scale(1.04);
   box-shadow: 6px 7px 0 #2b2140;

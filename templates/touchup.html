@@ -2,7 +2,7 @@
 {% set pageclass = "pg-touchup" %}
 {% block content %}
 <div class="touchup-card">
-  <h2 class="formtitle">touch up this photo ✧</h2>
+  <h2 class="formtitle">touch up this photo</h2>
   <p class="subhint">Erase any leftover background bits the automatic cutout missed.</p>
 
   <div class="touchup-toolbar">
@@ -21,7 +21,6 @@
 
   <div class="formbtnrow">
     <button type="button" class="savebtn cutebtn" id="saveBtn">
-      <svg class="btnsparkle" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
       <span class="btnlabel">save changes</span>
     </button>
     <a class="cancelbtn cutebtn" href="{{ url_for('edit_item', item_id=item_id) }}#restore-draft">Cancel</a>
