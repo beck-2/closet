@@ -11,6 +11,7 @@ Then open http://127.0.0.1:8000 in your browser.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
@@ -40,9 +41,17 @@ ORIGINALS_DIR = DATA_DIR / "originals"
 OUTFIT_BOARD_W = 600
 OUTFIT_BOARD_H = 620
 
+# Largest upload we'll accept, in bytes. A phone photo is a few MB; this is a
+# generous ceiling that still stops a runaway upload from filling memory/disk.
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+
 app = Flask(__name__)
+app.config["DB_PATH"] = os.environ.get("CLOSET_DB_PATH", str(db.DB_PATH))
+app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 app.teardown_appcontext(db.close_db)
-db.init_db()
+
+with app.app_context():
+    db.init_db()
 
 # A handful of named colors get an actual swatch dot; anything else just
 # shows as text without one.

@@ -45,6 +45,18 @@ nothing leaves your machine.
 - Every item page has an **Edit item** button and a **Worn today** button
   (bumps wear count, which feeds cost-per-wear).
 
+## Development
+
+```bash
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest
+```
+
+Tests run against a throwaway SQLite database per test (never `data/closet.db`).
+The app's database location can be overridden with the `CLOSET_DB_PATH`
+environment variable.
+
 ## Image pipeline (used automatically by "+ Add Item", or run by hand)
 
 Raw phone photos (any aspect ratio, including iPhone `.HEIC`) go in

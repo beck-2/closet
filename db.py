@@ -26,8 +26,17 @@ from flask import g
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "closet.db"
-ITEMS_JSON = DATA_DIR / "items.json"
-OUTFITS_JSON = DATA_DIR / "outfits.json"
+
+
+def _db_path() -> Path:
+    """The live SQLite file. Comes from app.config["DB_PATH"] when we're in a
+    Flask app context (that's what lets a test point at its own temp DB), and
+    falls back to the default location otherwise."""
+    from flask import current_app, has_app_context
+
+    if has_app_context() and "DB_PATH" in current_app.config:
+        return Path(current_app.config["DB_PATH"])
+    return DB_PATH
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS items (
@@ -77,8 +86,8 @@ CREATE INDEX IF NOT EXISTS idx_outfit_items_outfit ON outfit_items(outfit_id);
 """
 
 
-def _migrate_items_json(db: sqlite3.Connection) -> int:
-    items = json.loads(ITEMS_JSON.read_text())
+def _migrate_items_json(db: sqlite3.Connection, items_json: Path) -> int:
+    items = json.loads(items_json.read_text())
     for item_id, item in items.items():
         db.execute(
             """INSERT INTO items (id, name, item_type, color, comfort, fit, condition,
@@ -103,12 +112,12 @@ def _migrate_items_json(db: sqlite3.Connection) -> int:
                 "INSERT INTO item_images (item_id, path, raw_path, position) VALUES (?, ?, ?, ?)",
                 (item_id, path, raw, pos),
             )
-    ITEMS_JSON.rename(ITEMS_JSON.with_suffix(".json.bak"))
+    items_json.rename(items_json.with_suffix(".json.bak"))
     return len(items)
 
 
-def _migrate_outfits_json(db: sqlite3.Connection) -> int:
-    outfits = json.loads(OUTFITS_JSON.read_text())
+def _migrate_outfits_json(db: sqlite3.Connection, outfits_json: Path) -> int:
+    outfits = json.loads(outfits_json.read_text())
     for outfit in outfits:
         db.execute(
             "INSERT INTO outfits (id, name, vibes, created_at) VALUES (?, ?, ?, ?)",
@@ -128,25 +137,31 @@ def _migrate_outfits_json(db: sqlite3.Connection) -> int:
                     placement["w"], placement["rot"], pos,
                 ),
             )
-    OUTFITS_JSON.rename(OUTFITS_JSON.with_suffix(".json.bak"))
+    outfits_json.rename(outfits_json.with_suffix(".json.bak"))
     return len(outfits)
 
 
-def init_db() -> None:
+def init_db(db_path: Path | None = None) -> None:
     """Create the schema if it doesn't exist yet, and one-time import old
-    JSON data the first time this runs against a fresh database."""
-    is_new = not DB_PATH.exists()
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(DB_PATH)
+    JSON data the first time this runs against a fresh database. The old
+    items.json/outfits.json are looked for next to the database file."""
+    db_path = Path(db_path) if db_path is not None else _db_path()
+    data_dir = db_path.parent
+    items_json = data_dir / "items.json"
+    outfits_json = data_dir / "outfits.json"
+
+    is_new = not db_path.exists()
+    data_dir.mkdir(parents=True, exist_ok=True)
+    db = sqlite3.connect(db_path)
     try:
         db.executescript(SCHEMA_SQL)
         if is_new:
-            if ITEMS_JSON.exists():
-                n = _migrate_items_json(db)
-                print(f"[closet] migrated {n} item(s) from data/items.json into {DB_PATH.name}")
-            if OUTFITS_JSON.exists():
-                n = _migrate_outfits_json(db)
-                print(f"[closet] migrated {n} outfit(s) from data/outfits.json into {DB_PATH.name}")
+            if items_json.exists():
+                n = _migrate_items_json(db, items_json)
+                print(f"[closet] migrated {n} item(s) from data/items.json into {db_path.name}")
+            if outfits_json.exists():
+                n = _migrate_outfits_json(db, outfits_json)
+                print(f"[closet] migrated {n} outfit(s) from data/outfits.json into {db_path.name}")
         db.commit()
     finally:
         db.close()
@@ -154,7 +169,7 @@ def init_db() -> None:
 
 def get_db() -> sqlite3.Connection:
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH)
+        g.db = sqlite3.connect(_db_path())
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
