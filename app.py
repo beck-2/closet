@@ -32,6 +32,14 @@ RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 ORIGINALS_DIR = DATA_DIR / "originals"
 
+# The outfit board is a fixed-size canvas (see .pg-outfits .board in
+# style.css) — not responsive — specifically so that every x/y/w placement
+# saved for an outfit is a raw pixel value against this exact, known box.
+# That's what lets the board's arrangement be reconstructed faithfully
+# both in the little outfits-list thumbnail and when reopening it to edit.
+OUTFIT_BOARD_W = 600
+OUTFIT_BOARD_H = 620
+
 app = Flask(__name__)
 app.teardown_appcontext(db.close_db)
 db.init_db()
@@ -395,12 +403,40 @@ def add_item():
     return render_template("item_form.html", **_add_form_kwargs())
 
 
+def _outfit_render_pieces(outfit: dict, items: dict) -> list[dict]:
+    """Turn an outfit's raw x/y/w/rot layout into ready-to-draw percentages
+    of the fixed board size, in the same order they're stacked on the
+    board (later entries render on top) — used for both the outfits-list
+    thumbnail and the edit page's starting arrangement."""
+    pieces = []
+    for placement in outfit.get("layout") or []:
+        item = items.get(placement["id"])
+        if item is None or not item.get("images"):
+            continue
+        pieces.append({
+            "item_id": placement["id"],
+            "src": url_for("photos", filename=item["images"][0].split("/")[-1]),
+            "alt": item.get("name") or item.get("item_type") or "item",
+            # Percentages of the fixed board size, for the outfits-list
+            # thumbnail; raw px (the actual saved values) for reopening
+            # this outfit in the builder to edit.
+            "left_pct": placement["x"] / OUTFIT_BOARD_W * 100,
+            "top_pct": placement["y"] / OUTFIT_BOARD_H * 100,
+            "width_pct": placement["w"] / OUTFIT_BOARD_W * 100,
+            "x": placement["x"],
+            "y": placement["y"],
+            "w": placement["w"],
+            "rot": placement["rot"],
+        })
+    return pieces
+
+
 @app.route("/outfits")
 def outfits_list():
     items = db.load_items()
     outfits = db.load_outfits()
     for outfit in outfits:
-        outfit["pieces"] = [items[i] for i in outfit.get("item_ids", []) if i in items]
+        outfit["pieces"] = _outfit_render_pieces(outfit, items)
     return render_template("outfits_list.html", active="outfits", outfits=outfits)
 
 
@@ -408,27 +444,72 @@ def outfits_list():
 def outfit_builder():
     items = db.load_items()
     tray = [{"id": i, **items[i]} for i in sorted(items.keys())]
-    return render_template("outfit_builder.html", active="outfits", tray=tray)
+    return render_template(
+        "outfit_builder.html", active="outfits", tray=tray, mode="new", outfit=None, initial_pieces=[]
+    )
 
 
-@app.route("/outfits", methods=["POST"])
-def create_outfit():
+@app.route("/outfits/<outfit_id>/edit")
+def edit_outfit(outfit_id):
+    outfit = db.get_outfit(outfit_id)
+    if outfit is None:
+        abort(404)
+    items = db.load_items()
+    tray = [{"id": i, **items[i]} for i in sorted(items.keys())]
+    return render_template(
+        "outfit_builder.html",
+        active="outfits",
+        tray=tray,
+        mode="edit",
+        outfit=outfit,
+        initial_pieces=_outfit_render_pieces(outfit, items),
+    )
+
+
+def _outfit_payload_from_request():
     import datetime
 
     payload = request.get_json(force=True, silent=True) or {}
     placements = payload.get("items") or []
     if not placements:
-        return jsonify({"ok": False, "error": "no items placed"}), 400
-
+        return None, jsonify({"ok": False, "error": "no items placed"}), 400
     outfit = {
-        "id": db.next_outfit_id(),
         "name": (payload.get("name") or "").strip() or "untitled outfit",
         "vibes": [v.strip() for v in (payload.get("vibes") or "").split(",") if v.strip()],
         "created_at": datetime.datetime.now().isoformat(timespec="seconds"),
         "layout": placements,
     }
+    return outfit, None, None
+
+
+@app.route("/outfits", methods=["POST"])
+def create_outfit():
+    outfit, err_resp, err_code = _outfit_payload_from_request()
+    if outfit is None:
+        return err_resp, err_code
+    outfit["id"] = db.next_outfit_id()
     db.save_outfit(outfit)
     return jsonify({"ok": True, "id": outfit["id"]})
+
+
+@app.route("/outfits/<outfit_id>", methods=["POST"])
+def update_outfit(outfit_id):
+    if db.get_outfit(outfit_id) is None:
+        abort(404)
+    outfit, err_resp, err_code = _outfit_payload_from_request()
+    if outfit is None:
+        return err_resp, err_code
+    outfit["id"] = outfit_id
+    db.save_outfit(outfit)
+    return jsonify({"ok": True, "id": outfit_id})
+
+
+@app.route("/outfits/<outfit_id>/delete", methods=["POST"])
+def delete_outfit(outfit_id):
+    if db.get_outfit(outfit_id) is None:
+        abort(404)
+    db.delete_outfit(outfit_id)
+    return redirect(url_for("outfits_list"))
 
 
 @app.route("/photos/<path:filename>")

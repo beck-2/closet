@@ -287,12 +287,38 @@ def next_outfit_id() -> str:
     return f"o{count + 1:04d}"
 
 
+def get_outfit(outfit_id: str) -> dict | None:
+    db = get_db()
+    row = db.execute("SELECT * FROM outfits WHERE id = ?", (outfit_id,)).fetchone()
+    if row is None:
+        return None
+    layout = [
+        {"id": r["item_id"], "x": r["x"], "y": r["y"], "w": r["w"], "rot": r["rot"]}
+        for r in db.execute(
+            "SELECT * FROM outfit_items WHERE outfit_id = ? ORDER BY position", (outfit_id,)
+        )
+    ]
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "vibes": json.loads(row["vibes"]),
+        "created_at": row["created_at"],
+        "item_ids": [p["id"] for p in layout],
+        "layout": layout,
+    }
+
+
 def save_outfit(outfit: dict) -> None:
+    """Insert or fully replace one outfit's row + its layout rows, in one
+    transaction — works for both a brand-new outfit and an edit of an
+    existing one. On an update, the original created_at is left alone."""
     db = get_db()
     db.execute(
-        "INSERT INTO outfits (id, name, vibes, created_at) VALUES (?, ?, ?, ?)",
-        (outfit["id"], outfit["name"], json.dumps(outfit.get("vibes") or []), outfit["created_at"]),
+        """INSERT INTO outfits (id, name, vibes, created_at) VALUES (?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET name=excluded.name, vibes=excluded.vibes""",
+        (outfit["id"], outfit["name"], json.dumps(outfit.get("vibes") or []), outfit.get("created_at") or ""),
     )
+    db.execute("DELETE FROM outfit_items WHERE outfit_id = ?", (outfit["id"],))
     for pos, placement in enumerate(outfit.get("layout") or []):
         db.execute(
             "INSERT INTO outfit_items (outfit_id, item_id, x, y, w, rot, position) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -301,4 +327,11 @@ def save_outfit(outfit: dict) -> None:
                 placement["w"], placement["rot"], pos,
             ),
         )
+    db.commit()
+
+
+def delete_outfit(outfit_id: str) -> None:
+    """Removes the outfit row; outfit_items rows cascade via the FK."""
+    db = get_db()
+    db.execute("DELETE FROM outfits WHERE id = ?", (outfit_id,))
     db.commit()

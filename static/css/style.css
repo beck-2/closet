@@ -277,12 +277,16 @@ a:hover { color: #a61e4d; }
 /* ================= outfit builder ================= */
 .pg-outfits .layout { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
 .pg-outfits .board {
-  flex: 1;
-  min-width: 480px;
+  /* Fixed size (not flex/responsive) on purpose: saved x/y/w coordinates
+     are raw pixels against this exact box, so a fixed canonical size is
+     what makes those coordinates reproducible later — in the thumbnail on
+     the outfits list, and when reopening this outfit to edit it. */
+  width: 600px;
+  height: 620px;
+  flex: none;
   background: #fffdf7;
   border: 3px dashed #d8cdb0;
   border-radius: 20px;
-  height: 620px;
   position: relative;
   overflow: visible;
 }
@@ -323,6 +327,22 @@ a:hover { color: #a61e4d; }
   transition: opacity 0.15s;
 }
 .pg-outfits .cutout:hover .remove { opacity: 1; }
+.pg-outfits .cutout.selected {
+  outline: 2.5px dashed #7c3aa0;
+  outline-offset: 4px;
+}
+.pg-outfits .resizehandle {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #7c3aa0;
+  border: 2px solid #fff8ee;
+  cursor: nwse-resize;
+  z-index: 2;
+}
 .pg-outfits .namefield {
   position: absolute;
   bottom: 20px;
@@ -377,8 +397,9 @@ a:hover { color: #a61e4d; }
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: grab;
 }
+.pg-outfits .trayitem:active { cursor: grabbing; }
 .pg-outfits .trayitem img { max-width: 78%; max-height: 78%; object-fit: contain; }
 .pg-outfits .bottomrow { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; flex-wrap: wrap; gap: 16px; }
 .pg-outfits .vibesinput {
@@ -406,6 +427,46 @@ a:hover { color: #a61e4d; }
   cursor: pointer;
 }
 .pg-outfits .savebtn:disabled { opacity: 0.5; cursor: default; }
+.pg-outfits .bottombuttons { display: flex; align-items: center; gap: 14px; }
+.pg-outfits .deletebtn {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 14px;
+  color: #b23a3a;
+  background: #fff0ec;
+  border: 2.5px solid #b23a3a;
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+.pg-outfits .deletebtn:hover { background: #ffe1d8; }
+.ctxmenu {
+  position: fixed;
+  z-index: 1000;
+  background: #ffffff;
+  border: 2.5px solid #2b2140;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 rgba(43,33,64,0.25);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+}
+.ctxmenu[hidden] { display: none; }
+.ctxmenu button {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #2b2140;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.ctxmenu button:hover { background: #f7efe0; }
+.ctxmenu button[data-action="remove"] { color: #b23a3a; }
 .pg-outfits .savemsg { font-weight: 800; color: #2b2140; }
 
 /* ================= outfits list ================= */

@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% set pageclass = "pg-outfits" %}
 {% block content %}
-<p class="hint">tap a piece from your closet to add it, then drag it anywhere on the board</p>
+<p class="hint">drag a piece from your closet onto the board (or tap it) — drag to move, use the corner handle to resize, right-click for front/back</p>
 <div class="layout">
   <div class="board" id="board">
     <div class="boardempty" id="board-empty">the board is empty — add pieces from your closet on the right</div>
-    <input class="namefield" id="outfit-name" type="text" placeholder="name this outfit...">
+    <input class="namefield" id="outfit-name" type="text" placeholder="name this outfit..." value="{{ outfit.name if outfit else '' }}">
   </div>
 
   <div class="sidebar">
     <p class="sidebartitle">your closet</p>
-    <p class="sidebarhint">tap a piece to add it to the board</p>
+    <p class="sidebarhint">drag or tap a piece to add it to the board</p>
     <div class="filterrow" id="tray-filters">
       <div class="chip selected" data-type="">All</div>
       {% for t in tray|map(attribute='item_type')|reject('none')|unique|sort %}
@@ -20,7 +20,7 @@
     <div class="traygrid" id="traygrid">
       {% for item in tray %}
         {% if item.images %}
-        <div class="trayitem" data-id="{{ item.id }}" data-type="{{ item.item_type or '' }}" data-src="{{ url_for('photos', filename=item.images[0].split('/')[-1]) }}" data-alt="{{ item.name or item.item_type or 'item' }}" title="{{ item.name or item.item_type or '' }}">
+        <div class="trayitem" draggable="true" data-id="{{ item.id }}" data-type="{{ item.item_type or '' }}" data-src="{{ url_for('photos', filename=item.images[0].split('/')[-1]) }}" data-alt="{{ item.name or item.item_type or 'item' }}" title="{{ item.name or item.item_type or '' }}">
           <img src="{{ url_for('photos', filename=item.images[0].split('/')[-1]) }}" alt="{{ item.name or item.item_type or 'item' }}">
         </div>
         {% endif %}
@@ -29,11 +29,20 @@
   </div>
 </div>
 
+<div class="ctxmenu" id="ctx-menu" hidden>
+  <button type="button" data-action="front">Bring to front</button>
+  <button type="button" data-action="back">Send to back</button>
+  <button type="button" data-action="remove">Remove</button>
+</div>
+
 <div class="bottomrow">
-  <input class="vibesinput" id="outfit-vibes" type="text" placeholder="vibes, comma separated (e.g. going out, daytime)">
-  <div>
+  <input class="vibesinput" id="outfit-vibes" type="text" placeholder="vibes, comma separated (e.g. going out, daytime)" value="{{ outfit.vibes|join(', ') if outfit else '' }}">
+  <div class="bottombuttons">
+    {% if mode == 'edit' %}
+    <button type="button" class="deletebtn" id="delete-btn">delete outfit</button>
+    {% endif %}
     <span class="savemsg" id="save-msg"></span>
-    <button class="savebtn" id="save-btn">save outfit</button>
+    <button class="savebtn" id="save-btn">{{ 'save changes' if mode == 'edit' else 'save outfit' }}</button>
   </div>
 </div>
 {% endblock %}
@@ -41,23 +50,53 @@
 {% block scripts %}
 <script>
 (function () {
+  var BOARD_W = 600, BOARD_H = 620;
   var board = document.getElementById('board');
   var boardEmpty = document.getElementById('board-empty');
-  var items = [];
+  var ctxMenu = document.getElementById('ctx-menu');
   var uidCounter = 0;
-  var dragging = null;
+
+  var initialPieces = {{ initial_pieces|tojson }};
+  var items = initialPieces.map(function (p) {
+    return { uid: 'u' + (uidCounter++), id: p.item_id, src: p.src, alt: p.alt, x: p.x, y: p.y, w: p.w, rot: p.rot };
+  });
+
+  var dragging = null;   // uid currently being repositioned
+  var resizing = null;   // uid currently being resized
+  var selectedUid = null;
+  var moved = false;
+
+  function clampW(w) { return Math.max(60, Math.min(500, w)); }
+
+  function findItem(uid) { return items.find(function (x) { return x.uid === uid; }); }
+
+  function bringToFront(uid) {
+    var idx = items.findIndex(function (x) { return x.uid === uid; });
+    if (idx === -1 || idx === items.length - 1) return;
+    items.push(items.splice(idx, 1)[0]);
+  }
+  function sendToBack(uid) {
+    var idx = items.findIndex(function (x) { return x.uid === uid; });
+    if (idx <= 0) return;
+    items.unshift(items.splice(idx, 1)[0]);
+  }
+  function removeItem(uid) {
+    items = items.filter(function (x) { return x.uid !== uid; });
+    if (selectedUid === uid) selectedUid = null;
+    render();
+  }
 
   function render() {
     board.querySelectorAll('.cutout').forEach(function (el) { el.remove(); });
     boardEmpty.style.display = items.length ? 'none' : 'flex';
-    items.forEach(function (it) {
+    items.forEach(function (it, idx) {
       var div = document.createElement('div');
-      div.className = 'cutout';
+      div.className = 'cutout' + (it.uid === selectedUid ? ' selected' : '');
       div.style.left = it.x + 'px';
       div.style.top = it.y + 'px';
       div.style.width = it.w + 'px';
       div.style.transform = 'rotate(' + it.rot + 'deg)';
-      div.style.zIndex = dragging === it.uid ? 20 : 1;
+      div.style.zIndex = idx + 1;
       div.dataset.uid = it.uid;
 
       var img = document.createElement('img');
@@ -72,51 +111,154 @@
       rm.addEventListener('mousedown', function (e) { e.stopPropagation(); });
       rm.addEventListener('click', function (e) {
         e.stopPropagation();
-        items = items.filter(function (x) { return x.uid !== it.uid; });
-        render();
+        removeItem(it.uid);
       });
       div.appendChild(rm);
 
+      if (it.uid === selectedUid) {
+        var handle = document.createElement('div');
+        handle.className = 'resizehandle';
+        handle.title = 'drag to resize';
+        handle.addEventListener('mousedown', function (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          resizing = it.uid;
+        });
+        div.appendChild(handle);
+      }
+
       div.addEventListener('mousedown', function (e) {
+        if (e.button !== 0) return;
         e.preventDefault();
+        moved = false;
         dragging = it.uid;
+        bringToFront(it.uid); // dragging something always brings it to the top
+        render();
+      });
+
+      div.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+        selectedUid = it.uid;
+        ctxMenu.dataset.uid = it.uid;
+        ctxMenu.style.left = e.clientX + 'px';
+        ctxMenu.style.top = e.clientY + 'px';
+        ctxMenu.hidden = false;
         render();
       });
 
       board.appendChild(div);
     });
   }
+  render();
 
-  board.addEventListener('mousemove', function (e) {
-    if (!dragging) return;
-    var it = items.find(function (x) { return x.uid === dragging; });
-    if (!it) return;
-    it.x += e.movementX;
-    it.y += e.movementY;
-    var el = board.querySelector('.cutout[data-uid="' + dragging + '"]');
-    if (el) { el.style.left = it.x + 'px'; el.style.top = it.y + 'px'; }
+  document.addEventListener('mousemove', function (e) {
+    if (dragging) {
+      var it = findItem(dragging);
+      if (it) {
+        it.x += e.movementX;
+        it.y += e.movementY;
+        moved = true;
+        var el = board.querySelector('.cutout[data-uid="' + dragging + '"]');
+        if (el) { el.style.left = it.x + 'px'; el.style.top = it.y + 'px'; }
+      }
+    } else if (resizing) {
+      var it2 = findItem(resizing);
+      if (it2) {
+        it2.w = clampW(it2.w + e.movementX);
+        moved = true;
+        var el2 = board.querySelector('.cutout[data-uid="' + resizing + '"]');
+        if (el2) { el2.style.width = it2.w + 'px'; }
+      }
+    }
   });
+
   function stopDrag() {
-    if (dragging) { dragging = null; render(); }
+    if (dragging) {
+      var uid = dragging;
+      dragging = null;
+      selectedUid = moved ? uid : (selectedUid === uid ? null : uid);
+      render();
+    }
+    if (resizing) {
+      resizing = null;
+      render();
+    }
   }
-  board.addEventListener('mouseup', stopDrag);
-  board.addEventListener('mouseleave', stopDrag);
+  document.addEventListener('mouseup', stopDrag);
+
+  board.addEventListener('mousedown', function (e) {
+    if (e.target === board || e.target === boardEmpty) {
+      selectedUid = null;
+      ctxMenu.hidden = true;
+      render();
+    }
+  });
+
+  ctxMenu.addEventListener('click', function (e) {
+    var actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+    var uid = ctxMenu.dataset.uid;
+    if (actionEl.dataset.action === 'front') bringToFront(uid);
+    else if (actionEl.dataset.action === 'back') sendToBack(uid);
+    else if (actionEl.dataset.action === 'remove') removeItem(uid);
+    ctxMenu.hidden = true;
+    render();
+  });
+  document.addEventListener('click', function (e) {
+    if (!ctxMenu.hidden && !ctxMenu.contains(e.target)) ctxMenu.hidden = true;
+  });
+  document.addEventListener('contextmenu', function (e) {
+    if (!e.target.closest('.cutout')) ctxMenu.hidden = true;
+  });
+
+  function addItemFromTray(trayEl, dropPoint) {
+    var w = 220;
+    var x, y;
+    if (dropPoint) {
+      x = Math.round(dropPoint.x - w / 2);
+      y = Math.round(dropPoint.y - w / 2);
+    } else {
+      var n = items.length;
+      x = 60 + (n * 40) % (BOARD_W - w - 40);
+      y = 40 + (n * 55) % (BOARD_H - 160);
+    }
+    var it = {
+      uid: 'u' + (uidCounter++),
+      id: trayEl.dataset.id,
+      src: trayEl.dataset.src,
+      alt: trayEl.dataset.alt,
+      x: x, y: y, w: w,
+      rot: Math.round((Math.random() * 14 - 7) * 10) / 10
+    };
+    items.push(it);
+    selectedUid = it.uid;
+    render();
+  }
 
   document.getElementById('traygrid').addEventListener('click', function (e) {
     var el = e.target.closest('.trayitem');
     if (!el) return;
-    var n = items.length;
-    items.push({
-      uid: 'u' + (uidCounter++),
-      id: el.dataset.id,
-      src: el.dataset.src,
-      alt: el.dataset.alt,
-      x: 60 + (n * 40) % 340,
-      y: 40 + (n * 55) % 260,
-      w: 220,
-      rot: Math.round((Math.random() * 14 - 7) * 10) / 10
+    addItemFromTray(el, null);
+  });
+
+  document.querySelectorAll('#traygrid .trayitem').forEach(function (el) {
+    el.addEventListener('dragstart', function (e) {
+      e.dataTransfer.setData('text/plain', el.dataset.id);
+      e.dataTransfer.effectAllowed = 'copy';
     });
-    render();
+  });
+  board.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+  board.addEventListener('drop', function (e) {
+    e.preventDefault();
+    var id = e.dataTransfer.getData('text/plain');
+    if (!id) return;
+    var trayEl = document.querySelector('#traygrid .trayitem[data-id="' + id + '"]');
+    if (!trayEl) return;
+    var rect = board.getBoundingClientRect();
+    addItemFromTray(trayEl, { x: e.clientX - rect.left, y: e.clientY - rect.top });
   });
 
   document.getElementById('tray-filters').addEventListener('click', function (e) {
@@ -139,10 +281,13 @@
     var payload = {
       name: document.getElementById('outfit-name').value,
       vibes: document.getElementById('outfit-vibes').value,
-      items: items.map(function (it) { return { id: it.id, x: it.x, y: it.y, w: it.w, rot: it.rot }; })
+      items: items.map(function (it) {
+        return { id: it.id, x: Math.round(it.x), y: Math.round(it.y), w: Math.round(it.w), rot: it.rot };
+      })
     };
     msg.textContent = 'saving...';
-    fetch('{{ url_for("create_outfit") }}', {
+    var url = {{ (url_for('update_outfit', outfit_id=outfit.id) if mode == 'edit' else url_for('create_outfit'))|tojson }};
+    fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -154,6 +299,14 @@
       }
     }).catch(function () { msg.textContent = 'something went wrong'; });
   });
+
+  {% if mode == 'edit' %}
+  document.getElementById('delete-btn').addEventListener('click', function () {
+    if (!window.confirm('Delete this outfit? This can\'t be undone.')) return;
+    fetch({{ url_for('delete_outfit', outfit_id=outfit.id)|tojson }}, { method: 'POST' })
+      .then(function () { window.location.href = '{{ url_for("outfits_list") }}'; });
+  });
+  {% endif %}
 })();
 </script>
 {% endblock %}

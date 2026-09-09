@@ -30,7 +30,7 @@ model (~175MB) and caches it, so it's slow once and fast after that.
 
 ```bash
 source .venv/bin/activate
-python3 app.py
+python app.py
 ```
 
 Then open http://127.0.0.1:8000 in your browser. It's a local-only Flask app —
