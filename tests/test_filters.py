@@ -1,5 +1,5 @@
 # ABOUTME: Tests for the closet filter bar — the server side of it: the
-# ABOUTME: per-card data attributes and the checkbox option lists.
+# ABOUTME: per-card data attributes and the multi-select dropdown options.
 from __future__ import annotations
 
 import re
@@ -24,10 +24,12 @@ def test_cards_carry_all_filter_data_attributes(client, add_item):
     assert 'data-vibes="cozy warm"' in body
 
 
-def test_filters_are_checkboxes_not_dropdowns(client, add_item):
+def test_each_facet_is_a_collapsed_dropdown_of_checkboxes(client, add_item):
     add_item("001", item_type="top", source="from sat")
     body = client.get("/").data.decode()
-    assert "<select" not in body
+    assert "<select" not in body                       # not a native select
+    assert 'class="filterdrop" data-group="type"' in body
+    assert 'class="filterdrop-panel" hidden' in body   # panel starts closed
     assert 'type="checkbox" data-filter="type"' in body
     assert 'type="checkbox" data-filter="source"' in body
 
@@ -49,11 +51,11 @@ def test_filter_bar_search_boxes_present(client, add_item):
         assert f'data-filter="{field}"' in body
 
 
-def test_empty_facet_renders_no_group(client, add_item):
+def test_empty_facet_renders_no_dropdown(client, add_item):
     add_item("001", item_type="top", color=[], season=[], source="thrifted")
     body = client.get("/").data.decode()
-    assert 'data-filter="color"' not in body   # nothing has a color yet
-    assert 'data-filter="type"' in body
+    assert 'data-group="color"' not in body    # nothing has a color yet
+    assert 'data-group="type"' in body
 
 
 def test_checkbox_options_are_sorted_and_deduped(client, add_item):

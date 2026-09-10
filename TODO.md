@@ -23,15 +23,18 @@
 - [x] Server side: `?type=` query filter removed (now client-side).
 - [x] Tests + browser verification.
 
-### 3b. Filters → checkboxes (2026-09-09, follow-up)  ✅ DONE
-- [x] Type/color/season/source are now checkbox chips, not dropdowns —
-      one click applies instantly.
-- [x] Multiple boxes in one group = OR ("everything from sat OR bauer");
-      groups still AND together.
+### 3b/3c. Filters: multi-select, then collapse into dropdowns (2026-09-09)  ✅ DONE
+- [x] Type/color/season/source are multi-select and apply instantly.
+- [x] Multiple selections in one facet = OR ("from sat OR bauer");
+      facets still AND together.
+- [x] 3c: the ~40 always-visible chips were too much — each facet is now a
+      collapsed dropdown button ("Type ▾") that opens a checkbox panel.
+      One panel open at a time; outside-click / Esc closes; a count badge
+      ("Source 2") shows on the button when selections are active.
 - [x] Card data-attrs pipe-joined (`data-color="blue|black"`) so values
       with spaces ("from sat") match cleanly.
-- [x] An empty facet renders no group. "clear all" resets everything.
-- [x] tests/test_filters.py rewritten; verified OR/AND/clear in browser.
+- [x] Empty facet → no dropdown. "clear all" resets everything.
+- [x] tests/test_filters.py; verified open/close/OR/AND/badge/clear in browser.
 
 ## 4. Outfit board + outfits list  ✅ DONE
 - [x] Verified in browser — drag-from-closet, corner-handle resize,

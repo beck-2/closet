@@ -85,6 +85,14 @@
   and only reveals the delete button. Restructured card so the delete
   <form> is a sibling of the <a>, not nested. Verified: click card → builder
   with pieces placed; manage → delete buttons. 72 tests.
+- Follow-up 3: Beck sent a screenshot — ~40 filter chips all visible was
+  "totally overwhelming". Collapsed each facet into a dropdown button
+  ("Type ▾") that opens a checkbox panel; still multi-select + OR, still
+  instant. One panel at a time, outside-click/Esc closes, count badge on
+  the button. Kept the same checkbox filtering JS underneath.
+- Gotcha: `.filterdrop-panel { display: flex }` overrode the browser's
+  `[hidden]{display:none}` so all panels showed open on load — needed an
+  explicit `.filterdrop-panel[hidden] { display: none }`.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but

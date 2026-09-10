@@ -26,13 +26,15 @@
   </a>
 {% endmacro %}
 
-{% macro filter_group(field, label, options) %}
+{% macro filter_dropdown(field, label, options) %}
   {% if options %}
-  <div class="filtergroup">
-    <span class="filterlabel">{{ label }}</span>
-    <div class="filterchips">
+  <div class="filterdrop" data-group="{{ field }}">
+    <button type="button" class="filterdrop-btn" aria-expanded="false">
+      {{ label }}<span class="filterdrop-count" hidden></span><span class="filterdrop-caret" aria-hidden="true">▾</span>
+    </button>
+    <div class="filterdrop-panel" hidden>
       {% for opt in options %}
-      <label class="fchip"><input type="checkbox" data-filter="{{ field }}" value="{{ opt }}"> {{ opt }}</label>
+      <label class="filterdrop-opt"><input type="checkbox" data-filter="{{ field }}" value="{{ opt }}"> {{ opt }}</label>
       {% endfor %}
     </div>
   </div>
@@ -41,15 +43,13 @@
 
 {% block content %}
 <div class="filterbar" id="filterbar">
-  <div class="filtersearch">
-    <input type="search" id="filter-name" class="filtertext" placeholder="search by name…" autocomplete="off">
-    <input type="search" id="filter-vibes" class="filtertext" placeholder="search vibes…" autocomplete="off">
-    <button type="button" class="filterclear" id="filter-clear" hidden>clear all</button>
-  </div>
-  {{ filter_group('type', 'Type', filter_options.type) }}
-  {{ filter_group('color', 'Color', filter_options.color) }}
-  {{ filter_group('season', 'Season', filter_options.season) }}
-  {{ filter_group('source', 'Source', filter_options.source) }}
+  <input type="search" id="filter-name" class="filtertext" placeholder="search by name…" autocomplete="off">
+  <input type="search" id="filter-vibes" class="filtertext" placeholder="search vibes…" autocomplete="off">
+  {{ filter_dropdown('type', 'Type', filter_options.type) }}
+  {{ filter_dropdown('color', 'Color', filter_options.color) }}
+  {{ filter_dropdown('season', 'Season', filter_options.season) }}
+  {{ filter_dropdown('source', 'Source', filter_options.source) }}
+  <button type="button" class="filterclear" id="filter-clear" hidden>clear all</button>
 </div>
 
 {% if starred_cards %}
@@ -126,7 +126,47 @@
       goldSection.hidden = goldSection.querySelectorAll('.card:not([hidden])').length === 0;
     }
     noMatches.hidden = anyVisible;
+    updateDropdownBadges();
   }
+
+  // --- the collapsed dropdowns ----------------------------------------
+  var drops = Array.prototype.slice.call(document.querySelectorAll('.filterdrop'));
+
+  function updateDropdownBadges() {
+    drops.forEach(function (drop) {
+      var n = drop.querySelectorAll('input[type="checkbox"]:checked').length;
+      var badge = drop.querySelector('.filterdrop-count');
+      badge.textContent = n ? ' ' + n : '';
+      badge.hidden = n === 0;
+      drop.querySelector('.filterdrop-btn').classList.toggle('has-selection', n > 0);
+    });
+  }
+
+  function closeAllDropdowns(except) {
+    drops.forEach(function (drop) {
+      if (drop === except) return;
+      drop.querySelector('.filterdrop-panel').hidden = true;
+      drop.querySelector('.filterdrop-btn').setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  drops.forEach(function (drop) {
+    var btn = drop.querySelector('.filterdrop-btn');
+    var panel = drop.querySelector('.filterdrop-panel');
+    btn.addEventListener('click', function () {
+      var willOpen = panel.hidden;
+      closeAllDropdowns(drop);
+      panel.hidden = !willOpen;
+      btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.filterdrop')) closeAllDropdowns(null);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAllDropdowns(null);
+  });
 
   nameInput.addEventListener('input', apply);
   vibesInput.addEventListener('input', apply);
@@ -135,8 +175,11 @@
     nameInput.value = '';
     vibesInput.value = '';
     checkboxes.forEach(function (cb) { cb.checked = false; });
+    closeAllDropdowns(null);
     apply();
   });
+
+  updateDropdownBadges();
 })();
 </script>
 

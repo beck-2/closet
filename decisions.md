@@ -2,12 +2,23 @@
 
 Why things are built the way they are. Newest first.
 
-## Closet filters: checkbox chips, OR within a facet (2026-09-09)
+## Closet filters: collapsed multi-select dropdowns, OR within a facet (2026-09-09)
 
-Type/color/season/source are checkbox chip groups, not `<select>` dropdowns —
-one click applies (no "open, pick, close"). Checking several boxes in one
-group **widens** the results (OR): "everything from sat or bauer". Different
-groups still narrow (AND).
+Type/color/season/source each become a small dropdown button ("Type ▾") that
+opens a panel of checkboxes. Multi-select, applies instantly, and checking
+several boxes in one facet **widens** the results (OR): "everything from sat
+or bauer". Facets still narrow across each other (AND). A count badge on the
+button shows how many are picked.
+
+They were briefly ~40 always-visible chips (one click, very direct) but that
+was visually overwhelming with a real closet's worth of values — the collapsed
+dropdown keeps the same behaviour without the wall of buttons. Not a native
+`<select multiple>` (unusable on most platforms) — a plain button + absolutely
+positioned panel, one open at a time, closed by outside-click or Esc.
+
+Watch out: a `.panel { display: flex }` rule beats the UA `[hidden]{display:none}`,
+so the panel needs an explicit `[hidden]{display:none}` of its own or it renders
+open on load.
 
 The card filter data-attributes are pipe-joined (`data-color="blue|black"`),
 not space-joined, because some values legitimately contain spaces (`from sat`,
