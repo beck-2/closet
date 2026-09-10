@@ -93,6 +93,18 @@
 - Gotcha: `.filterdrop-panel { display: flex }` overrode the browser's
   `[hidden]{display:none}` so all panels showed open on load — needed an
   explicit `.filterdrop-panel[hidden] { display: none }`.
+- Follow-up 4: Beck says filtering "simply isn't working". Root cause: the
+  SAME `[hidden]` trap on `.pg-closet .card { display:block }` — the filter
+  JS set the attribute correctly the whole time (since item 3!) but the
+  card never hid. My earlier "verification" checked `:not([hidden])` which
+  counts the ATTRIBUTE, not rendered visibility — so I never caught it.
+  Lesson: verify with getComputedStyle / eyeballs, not the attribute.
+- Same follow-up: name/vibes search reworked from filter → ranking. Matches
+  float up by relevance score, nothing hidden, clear restores id order.
+- Same follow-up: removed gold stars entirely (Beck's call). Schema column
+  gone; his existing DB keeps an unused starred_at column (harmless).
+  Dropped _run_column_migrations too — no migrations left; pattern's in git
+  history (ece8f76) if needed again.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but

@@ -2,7 +2,7 @@
 {% set pageclass = "pg-closet" %}
 
 {% macro card(item) %}
-  <a class="card {{ 'starred' if item.starred }}"
+  <a class="card"
      href="{{ url_for('item_view', item_id=item.id) }}"
      data-name="{{ (item.name or '') | lower }}"
      data-type="{{ item.item_type or '' }}"
@@ -10,7 +10,6 @@
      data-season="{{ item.season | join('|') }}"
      data-source="{{ item.source or '' }}"
      data-vibes="{{ item.vibes | join(' ') | lower }}">
-    {% if item.starred %}<span class="cardstar" title="gold star">★</span>{% endif %}
     <div class="swatch">
       {% if item.images %}
         <img src="{{ url_for('thumbs', filename=item.images[0].split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}" loading="lazy">
@@ -52,24 +51,14 @@
   <button type="button" class="filterclear" id="filter-clear" hidden>clear all</button>
 </div>
 
-{% if starred_cards %}
-<div class="goldsection" id="gold-section">
-  <p class="goldlabel">★ gold stars</p>
-  <div class="grid">
-    {% for item in starred_cards %}{{ card(item) }}{% endfor %}
-  </div>
-</div>
-{% endif %}
-
 {% if cards %}
 <div class="grid" id="main-grid">
   {% for item in cards %}{{ card(item) }}{% endfor %}
 </div>
-{% elif not starred_cards %}
-<p class="empty">nothing here yet — try a different filter, or add a piece</p>
-{% endif %}
-
 <p class="empty" id="no-matches" hidden>nothing matches those filters</p>
+{% else %}
+<p class="empty">nothing here yet — add a piece</p>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -77,17 +66,20 @@
 (function () {
   var nameInput = document.getElementById('filter-name');
   var vibesInput = document.getElementById('filter-vibes');
+  var grid = document.getElementById('main-grid');
+  if (!grid) return;
+
   var checkboxes = Array.prototype.slice.call(
     document.querySelectorAll('#filterbar input[type="checkbox"][data-filter]')
   );
   var clearBtn = document.getElementById('filter-clear');
-  var goldSection = document.getElementById('gold-section');
   var noMatches = document.getElementById('no-matches');
-  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.card'));
+  var originalOrder = cards.slice();  // the order the server sent (by id)
 
   // color/season are lists on a card (an item can be several); type/source
-  // are single. Either way, checking more than one box in a group widens
-  // the results (OR) — "everything from sat or bauer".
+  // are single. Checking more than one box in a group widens the results
+  // (OR) — "everything from sat or bauer".
   var LIST_FACET = { color: true, season: true, type: false, source: false };
 
   function norm(s) { return (s || '').trim().toLowerCase(); }
@@ -100,20 +92,33 @@
     return wantedSet.has(cardValue);
   }
 
+  // How well a card's text matches a query — bigger is more relevant.
+  function relevance(haystack, needle) {
+    if (!needle) return 0;
+    if (haystack === needle) return 100;
+    if (haystack.indexOf(needle) === 0) return 60;
+    var words = haystack.split(/\s+/);
+    for (var i = 0; i < words.length; i++) {
+      if (words[i].indexOf(needle) === 0) return 40;
+    }
+    return haystack.indexOf(needle) !== -1 ? 15 : 0;
+  }
+
   function apply() {
     var name = norm(nameInput.value);
     var vibes = norm(vibesInput.value);
+    var searching = !!(name || vibes);
+
     var wanted = { type: new Set(), color: new Set(), season: new Set(), source: new Set() };
     checkboxes.forEach(function (cb) { if (cb.checked) wanted[cb.dataset.filter].add(cb.value); });
+    var anyBox = checkboxes.some(function (cb) { return cb.checked; });
 
-    var active = !!(name || vibes) || checkboxes.some(function (cb) { return cb.checked; });
-    clearBtn.hidden = !active;
+    clearBtn.hidden = !(searching || anyBox);
 
+    // 1. Checkboxes filter: hide cards that don't match.
     var anyVisible = false;
     cards.forEach(function (card) {
       var show =
-        (!name || card.dataset.name.indexOf(name) !== -1) &&
-        (!vibes || card.dataset.vibes.indexOf(vibes) !== -1) &&
         facetOk(card.dataset.type, wanted.type, LIST_FACET.type) &&
         facetOk(card.dataset.source, wanted.source, LIST_FACET.source) &&
         facetOk(card.dataset.color, wanted.color, LIST_FACET.color) &&
@@ -121,18 +126,34 @@
       card.hidden = !show;
       if (show) anyVisible = true;
     });
-
-    if (goldSection) {
-      goldSection.hidden = goldSection.querySelectorAll('.card:not([hidden])').length === 0;
-    }
     noMatches.hidden = anyVisible;
-    updateDropdownBadges();
+
+    // 2. Text search reorders (does not hide): most relevant first, then
+    //    back to the original order once the search is cleared.
+    var ordered;
+    if (searching) {
+      ordered = originalOrder
+        .map(function (card, idx) {
+          return {
+            card: card,
+            idx: idx,
+            score: relevance(card.dataset.name, name) + relevance(card.dataset.vibes, vibes),
+          };
+        })
+        .sort(function (a, b) { return b.score - a.score || a.idx - b.idx; })
+        .map(function (entry) { return entry.card; });
+    } else {
+      ordered = originalOrder;
+    }
+    ordered.forEach(function (card) { grid.appendChild(card); });
+
+    updateBadges();
   }
 
   // --- the collapsed dropdowns ----------------------------------------
   var drops = Array.prototype.slice.call(document.querySelectorAll('.filterdrop'));
 
-  function updateDropdownBadges() {
+  function updateBadges() {
     drops.forEach(function (drop) {
       var n = drop.querySelectorAll('input[type="checkbox"]:checked').length;
       var badge = drop.querySelector('.filterdrop-count');
@@ -179,7 +200,7 @@
     apply();
   });
 
-  updateDropdownBadges();
+  updateBadges();
 })();
 </script>
 

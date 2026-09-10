@@ -1,0 +1,13 @@
+Future features (DO NOT IMPLEMENT YET)
+-reveiw images after uploading, can manually remove background if the first one doesn't work
+-change the theme (i.e. pink gingham)
+-weather and calendar integration
+-view other peoples closets, hide or make certain items public
+-rate other peoples closets
+-autotagging clothing items
+-receipt scanning feature
+-wardrobe value estimation
+-integrate resale with depop ORR make own marketplace
+-unwrinkler
+-timeline/history feature
+-packing list

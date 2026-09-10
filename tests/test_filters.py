@@ -64,3 +64,13 @@ def test_checkbox_options_are_sorted_and_deduped(client, add_item):
     body = client.get("/").data.decode()
     color_values = re.findall(r'data-filter="color" value="([^"]*)"', body)
     assert color_values == ["blue", "green", "red"]
+
+
+def test_cards_render_in_id_order(client, add_item):
+    # This is the "normal position" the name/vibes search reorders away from
+    # and restores to when cleared (the reordering itself is client-side).
+    add_item("003", name="cee")
+    add_item("001", name="aay")
+    add_item("002", name="bee")
+    body = client.get("/").data.decode()
+    assert body.index(">aay<") < body.index(">bee<") < body.index(">cee<")

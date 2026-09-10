@@ -189,6 +189,9 @@ a:hover { color: #a61e4d; }
   position: relative;
   display: block;
 }
+/* the filter JS toggles [hidden]; this class rule would otherwise beat the
+   browser default of [hidden] { display: none } */
+.pg-closet .card[hidden] { display: none; }
 .pg-closet .swatch {
   background: #f7efe0;
   border-radius: 6px;
@@ -221,34 +224,6 @@ a:hover { color: #a61e4d; }
 .pg-closet .dots { display: flex; gap: 4px; }
 .pg-closet .dot { width: 9px; height: 9px; border-radius: 50%; background: #e7dfca; border: 1.5px solid #2b2140; }
 .pg-closet .dot.filled { background: #ff6fa5; }
-
-/* gold stars — pinned favourites at the top of the closet */
-.pg-closet .goldsection { margin-bottom: 30px; }
-.pg-closet .goldlabel {
-  display: inline-block;
-  font-family: 'Baloo 2', cursive;
-  font-weight: 800;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #2b2140;
-  background: #ffd447;
-  border: 3px solid #2b2140;
-  border-radius: 999px;
-  padding: 4px 14px;
-  margin: 0 0 16px;
-  box-shadow: 3px 3px 0 rgba(43,33,64,0.18);
-}
-.pg-closet .card.starred { border-color: #e8a900; box-shadow: 5px 5px 0 rgba(232,169,0,0.3); }
-.pg-closet .cardstar {
-  position: absolute;
-  top: -12px;
-  right: -10px;
-  font-size: 22px;
-  color: #ffd447;
-  -webkit-text-stroke: 1.5px #2b2140;
-  z-index: 2;
-}
 
 /* ================= item viewer ================= */
 .pg-item .layout { display: flex; gap: 44px; align-items: flex-start; flex-wrap: wrap; }
@@ -315,22 +290,6 @@ a:hover { color: #a61e4d; }
   box-shadow: 3px 3px 0 #2b2140;
   white-space: nowrap;
 }
-.pg-item .starform { margin: 0; }
-.pg-item .starbtn {
-  font-family: 'Baloo 2', cursive;
-  font-weight: 700;
-  font-size: 15px;
-  color: #2b2140;
-  background: #fff;
-  border: 3px solid #2b2140;
-  border-radius: 999px;
-  padding: 9px 20px;
-  box-shadow: 3px 3px 0 #2b2140;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.pg-item .starbtn.on { background: #ffd447; }
-.pg-item .starhint { font-size: 13px; color: #7c7192; margin: 10px 0 0; }
 .pg-item .section-label {
   font-family: 'Baloo 2', cursive;
   font-weight: 700;

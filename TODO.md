@@ -6,14 +6,11 @@
 - [x] Item view: `acquired_display` filter → "March 2025" / "2025" / "—".
 - [x] Tests in tests/test_date_acquired.py (7). Verified in browser.
 
-## 2. Gold stars (max 5 awarded pieces, pinned to top of closet)  ✅ DONE
-- [x] Storage: `items.starred_at TEXT` + `_run_column_migrations` (ALTER on
-      existing DBs, idempotent). Verified on a copy of the real 74-item DB.
-- [x] `db.set_star` enforces cap 5, bumps the oldest on a 6th award.
-- [x] `POST /item/<id>/star` toggle on the item view page.
-- [x] Closet: "★ gold stars" section above the grid, starred cards not
-      duplicated below. Gold border + corner star badge.
-- [x] Tests in tests/test_gold_stars.py (8). Verified in browser.
+## 2. Gold stars  ❌ REMOVED (2026-09-09, Beck's call)
+- Built, shipped (ece8f76), then Beck decided he didn't want it. Fully
+  removed in a later commit — star column dropped from the schema, all
+  routes/UI/tests gone. Beck's existing closet.db keeps an unused
+  `starred_at` column (harmless; not worth a destructive migration).
 
 ## 3. Richer closet filtering + name search  ✅ DONE
 - [x] Text search: name + vibes (substring, live).
@@ -35,6 +32,17 @@
       with spaces ("from sat") match cleanly.
 - [x] Empty facet → no dropdown. "clear all" resets everything.
 - [x] tests/test_filters.py; verified open/close/OR/AND/badge/clear in browser.
+
+### 3d. Filter bug + search-as-ranking (2026-09-09)  ✅ DONE
+- [x] BUG: checkboxes set `card.hidden` but `.pg-closet .card { display:block }`
+      beat the UA `[hidden]{display:none}` — nothing ever visually hid.
+      Fixed with `.pg-closet .card[hidden] { display:none }` (same class-vs-
+      [hidden] trap as the dropdown panel). Verified with real clicks +
+      `getComputedStyle`, not just the attribute.
+- [x] Name/vibes search now RANKS instead of filtering: matches float to the
+      top by relevance (exact > prefix > word-prefix > substring), nothing
+      is hidden, and clearing the box restores the original id order.
+      Checkboxes still hide. Verified all of it in the browser.
 
 ## 4. Outfit board + outfits list  ✅ DONE
 - [x] Verified in browser — drag-from-closet, corner-handle resize,

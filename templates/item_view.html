@@ -23,17 +23,8 @@
     <h2 class="itemname">{{ item.name or 'unnamed piece' }}</h2>
     <div class="typerow">
       <div class="typebadge">{{ item.item_type or 'unlabeled' }}</div>
-      <form method="post" action="{{ url_for('toggle_star', item_id=item_id) }}" class="starform">
-        <button type="submit" class="starbtn {{ 'on' if item.starred }}"
-                title="{{ 'remove gold star' if item.starred else 'give a gold star' }}">
-          {{ '★ gold star' if item.starred else '☆ gold star' }}
-        </button>
-      </form>
       <a class="editbtn" href="{{ url_for('edit_item', item_id=item_id) }}">✎ Edit item</a>
     </div>
-    {% if not item.starred and stars_used >= max_stars %}
-    <p class="starhint">all {{ max_stars }} gold stars are in use — starring this bumps the oldest one</p>
-    {% endif %}
 
     <div>
       <p class="section-label">Color</p>

@@ -18,7 +18,25 @@ positioned panel, one open at a time, closed by outside-click or Esc.
 
 Watch out: a `.panel { display: flex }` rule beats the UA `[hidden]{display:none}`,
 so the panel needs an explicit `[hidden]{display:none}` of its own or it renders
-open on load.
+open on load. **The exact same trap hit `.pg-closet .card { display: block }`** —
+the filter JS set `card.hidden` correctly but the card never hid, so filtering
+looked completely broken. Any class that sets `display` AND gets toggled via the
+`hidden` attribute needs its own `.thing[hidden] { display: none }`.
+
+## Closet name/vibes search: rank, don't filter (2026-09-09)
+
+Typing in the name or vibes box **reorders** the grid — matches float to the top
+by relevance (exact 100 > starts-with 60 > word-starts-with 40 > contains 15),
+ties keep their original order — and nothing is hidden. Clearing the box puts
+every card back in its original (id) position. The checkbox dropdowns are what
+actually filter (hide) the grid; text search only re-ranks what's visible.
+
+## Gold stars: removed (2026-09-09)
+
+Built (ece8f76) then pulled at Beck's request. The `starred_at` column is out of
+the schema; databases that already have it (Beck's) keep the unused column rather
+than eat a destructive `DROP COLUMN`. The one-off `_run_column_migrations` hook
+went with it — no migrations remain and the pattern is in git history.
 
 The card filter data-attributes are pipe-joined (`data-color="blue|black"`),
 not space-joined, because some values legitimately contain spaces (`from sat`,

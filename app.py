@@ -24,7 +24,6 @@ from pipeline.metadata_schema import (
     ACQUIRED_MIN_YEAR,
     COLOR_SUGGESTIONS,
     ITEM_TYPES,
-    MAX_GOLD_STARS,
     RATING_FIELDS,
     RATING_MAX,
     RATING_MIN,
@@ -216,15 +215,7 @@ def _distinct_values(items: list[dict], key: str) -> list[str]:
 def closet():
     items = db.load_items()
     all_items = list(items.values())
-
-    starred = db.starred_items()
-    starred_ids = {it["id"] for it in starred}
-    starred_cards = [{**it, "rating": avg_rating(it)} for it in starred]
-    cards = [
-        {**items[i], "rating": avg_rating(items[i])}
-        for i in sorted(items)
-        if i not in starred_ids
-    ]
+    cards = [{**items[i], "rating": avg_rating(items[i])} for i in sorted(items)]
 
     # Options for the filter dropdowns — filtering itself is done client-side.
     filter_options = {
@@ -238,7 +229,6 @@ def closet():
         "closet.html",
         active="closet",
         cards=cards,
-        starred_cards=starred_cards,
         filter_options=filter_options,
     )
 
@@ -255,8 +245,6 @@ def item_view(item_id):
         item_id=item_id,
         color_hex=COLOR_HEX,
         cost_per_wear=cost_per_wear(item),
-        stars_used=db.count_starred(),
-        max_stars=MAX_GOLD_STARS,
     )
 
 
@@ -265,15 +253,6 @@ def mark_worn(item_id):
     if db.get_item(item_id) is None:
         abort(404)
     db.increment_wear_count(item_id)
-    return redirect(url_for("item_view", item_id=item_id))
-
-
-@app.route("/item/<item_id>/star", methods=["POST"])
-def toggle_star(item_id):
-    item = db.get_item(item_id)
-    if item is None:
-        abort(404)
-    db.set_star(item_id, not item["starred"])
     return redirect(url_for("item_view", item_id=item_id))
 
 

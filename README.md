@@ -37,15 +37,16 @@ Then open http://127.0.0.1:8000 in your browser. It's a local-only Flask app —
 nothing leaves your machine.
 
 - **Closet** — browse everything; filter by type / color / season / source
-  and search by name or vibe. Up to five **gold star** pieces pin to the top.
+  (multi-select dropdowns), and search by name or vibe — search reorders the
+  grid by relevance rather than hiding anything.
 - **Outfits** — build a look on a scrapbook-style board (drag pieces around,
   resize them, right-click to reorder), save it, and see saved outfits as
-  little arranged boards. Hit **edit** to rename or delete them.
+  little arranged boards. Click one to reopen it; hit **manage** to delete.
 - **+ Add Item** — upload a new photo; it runs through the same
   background-removal + resize pipeline automatically and gets the next item
   ID.
-- Every item page has an **Edit item** button, a **Worn today** button
-  (bumps wear count, which feeds cost-per-wear), and a **gold star** toggle.
+- Every item page has an **Edit item** button and a **Worn today** button
+  (bumps wear count, which feeds cost-per-wear).
 - "Date acquired" takes a year on its own, or a year and month.
 
 ## Development
