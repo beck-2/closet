@@ -77,7 +77,7 @@
         <div class="statlabel">cost per wear</div>
       </div>
       <div class="statcard">
-        <div class="statvalue">{{ item.date_acquired or '—' }}</div>
+        <div class="statvalue">{{ item.date_acquired | acquired_display }}</div>
         <div class="statlabel">acquired</div>
       </div>
     </div>

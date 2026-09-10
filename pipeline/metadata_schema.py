@@ -21,6 +21,14 @@ SOURCES = [
 RATING_FIELDS = ["comfort", "fit", "condition"]
 RATING_MIN, RATING_MAX = 1, 3
 
+# "Date acquired" is stored as "YYYY" or "YYYY-MM" (day is never known). The
+# Add/Edit form's year dropdown starts here and runs to the current year.
+ACQUIRED_MIN_YEAR = 2010
+
+# Up to this many items can hold a gold star at once; awarding one past the
+# cap drops the oldest star.
+MAX_GOLD_STARS = 5
+
 # Multi-select — pick any number. These lists are suggestions/starting
 # points, not hard limits; feel free to use values outside them, the
 # validator below only warns, it doesn't block.

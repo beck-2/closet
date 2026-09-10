@@ -36,6 +36,25 @@
 - Beck called it after step 3 — stopping here. Steps 1-3 committed
   (2b415cf, 4cfb35d, 3db1120), nothing pushed. 44 tests green.
 
+## 2026-09-09 (later) — feature batch
+- Beck handed over a 4-item todo list (see TODO.md): flexible date_acquired,
+  gold stars, richer filters + name search, outfit board / outfits-list work.
+- Items 4's drag/resize/reorder/auto-top all already exist in
+  outfit_builder.html — need to verify, not build. The real work in #4 is the
+  arranged-board thumbnail (supersedes the earlier outfits_list bug chip) and
+  an edit/delete path from the outfits list.
+- Asking clarifying questions before starting #2/#3/#4. Starting #1 (date)
+  now since it's self-contained.
+- Beck's answers: star cap → bump oldest; filter dropdowns → type/color/
+  season/source, text search for name + vibes; outfit list → edit-mode
+  toggle; year range → 2010..now.
+- #1 done + committed. Two dropdowns, `acquired_display` Jinja filter.
+  Verified end-to-end in browser (picked April 2022 → shows "April 2022").
+- FOUND (out of scope, pre-existing): editing an item silently drops any
+  color that isn't one of the checkbox suggestions — item 001's "grey"
+  (note: not "gray") vanished on save because `color_other` never
+  pre-fills current free-form colors. Worth a fix later. Added to TODO.
+
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but
   `_outfit_render_pieces` returns `.src` — saved-outfit thumbnails render as

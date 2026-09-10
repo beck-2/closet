@@ -113,7 +113,23 @@
       </div>
       <div class="field">
         <span class="label">Date acquired</span>
-        <input class="textinput" type="month" name="date_acquired" value="{{ item.date_acquired or '' }}">
+        {% set da = (item.date_acquired or '').split('-') %}
+        {% set da_year = da[0] %}
+        {% set da_month = (da[1] | int) if da | length > 1 else 0 %}
+        <div class="daterow">
+          <select class="select" name="date_acquired_year">
+            <option value="">— year —</option>
+            {% for y in acquire_years %}
+            <option value="{{ y }}" {{ 'selected' if da_year == y | string }}>{{ y }}</option>
+            {% endfor %}
+          </select>
+          <select class="select" name="date_acquired_month">
+            <option value="">— month (optional) —</option>
+            {% for num, name in acquire_months %}
+            <option value="{{ num }}" {{ 'selected' if da_month == num | int }}>{{ name }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
 
       <div class="field full">

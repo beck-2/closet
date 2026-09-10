@@ -10,6 +10,8 @@ Then open http://127.0.0.1:8000 in your browser.
 """
 from __future__ import annotations
 
+import calendar
+import datetime
 import logging
 import os
 from pathlib import Path
@@ -19,6 +21,7 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, sen
 
 import db
 from pipeline.metadata_schema import (
+    ACQUIRED_MIN_YEAR,
     COLOR_SUGGESTIONS,
     ITEM_TYPES,
     RATING_FIELDS,
@@ -27,6 +30,14 @@ from pipeline.metadata_schema import (
     SEASON_SUGGESTIONS,
     SOURCES,
 )
+
+# Month options for the "date acquired" picker: [("1", "January"), ...].
+ACQUIRED_MONTHS = [(str(m), calendar.month_name[m]) for m in range(1, 13)]
+
+
+def acquired_years() -> list[int]:
+    """Year options for the picker, newest first, ACQUIRED_MIN_YEAR..this year."""
+    return list(range(datetime.date.today().year, ACQUIRED_MIN_YEAR - 1, -1))
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
@@ -260,10 +271,33 @@ def _read_form_item(form) -> dict:
         "vibes": vibes,
         "source": form.get("source") or None,
         "price": num("price"),
-        "date_acquired": form.get("date_acquired") or None,
+        "date_acquired": _form_date_acquired(form),
         "season": multi("season"),
         "notes": (form.get("notes") or "").strip(),
     }
+
+
+def _form_date_acquired(form) -> str | None:
+    """Combine the year + optional month dropdowns into "YYYY" or "YYYY-MM".
+    A month with no year is meaningless, so it's dropped."""
+    year = (form.get("date_acquired_year") or "").strip()
+    month = (form.get("date_acquired_month") or "").strip()
+    if not year:
+        return None
+    if month:
+        return f"{year}-{int(month):02d}"
+    return year
+
+
+@app.template_filter("acquired_display")
+def acquired_display(value: str | None) -> str:
+    """"2025-03" -> "March 2025"; "2025" -> "2025"; empty -> em dash."""
+    if not value:
+        return "—"
+    parts = value.split("-")
+    if len(parts) == 2:
+        return f"{calendar.month_name[int(parts[1])]} {parts[0]}"
+    return parts[0]
 
 
 def _edit_form_kwargs(item_id, item, error=None):
@@ -278,6 +312,8 @@ def _edit_form_kwargs(item_id, item, error=None):
         sources=SOURCES,
         rating_min=RATING_MIN,
         rating_max=RATING_MAX,
+        acquire_years=acquired_years(),
+        acquire_months=ACQUIRED_MONTHS,
         error=error,
     )
 
@@ -414,6 +450,8 @@ def _add_form_kwargs(error=None):
         sources=SOURCES,
         rating_min=RATING_MIN,
         rating_max=RATING_MAX,
+        acquire_years=acquired_years(),
+        acquire_months=ACQUIRED_MONTHS,
         error=error,
     )
 
@@ -535,8 +573,6 @@ def _clean_placements(raw) -> list[dict] | None:
 
 
 def _outfit_payload_from_request():
-    import datetime
-
     payload = request.get_json(force=True, silent=True) or {}
     placements = _clean_placements(payload.get("items") or [])
     if placements is None:

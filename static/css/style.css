@@ -570,6 +570,8 @@ a:hover { color: #a61e4d; }
 .pg-add .dot { width: 18px; height: 18px; border-radius: 50%; background: #ffffff; border: 2.5px solid #2b2140; display: block; }
 .pg-add .dots input:checked ~ .dot, .pg-add .dot.filled { background: #ff6fa5; }
 .pg-add .pricewrap { display: flex; align-items: center; gap: 8px; }
+.pg-add .daterow { display: flex; gap: 10px; }
+.pg-add .daterow .select { flex: 1; min-width: 0; }
 .pg-add .dollar { font-weight: 800; color: #2b2140; }
 .pg-add textarea.notesarea {
   background: #fffef8;
