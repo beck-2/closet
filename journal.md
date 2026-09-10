@@ -33,5 +33,14 @@
   double-bumped item 001's wear_count. Caught it, reset to 0. For the browser
   check I copied the DB to a temp file and used CLOSET_DB_PATH. Do that from
   the start next time.
-- Next: step 4, cleanup (unpinned deps, stale data files, naive timestamps,
-  the outfits_list.html empty-thumbnail bug).
+- Beck called it after step 3 — stopping here. Steps 1-3 committed
+  (2b415cf, 4cfb35d, 3db1120), nothing pushed. 44 tests green.
+
+## Outstanding (step 4, not done — for later)
+- BUG: templates/outfits_list.html checks `piece.images` but
+  `_outfit_render_pieces` returns `.src` — saved-outfit thumbnails render as
+  empty boxes. One-liner fix + test.
+- requirements.txt is all `>=`, no lockfile — pin for reproducible installs.
+- /photos and /originals have no Cache-Control (only /thumbs does).
+- Naive `datetime.now()` for outfit created_at.
+- No prod server story (app.run only) — waitress is a 1-liner if ever needed.
