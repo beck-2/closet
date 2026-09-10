@@ -32,6 +32,13 @@ DATA_DIR = BASE_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 ORIGINALS_DIR = DATA_DIR / "originals"
+THUMBS_DIR = DATA_DIR / "thumbs"
+
+# Grid views (the closet, the outfit-builder tray) only ever show a photo a
+# couple hundred px wide, so they pull a cached downscaled copy instead of
+# the full ~1MB 1024px cutout. Thumbs are regenerated whenever the source
+# cutout is newer than the cached thumb (e.g. after a touch-up).
+THUMB_LONG_EDGE = 400
 
 # The outfit board is a fixed-size canvas (see .pg-outfits .board in
 # style.css) — not responsive — specifically so that every x/y/w placement
@@ -278,11 +285,9 @@ def edit_item(item_id):
 
         new_processed, new_raw = [], []
         if new_files:
-            from rembg import new_session
+            from pipeline.process_images import get_session
 
-            from pipeline.config import REMBG_MODEL
-
-            session = new_session(REMBG_MODEL)
+            session = get_session()
             try:
                 for f in new_files:
                     stub = next_photo_stub(item_id)
@@ -302,6 +307,7 @@ def edit_item(item_id):
             (BASE_DIR / rel).unlink(missing_ok=True)
         for rel in removed:
             (BASE_DIR / original_rel_for(rel)).unlink(missing_ok=True)
+            (THUMBS_DIR / Path(rel).name).unlink(missing_ok=True)
 
         updates = _read_form_item(request.form)
         updates["wear_count"] = item.get("wear_count") or 0
@@ -390,11 +396,9 @@ def add_item():
 
         new_id = next_item_id()
 
-        from rembg import new_session
+        from pipeline.process_images import get_session
 
-        from pipeline.config import REMBG_MODEL
-
-        session = new_session(REMBG_MODEL)
+        session = get_session()
         try:
             raw_rel, processed_rel = process_upload(photo, new_id, session)
         except ValueError as exc:
@@ -519,6 +523,37 @@ def delete_outfit(outfit_id):
         abort(404)
     db.delete_outfit(outfit_id)
     return redirect(url_for("outfits_list"))
+
+
+def ensure_thumb(processed_filename: str) -> Path:
+    """Build (or rebuild) the cached thumbnail for one processed cutout and
+    return its path. Rebuilds whenever the source cutout is newer than the
+    thumb, so a touched-up photo shows its new version."""
+    from PIL import Image
+
+    src = PROCESSED_DIR / processed_filename
+    thumb = THUMBS_DIR / processed_filename
+    if thumb.exists() and thumb.stat().st_mtime >= src.stat().st_mtime:
+        return thumb
+
+    THUMBS_DIR.mkdir(parents=True, exist_ok=True)
+    with Image.open(src) as im:
+        im = im.convert("RGBA")
+        im.thumbnail((THUMB_LONG_EDGE, THUMB_LONG_EDGE), Image.LANCZOS)
+        im.save(thumb, format="PNG", optimize=True)
+    return thumb
+
+
+@app.route("/thumbs/<path:filename>")
+def thumbs(filename):
+    # safe_join returns None on any attempt to escape the directory.
+    from werkzeug.utils import safe_join
+
+    safe = safe_join(str(PROCESSED_DIR), filename)
+    if safe is None or not Path(safe).is_file():
+        abort(404)
+    ensure_thumb(filename)
+    return send_from_directory(THUMBS_DIR, filename, max_age=60 * 60 * 24 * 30)
 
 
 @app.route("/photos/<path:filename>")

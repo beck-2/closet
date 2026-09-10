@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import io
-import sys
-import types
 
 import db as db_module
 
@@ -58,7 +56,7 @@ def test_add_without_photo_is_400(client):
 
 
 def test_add_with_photo_happy_path(client, flask_app, monkeypatch):
-    monkeypatch.setitem(sys.modules, "rembg", types.SimpleNamespace(new_session=lambda *a, **k: None))
+    monkeypatch.setattr("pipeline.process_images.get_session", lambda: object())
     monkeypatch.setattr(
         "app.process_upload",
         lambda file_storage, stub, session: (f"data/raw/{stub}.jpeg", f"data/processed/{stub}.png"),

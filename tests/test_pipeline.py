@@ -6,6 +6,7 @@ from pathlib import Path
 
 from PIL import Image
 
+import pipeline.process_images as pipe
 from pipeline.process_images import (
     find_source_images,
     output_path_for,
@@ -38,3 +39,14 @@ def test_find_source_images_filters_by_extension(tmp_path):
     (tmp_path / "notes.txt").write_bytes(b"")
     found = {p.name for p in find_source_images(tmp_path)}
     assert found == {"a.jpeg", "b.HEIC"}
+
+
+def test_get_session_is_built_once_and_reused(monkeypatch):
+    pipe._session = None
+    calls = []
+    monkeypatch.setattr(pipe, "_new_session", lambda model: calls.append(model) or object())
+    first = pipe.get_session()
+    second = pipe.get_session()
+    assert first is second
+    assert calls == [pipe.REMBG_MODEL]
+    pipe._session = None

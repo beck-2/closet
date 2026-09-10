@@ -224,6 +224,7 @@ __marimo__/
 /data/raw/
 /data/processed/
 /data/originals/
+/data/thumbs/
 *.heic
 *.HEIC
 

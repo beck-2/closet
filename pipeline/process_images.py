@@ -38,6 +38,27 @@ from .config import (
 
 log = logging.getLogger("closet.pipeline")
 
+# The rembg session owns the loaded background-removal model (~175MB on
+# disk, and not cheap to spin up). Build it once per process and hand the
+# same one to every photo — see get_session().
+_session = None
+
+
+def _new_session(model: str):
+    """Thin, monkeypatch-friendly wrapper. The rembg import stays in here so
+    merely importing this module doesn't drag in onnxruntime."""
+    from rembg import new_session
+
+    return new_session(model)
+
+
+def get_session():
+    """The process-wide rembg session, built lazily on first use."""
+    global _session
+    if _session is None:
+        _session = _new_session(REMBG_MODEL)
+    return _session
+
 
 def _register_heif_opener() -> None:
     """Let Pillow open .HEIC/.HEIF files straight off an iPhone."""
@@ -113,8 +134,6 @@ def process_one(
 
 
 def run(input_dir: Path, output_dir: Path, overwrite: bool) -> list[ProcessResult]:
-    from rembg import new_session
-
     _register_heif_opener()
 
     sources = find_source_images(input_dir)
@@ -123,7 +142,7 @@ def run(input_dir: Path, output_dir: Path, overwrite: bool) -> list[ProcessResul
         return []
 
     log.info("Found %d image(s) to process", len(sources))
-    session = new_session(REMBG_MODEL)
+    session = get_session()
 
     results = []
     try:
