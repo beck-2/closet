@@ -43,11 +43,18 @@ def test_miniboard_uses_thumbnails(client, flask_app, add_item):
     assert "/photos/001.png" not in body
 
 
-def test_edit_toggle_and_per_card_controls_present(client, flask_app, add_item):
+def test_outfit_card_links_straight_into_the_builder(client, flask_app, add_item):
+    _seed(flask_app, add_item)
+    body = client.get("/outfits").data.decode()
+    # the whole card is a link to the edit/builder page, with the miniboard inside it
+    link = body.split('class="outfitcardlink" href="/outfits/o0001/edit"')[1]
+    assert link.split("</a>")[0].count("miniboard") == 1
+
+
+def test_manage_toggle_and_delete_control_present(client, flask_app, add_item):
     _seed(flask_app, add_item)
     body = client.get("/outfits").data.decode()
     assert 'id="edit-toggle"' in body
-    assert '/outfits/o0001/edit' in body
     assert 'action="/outfits/o0001/delete"' in body
 
 

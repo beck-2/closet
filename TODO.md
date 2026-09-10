@@ -41,10 +41,12 @@
       absolutely-positioned `.minipiece` at the saved %s + rotation).
       Fixes the old empty-boxes bug. Uses `/thumbs/` for the piece images
       (new `thumb_src` on `_outfit_render_pieces`).
-- [x] "edit" button next to "+ new outfit" → JS edit-mode toggle; in edit
-      mode each card shows ✎ edit + 🗑 delete (delete confirms).
-- [x] Tests in tests/test_outfits.py (6). Verified end-to-end: built an
-      outfit in the browser, saved, saw the arrangement in the list.
+- [x] Whole outfit card is a link straight into the builder (2026-09-09
+      follow-up). "manage" toggle next to "+ new outfit" reveals a 🗑 delete
+      per card (delete confirms).
+- [x] Tests in tests/test_outfits.py (7). Verified end-to-end: built an
+      outfit in the browser, saved, saw the arrangement in the list,
+      clicked it back open.
 
 ## Found along the way (not requested — for later)
 - Editing an item drops any color not in the checkbox suggestions: the

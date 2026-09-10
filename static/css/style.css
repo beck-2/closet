@@ -593,6 +593,8 @@ a:hover { color: #a61e4d; }
   box-shadow: 5px 5px 0 rgba(43,33,64,0.14);
   padding: 18px;
 }
+.pg-outfitslist .outfitcardlink { display: block; color: inherit; text-decoration: none; }
+.pg-outfitslist .outfitcardlink:hover .miniboard { border-color: #ff6fa5; box-shadow: 0 0 0 2px #ff6fa5; }
 .pg-outfitslist .miniboard {
   position: relative;
   width: 100%;
@@ -608,16 +610,6 @@ a:hover { color: #a61e4d; }
 .pg-outfitslist .outfitdate { font-size: 12px; font-weight: 700; color: #7c7192; margin: 0 0 4px; }
 .pg-outfitslist .outfitactions { display: none; gap: 10px; align-items: center; margin-top: 12px; }
 .pg-outfitslist .grid.editing .outfitactions { display: flex; }
-.pg-outfitslist .miniedit {
-  font-family: 'Nunito', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  color: #2b2140;
-  background: #c9a6ff;
-  border: 2.5px solid #2b2140;
-  border-radius: 999px;
-  padding: 6px 16px;
-}
 .pg-outfitslist .minidelete {
   font-family: 'Nunito', sans-serif;
   font-weight: 800;

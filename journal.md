@@ -80,6 +80,11 @@
   data-attrs from space-join to pipe-join because source values contain
   spaces ("from sat"). Verified OR-within / AND-across / clear-all in the
   browser. 71 tests.
+- Follow-up 2: whole outfit card now links into the builder (the "✎ edit"
+  button was redundant — dropped it). The list-page toggle is now "manage"
+  and only reveals the delete button. Restructured card so the delete
+  <form> is a sibling of the <a>, not nested. Verified: click card → builder
+  with pieces placed; manage → delete buttons. 72 tests.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but
