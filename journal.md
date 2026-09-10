@@ -157,6 +157,9 @@
   Money section: solid border, title "PRICE" + caret, no show/hide button.
   Also: excluded $0 pieces from "best value" (a free gift at $0/wear isn't
   a value story) — avg CPW went $16.17 → $24.25.
+- Beck follow-up: keep free items IN the average CPW (a $0 gift you wear a
+  lot legitimately pulls your average down), just not in best value. Avg
+  back to $16.17. Also removed the drop shadow from closet cards — flat now.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but

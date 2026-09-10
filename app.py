@@ -441,16 +441,19 @@ def stats_view():
     # --- money (rendered inside a collapsed section) ---
     priced = [it for it in items if it.get("price") is not None]
     total_spent = round(sum(it["price"] for it in priced), 2)
-    # "value" only makes sense for pieces that actually cost something
-    paid_and_worn = [it for it in priced if it["price"] and it["wear_count"]]
-    total_wears_paid = sum(it["wear_count"] for it in paid_and_worn)
+    # Average includes free pieces (a $0 gift you wear a lot really does
+    # drag your average down)...
+    priced_and_worn = [it for it in priced if it["wear_count"]]
+    total_wears = sum(it["wear_count"] for it in priced_and_worn)
     avg_cpw = (
-        round(sum(it["price"] for it in paid_and_worn) / total_wears_paid, 2)
-        if total_wears_paid
+        round(sum(it["price"] for it in priced_and_worn) / total_wears, 2)
+        if total_wears
         else None
     )
+    # ...but "best value" only ranks pieces that actually cost something.
     best_value = sorted(
-        paid_and_worn, key=lambda it: it["price"] / it["wear_count"]
+        (it for it in priced_and_worn if it["price"]),
+        key=lambda it: it["price"] / it["wear_count"],
     )[:5]
     best_value = [
         {"id": it["id"], "name": it.get("name") or it.get("item_type") or "item",

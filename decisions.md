@@ -23,8 +23,9 @@ A `/stats` page, three sections: Wardrobe (composition), Wear (usage), Money.
   Closed-by-default so a glance at the screen doesn't show finances.
 - **"Blended" avg cost-per-wear** = total spent on priced-and-worn pieces ÷
   their total wears, not the mean of per-item ratios (which a single
-  worn-once expensive piece would dominate). price = 0 pieces are excluded
-  from value stats — a $0 gift at $0/wear isn't a "best value" story.
+  worn-once expensive piece would dominate). Free ($0) pieces ARE counted in
+  the average — a $0 gift you wear constantly genuinely lowers it — but are
+  excluded from the "best value" ranking, where $0.00/wear isn't a story.
 - Per-item cost-per-wear stays on the item page (it was already a stat card
   there); the dashboard is closet-wide aggregates only.
 

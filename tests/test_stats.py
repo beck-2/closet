@@ -67,6 +67,21 @@ def test_best_value_and_regrets(client, flask_app, add_item):
     assert "the regret" in body and "$200" in body        # priced, never worn
 
 
+def test_free_pieces_count_toward_avg_cpw_but_not_best_value(client, flask_app, add_item):
+    add_item("001", name="paid piece", price=40.0)
+    add_item("002", name="freebie", price=0.0)
+    with flask_app.app_context():
+        for d in ("2026-09-01", "2026-09-02"):
+            db_module.log_items_worn(d, ["001", "002"])
+    body = client.get("/stats").data.decode()
+    # average: (40 + 0) / (2 + 2 wears) = $10.00
+    assert "$10.00" in body
+    # best value ranks only pieces that cost something
+    best_value = body.split("Best value")[1].split("Closet regrets")[0]
+    assert "paid piece" in best_value
+    assert "freebie" not in best_value
+
+
 def test_money_section_is_a_closed_details_by_default(client, add_item):
     add_item("001", price=10.0)
     body = client.get("/stats").data.decode()
