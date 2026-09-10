@@ -36,14 +36,17 @@ python app.py
 Then open http://127.0.0.1:8000 in your browser. It's a local-only Flask app —
 nothing leaves your machine.
 
-- **Closet** — browse everything, filter by item type.
+- **Closet** — browse everything; filter by type / color / season / source
+  and search by name or vibe. Up to five **gold star** pieces pin to the top.
 - **Outfits** — build a look on a scrapbook-style board (drag pieces around,
-  save it), or look back at saved outfits.
+  resize them, right-click to reorder), save it, and see saved outfits as
+  little arranged boards. Hit **edit** to rename or delete them.
 - **+ Add Item** — upload a new photo; it runs through the same
   background-removal + resize pipeline automatically and gets the next item
   ID.
-- Every item page has an **Edit item** button and a **Worn today** button
-  (bumps wear count, which feeds cost-per-wear).
+- Every item page has an **Edit item** button, a **Worn today** button
+  (bumps wear count, which feeds cost-per-wear), and a **gold star** toggle.
+- "Date acquired" takes a year on its own, or a year and month.
 
 ## Development
 
