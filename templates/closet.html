@@ -4,6 +4,8 @@
 {% macro card(item) %}
   <a class="card"
      href="{{ url_for('item_view', item_id=item.id) }}"
+     draggable="false"
+     data-id="{{ item.id }}"
      data-name="{{ (item.name or '') | lower }}"
      data-type="{{ item.item_type or '' }}"
      data-color="{{ item.color | join('|') }}"
@@ -52,6 +54,7 @@
 </div>
 
 {% if cards %}
+<p class="draghint" id="drag-hint">drag pieces to rearrange — the order sticks</p>
 <div class="grid" id="main-grid">
   {% for item in cards %}{{ card(item) }}{% endfor %}
 </div>
@@ -74,8 +77,9 @@
   );
   var clearBtn = document.getElementById('filter-clear');
   var noMatches = document.getElementById('no-matches');
+  var dragHint = document.getElementById('drag-hint');
   var cards = Array.prototype.slice.call(grid.querySelectorAll('.card'));
-  var originalOrder = cards.slice();  // the order the server sent (by id)
+  var originalOrder = cards.slice();  // the current saved order
 
   // color/season are lists on a card (an item can be several); type/source
   // are single. Checking more than one box in a group widens the results
@@ -147,7 +151,17 @@
     }
     ordered.forEach(function (card) { grid.appendChild(card); });
 
+    // Reordering by hand only makes sense in the natural, unfiltered view.
+    var filtering = searching || anyBox;
+    grid.classList.toggle('filtering', filtering);
+    if (dragHint) dragHint.hidden = filtering;
+
     updateBadges();
+  }
+
+  function isFiltering() {
+    return !!(norm(nameInput.value) || norm(vibesInput.value)) ||
+      checkboxes.some(function (cb) { return cb.checked; });
   }
 
   // --- the collapsed dropdowns ----------------------------------------
@@ -199,6 +213,64 @@
     closeAllDropdowns(null);
     apply();
   });
+
+  // --- drag a card to a new spot (only in the unfiltered view) --------
+  var dragCard = null, dragStart = null, dragging = false, suppressClick = false;
+
+  function cardUnder(x, y) {
+    var el = document.elementFromPoint(x, y);
+    return el && el.closest ? el.closest('#main-grid .card') : null;
+  }
+
+  grid.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0 || isFiltering()) return;
+    var card = e.target.closest('.card');
+    if (!card) return;
+    dragCard = card;
+    dragStart = { x: e.clientX, y: e.clientY };
+    dragging = false;
+  });
+
+  document.addEventListener('pointermove', function (e) {
+    if (!dragCard) return;
+    if (!dragging) {
+      if (Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y) < 6) return;
+      dragging = true;
+      dragCard.classList.add('dragging');
+    }
+    e.preventDefault();
+    var over = cardUnder(e.clientX, e.clientY);
+    if (over && over !== dragCard) {
+      var rect = over.getBoundingClientRect();
+      var after = (e.clientY - rect.top) > rect.height / 2
+        || (Math.abs(e.clientY - (rect.top + rect.height / 2)) < 4 && e.clientX > rect.left + rect.width / 2);
+      grid.insertBefore(dragCard, after ? over.nextSibling : over);
+    }
+  });
+
+  document.addEventListener('pointerup', function () {
+    if (!dragCard) return;
+    var wasDragging = dragging;
+    dragCard.classList.remove('dragging');
+    dragCard = null;
+    dragging = false;
+    if (!wasDragging) return;
+
+    suppressClick = true;
+    setTimeout(function () { suppressClick = false; }, 0);
+
+    originalOrder = Array.prototype.slice.call(grid.querySelectorAll('.card'));
+    cards = originalOrder.slice();
+    fetch({{ url_for('save_closet_order') | tojson }}, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order: originalOrder.map(function (c) { return c.dataset.id; }) }),
+    }).catch(function () {});
+  });
+
+  grid.addEventListener('click', function (e) {
+    if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
 
   updateBadges();
 })();

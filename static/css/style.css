@@ -180,6 +180,13 @@ a:hover { color: #a61e4d; }
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 24px;
 }
+.pg-closet .draghint {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #9a94a6;
+  margin: -12px 0 16px;
+}
 .pg-closet .card {
   background: #f7efe0;
   border: 3px solid #2b2140;
@@ -188,6 +195,16 @@ a:hover { color: #a61e4d; }
   box-shadow: 5px 5px 0 rgba(43,33,64,0.18);
   position: relative;
   display: block;
+  cursor: grab;
+}
+.pg-closet .grid.filtering .card { cursor: pointer; }
+.pg-closet .card.dragging {
+  cursor: grabbing;
+  opacity: 0.75;
+  transform: scale(1.04) rotate(-1.5deg);
+  box-shadow: 8px 8px 0 rgba(43,33,64,0.28);
+  pointer-events: none;   /* so elementFromPoint sees the card underneath */
+  z-index: 5;
 }
 /* the filter JS toggles [hidden]; this class rule would otherwise beat the
    browser default of [hidden] { display: none } */

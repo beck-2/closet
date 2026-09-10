@@ -1,0 +1,65 @@
+# ABOUTME: Tests for the drag-to-rearrange closet order — the sort_order
+# ABOUTME: column, its persistence, and the save endpoint.
+from __future__ import annotations
+
+import db as db_module
+
+
+def test_unordered_items_fall_back_to_id_order(client, flask_app, add_item):
+    add_item("003")
+    add_item("001")
+    add_item("002")
+    with flask_app.app_context():
+        assert list(db_module.load_items()) == ["001", "002", "003"]
+
+
+def test_set_closet_order_puts_items_in_that_order(client, flask_app, add_item):
+    for i in ("001", "002", "003"):
+        add_item(i)
+    with flask_app.app_context():
+        db_module.set_closet_order(["003", "001", "002"])
+        assert list(db_module.load_items()) == ["003", "001", "002"]
+
+
+def test_ordered_items_come_before_never_dragged_ones(client, flask_app, add_item):
+    for i in ("001", "002", "003", "004"):
+        add_item(i)
+    with flask_app.app_context():
+        db_module.set_closet_order(["003", "001"])  # 002 and 004 never placed
+        assert list(db_module.load_items()) == ["003", "001", "002", "004"]
+
+
+def test_order_survives_an_item_edit(client, flask_app, add_item):
+    for i in ("001", "002"):
+        add_item(i)
+    with flask_app.app_context():
+        db_module.set_closet_order(["002", "001"])
+    client.post("/item/002/edit", data={"item_type": "hoodie", "color": ["black"]})
+    with flask_app.app_context():
+        assert list(db_module.load_items()) == ["002", "001"]
+
+
+def test_save_order_endpoint(client, flask_app, add_item):
+    for i in ("001", "002", "003"):
+        add_item(i)
+    resp = client.post("/closet/order", json={"order": ["002", "003", "001"]})
+    assert resp.status_code == 200
+    assert resp.get_json()["ok"] is True
+    with flask_app.app_context():
+        assert list(db_module.load_items()) == ["002", "003", "001"]
+
+
+def test_save_order_endpoint_rejects_a_bad_payload(client):
+    assert client.post("/closet/order", json={"order": "nope"}).status_code == 400
+    assert client.post("/closet/order", json={}).status_code == 400
+    assert client.post("/closet/order", json={"order": [1, 2, 3]}).status_code == 400
+
+
+def test_closet_page_renders_cards_in_saved_order(client, flask_app, add_item):
+    add_item("001", name="aay")
+    add_item("002", name="bee")
+    add_item("003", name="cee")
+    with flask_app.app_context():
+        db_module.set_closet_order(["003", "002", "001"])
+    body = client.get("/").data.decode()
+    assert body.index(">cee<") < body.index(">bee<") < body.index(">aay<")

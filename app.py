@@ -199,9 +199,9 @@ def _distinct_values(items: list[dict], key: str) -> list[str]:
 
 @app.route("/")
 def closet():
-    items = db.load_items()
+    items = db.load_items()  # already in the user's chosen order (see db._ITEM_ORDER)
     all_items = list(items.values())
-    cards = [{**items[i], "rating": avg_rating(items[i])} for i in sorted(items)]
+    cards = [{**it, "rating": avg_rating(it)} for it in all_items]
 
     # Options for the filter dropdowns — filtering itself is done client-side.
     filter_options = {
@@ -232,6 +232,16 @@ def item_view(item_id):
         color_hex=COLOR_HEX,
         cost_per_wear=cost_per_wear(item),
     )
+
+
+@app.route("/closet/order", methods=["POST"])
+def save_closet_order():
+    payload = request.get_json(silent=True) or {}
+    order = payload.get("order")
+    if not isinstance(order, list) or not all(isinstance(i, str) for i in order):
+        return jsonify({"ok": False, "error": "expected {order: [id, …]}"}), 400
+    db.set_closet_order(order)
+    return jsonify({"ok": True})
 
 
 @app.route("/item/<item_id>/worn", methods=["POST"])

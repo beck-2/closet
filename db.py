@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS items (
     date_acquired TEXT,
     season        TEXT NOT NULL DEFAULT '[]',
     wear_count    INTEGER NOT NULL DEFAULT 0,
-    notes         TEXT NOT NULL DEFAULT ''
+    notes         TEXT NOT NULL DEFAULT '',
+    sort_order    INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS item_images (
@@ -155,6 +156,11 @@ def init_db(db_path: Path | None = None) -> None:
     db = sqlite3.connect(db_path)
     try:
         db.executescript(SCHEMA_SQL)
+        # Columns added after the first schema shipped — for databases created
+        # before them. Cheap, idempotent, runs every startup.
+        have = {row[1] for row in db.execute("PRAGMA table_info(items)")}
+        if "sort_order" not in have:
+            db.execute("ALTER TABLE items ADD COLUMN sort_order INTEGER")
         if is_new:
             if items_json.exists():
                 n = _migrate_items_json(db, items_json)
@@ -205,14 +211,21 @@ def _item_from_row(db: sqlite3.Connection, row: sqlite3.Row) -> dict:
         "season": json.loads(row["season"]),
         "wear_count": row["wear_count"],
         "notes": row["notes"],
+        "sort_order": row["sort_order"],
         "images": images,
         "raw_images": raw_images,
     }
 
 
+# Manually-ordered items first (by sort_order), then anything never dragged,
+# oldest id first. That "unset goes last" is what keeps a brand-new item at
+# the end until you place it.
+_ITEM_ORDER = "ORDER BY sort_order IS NULL, sort_order, id"
+
+
 def load_items() -> dict:
     db = get_db()
-    return {row["id"]: _item_from_row(db, row) for row in db.execute("SELECT * FROM items ORDER BY id")}
+    return {row["id"]: _item_from_row(db, row) for row in db.execute(f"SELECT * FROM items {_ITEM_ORDER}")}
 
 
 def get_item(item_id: str) -> dict | None:
@@ -271,6 +284,16 @@ def increment_wear_count(item_id: str) -> None:
     version had."""
     db = get_db()
     db.execute("UPDATE items SET wear_count = wear_count + 1 WHERE id = ?", (item_id,))
+    db.commit()
+
+
+def set_closet_order(ordered_ids: list[str]) -> None:
+    """Stamp sort_order = 0, 1, 2, … onto the items in the given order. Ids
+    that aren't real items are ignored."""
+    db = get_db()
+    known = {row["id"] for row in db.execute("SELECT id FROM items")}
+    for pos, item_id in enumerate(i for i in ordered_ids if i in known):
+        db.execute("UPDATE items SET sort_order = ? WHERE id = ?", (pos, item_id))
     db.commit()
 
 

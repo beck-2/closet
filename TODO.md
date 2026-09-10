@@ -2,12 +2,17 @@
 
 ## Batch 2 (requested 2026-09-09)
 
-### 5. Drag to rearrange the closet grid; persist the order
-- [ ] Manual sort order per item (`items.sort_order INTEGER`, migration for
-      existing DBs). `closet()` sorts by it (then id for unset).
-- [ ] Drag-and-drop reordering on the grid; clicking a card still navigates.
-- [ ] `POST` the new order; it sticks across reloads.
-- [ ] Plays nice with search-ranking (manual order = the "normal position").
+### 5. Drag to rearrange the closet grid; persist the order  ✅ DONE
+- [x] `items.sort_order INTEGER` + idempotent ALTER migration. `load_items()`
+      orders by `sort_order IS NULL, sort_order, id` — placed items first,
+      never-dragged ones after (so new items land at the end).
+- [x] Pointer-based drag on the grid (6px threshold to tell drag from click);
+      clicking a card still navigates. `POST /closet/order` persists.
+- [x] Drag disabled while a filter/search is active (order is only meaningful
+      in the natural view); the shared filter script keeps `originalOrder` in
+      sync after a drag so search-clear restores the *new* order.
+- [x] tests/test_closet_order.py (7). Verified drag + persist + click-still-
+      navigates + disabled-while-filtering in the browser.
 
 ### 6. Fix the touch-up "restore to original" bug  ✅ DONE
 - [x] Root cause confirmed: the "original" backup was captured lazily from

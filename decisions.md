@@ -2,6 +2,25 @@
 
 Why things are built the way they are. Newest first.
 
+## Closet drag-to-reorder (2026-09-09)
+
+`items.sort_order INTEGER`, nullable. `load_items()` orders
+`sort_order IS NULL, sort_order, id` so hand-placed items come first and
+anything never dragged trails behind by id — that's what keeps a brand-new
+item at the end until you place it. `save_item`'s UPDATE never names
+`sort_order`, so the order survives editing an item.
+
+The drag is pointer-events based (not HTML5 DnD, not a library — consistent
+with the outfit board). A 6px move threshold separates a drag from a click,
+and a one-shot capture-phase `click` handler swallows the click that would
+otherwise fire after a drag. `.dragging` gets `pointer-events: none` so
+`elementFromPoint` can see the card being hovered *under* it.
+
+It lives in the same IIFE as the filters so it shares `originalOrder`; after
+a drop that array is rebuilt from the DOM, so clearing a search afterwards
+restores the *new* order, not the pre-drag one. Dragging is disabled whenever
+a filter or search is active — reordering only makes sense in the natural view.
+
 ## Touch-up tool: a "restore" brush, snapshot-based reset (2026-09-09)
 
 The auto background-removal sometimes eats part of a garment (a grey sleeve on

@@ -118,6 +118,11 @@
   route, EXIF-rotated + resized to cutout dims). Verified on 028 in browser
   — painted the sleeve back. Removed the dead data/originals/ machinery.
   Beck will re-fix 028/039/040 himself with the new tool.
+- #5 (drag-reorder closet) done. New sort_order column + ALTER migration
+  (brought the column-check pattern back, inline in init_db this time).
+  Pointer-based drag with a 6px click/drag threshold, merged into the
+  filter IIFE so originalOrder stays in sync. Disabled while filtering.
+  Verified real mouse drag + persist + click-navigation in the browser.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but
