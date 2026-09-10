@@ -17,11 +17,14 @@ live data source anymore.
 """
 from __future__ import annotations
 
+import datetime
 import json
 import sqlite3
 from pathlib import Path
 
 from flask import g
+
+from pipeline.metadata_schema import MAX_GOLD_STARS
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
@@ -53,7 +56,8 @@ CREATE TABLE IF NOT EXISTS items (
     date_acquired TEXT,
     season        TEXT NOT NULL DEFAULT '[]',
     wear_count    INTEGER NOT NULL DEFAULT 0,
-    notes         TEXT NOT NULL DEFAULT ''
+    notes         TEXT NOT NULL DEFAULT '',
+    starred_at    TEXT
 );
 
 CREATE TABLE IF NOT EXISTS item_images (
@@ -141,6 +145,14 @@ def _migrate_outfits_json(db: sqlite3.Connection, outfits_json: Path) -> int:
     return len(outfits)
 
 
+def _run_column_migrations(db: sqlite3.Connection) -> None:
+    """Add columns that were introduced after the first schema shipped, for
+    databases created before them. Safe to run on every startup."""
+    item_cols = {row[1] for row in db.execute("PRAGMA table_info(items)")}
+    if "starred_at" not in item_cols:
+        db.execute("ALTER TABLE items ADD COLUMN starred_at TEXT")
+
+
 def init_db(db_path: Path | None = None) -> None:
     """Create the schema if it doesn't exist yet, and one-time import old
     JSON data the first time this runs against a fresh database. The old
@@ -155,6 +167,7 @@ def init_db(db_path: Path | None = None) -> None:
     db = sqlite3.connect(db_path)
     try:
         db.executescript(SCHEMA_SQL)
+        _run_column_migrations(db)
         if is_new:
             if items_json.exists():
                 n = _migrate_items_json(db, items_json)
@@ -205,6 +218,8 @@ def _item_from_row(db: sqlite3.Connection, row: sqlite3.Row) -> dict:
         "season": json.loads(row["season"]),
         "wear_count": row["wear_count"],
         "notes": row["notes"],
+        "starred_at": row["starred_at"],
+        "starred": row["starred_at"] is not None,
         "images": images,
         "raw_images": raw_images,
     }
@@ -271,6 +286,53 @@ def increment_wear_count(item_id: str) -> None:
     version had."""
     db = get_db()
     db.execute("UPDATE items SET wear_count = wear_count + 1 WHERE id = ?", (item_id,))
+    db.commit()
+
+
+# ---------------------------------------------------------- gold stars --
+
+def count_starred() -> int:
+    return get_db().execute(
+        "SELECT COUNT(*) FROM items WHERE starred_at IS NOT NULL"
+    ).fetchone()[0]
+
+
+def starred_items() -> list[dict]:
+    """Starred items, oldest award first — the order they pin to the top of
+    the closet."""
+    db = get_db()
+    return [
+        _item_from_row(db, row)
+        for row in db.execute(
+            "SELECT * FROM items WHERE starred_at IS NOT NULL ORDER BY starred_at, id"
+        )
+    ]
+
+
+def set_star(item_id: str, starred: bool) -> None:
+    """Award or remove a gold star. Awarding past MAX_GOLD_STARS silently
+    drops the oldest star(s) to make room, all in one transaction."""
+    db = get_db()
+    if not starred:
+        db.execute("UPDATE items SET starred_at = NULL WHERE id = ?", (item_id,))
+        db.commit()
+        return
+
+    already = db.execute(
+        "SELECT starred_at FROM items WHERE id = ?", (item_id,)
+    ).fetchone()
+    if already is not None and already["starred_at"] is not None:
+        return  # nothing to do
+
+    current = db.execute(
+        "SELECT id FROM items WHERE starred_at IS NOT NULL ORDER BY starred_at, id"
+    ).fetchall()
+    overflow = len(current) - (MAX_GOLD_STARS - 1)
+    for row in current[: max(0, overflow)]:
+        db.execute("UPDATE items SET starred_at = NULL WHERE id = ?", (row["id"],))
+
+    now = datetime.datetime.now().isoformat(timespec="microseconds")
+    db.execute("UPDATE items SET starred_at = ? WHERE id = ?", (now, item_id))
     db.commit()
 
 

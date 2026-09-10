@@ -54,6 +54,13 @@
   color that isn't one of the checkbox suggestions — item 001's "grey"
   (note: not "gray") vanished on save because `color_other` never
   pre-fills current free-form colors. Worth a fix later. Added to TODO.
+- #2 (gold stars) done + committed. New `starred_at` column via a real
+  idempotent migration path (`_run_column_migrations`), tested against a
+  copy of the live 74-item DB. `set_star` bumps the oldest at cap 5.
+  Closet gets a pinned "★ gold stars" row. Verified in browser.
+- Decision: a star is a plain form POST like "Worn today" (no JS), toggles,
+  redirects back to the item. Survives item edits because save_item's
+  UPDATE clause never names starred_at.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but

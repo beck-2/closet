@@ -1,17 +1,9 @@
 {% extends "base.html" %}
 {% set pageclass = "pg-closet" %}
-{% block content %}
-<div class="filterrow">
-  <a class="chip {{ 'selected' if not active_type }}" href="{{ url_for('closet') }}">All</a>
-  {% for t in types %}
-    <a class="chip {{ 'selected' if active_type == t }}" href="{{ url_for('closet', type=t) }}">{{ t }}</a>
-  {% endfor %}
-</div>
 
-{% if cards %}
-<div class="grid">
-  {% for item in cards %}
-  <a class="card" href="{{ url_for('item_view', item_id=item.id) }}">
+{% macro card(item) %}
+  <a class="card {{ 'starred' if item.starred }}" href="{{ url_for('item_view', item_id=item.id) }}">
+    {% if item.starred %}<span class="cardstar" title="gold star">★</span>{% endif %}
     <div class="swatch">
       {% if item.images %}
         <img src="{{ url_for('thumbs', filename=item.images[0].split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}" loading="lazy">
@@ -25,9 +17,30 @@
       </div>
     </div>
   </a>
+{% endmacro %}
+
+{% block content %}
+<div class="filterrow">
+  <a class="chip {{ 'selected' if not active_type }}" href="{{ url_for('closet') }}">All</a>
+  {% for t in types %}
+    <a class="chip {{ 'selected' if active_type == t }}" href="{{ url_for('closet', type=t) }}">{{ t }}</a>
   {% endfor %}
 </div>
-{% else %}
+
+{% if starred_cards %}
+<div class="goldsection">
+  <p class="goldlabel">★ gold stars</p>
+  <div class="grid">
+    {% for item in starred_cards %}{{ card(item) }}{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if cards %}
+<div class="grid">
+  {% for item in cards %}{{ card(item) }}{% endfor %}
+</div>
+{% elif not starred_cards %}
 <p class="empty">nothing here yet — try a different filter, or add a piece</p>
 {% endif %}
 {% endblock %}

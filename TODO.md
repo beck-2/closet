@@ -6,13 +6,14 @@
 - [x] Item view: `acquired_display` filter → "March 2025" / "2025" / "—".
 - [x] Tests in tests/test_date_acquired.py (7). Verified in browser.
 
-## 2. Gold stars (max 5 awarded pieces, pinned to top of closet)
-- [ ] Storage: per-item `starred_at TEXT` (null = not starred; timestamp gives
-      award order). Migration-safe.
-- [ ] Cap = 5. Awarding a 6th **bumps the oldest** star automatically.
-- [ ] Toggle control on the item view page.
-- [ ] Closet page: a "gold stars" section pinned above the normal grid.
-- [ ] Tests.
+## 2. Gold stars (max 5 awarded pieces, pinned to top of closet)  ✅ DONE
+- [x] Storage: `items.starred_at TEXT` + `_run_column_migrations` (ALTER on
+      existing DBs, idempotent). Verified on a copy of the real 74-item DB.
+- [x] `db.set_star` enforces cap 5, bumps the oldest on a 6th award.
+- [x] `POST /item/<id>/star` toggle on the item view page.
+- [x] Closet: "★ gold stars" section above the grid, starred cards not
+      duplicated below. Gold border + corner star badge.
+- [x] Tests in tests/test_gold_stars.py (8). Verified in browser.
 
 ## 3. Richer closet filtering + name search
 - [ ] Dropdowns: item_type, color, season, source.
