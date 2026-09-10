@@ -834,6 +834,23 @@ a:hover { color: #a61e4d; }
   cursor: pointer;
 }
 .pg-touchup .toolbtn:hover { background: #d8d2c2; }
+.pg-touchup .modeswitch { display: inline-flex; border: 2.5px solid #2b2140; border-radius: 999px; overflow: hidden; }
+.pg-touchup .modebtn {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 9px 18px;
+  border: 0;
+  background: #fffdf7;
+  color: #2b2140;
+  cursor: pointer;
+}
+.pg-touchup .modebtn + .modebtn { border-left: 2.5px solid #2b2140; }
+.pg-touchup .modebtn.active { background: #c9a6ff; }
+.pg-touchup .modebtn:disabled { color: #b3acc0; cursor: not-allowed; }
+.pg-touchup #board.restoring { cursor: none; }
+.pg-touchup #board.restoring + .brushcursor,
+.pg-touchup .touchup-canvaswrap:has(#board.restoring) .brushcursor { border-color: #5c9a63; }
 
 .pg-touchup .touchup-canvaswrap {
   position: relative;

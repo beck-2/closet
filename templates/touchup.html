@@ -3,15 +3,23 @@
 {% block content %}
 <div class="touchup-card">
   <h2 class="formtitle">touch up this photo</h2>
-  <p class="subhint">Erase any leftover background bits the automatic cutout missed.</p>
+  <p class="subhint">
+    <strong>Erase</strong> leftover background the auto-cutout missed, or switch to
+    <strong>Restore</strong> to paint back anything it wrongly cut off (a sleeve, a hem…)
+    straight from your original photo.
+  </p>
 
   <div class="touchup-toolbar">
+    <div class="modeswitch" id="mode-switch">
+      <button type="button" class="modebtn active" data-mode="erase">Erase</button>
+      <button type="button" class="modebtn" data-mode="restore" {{ 'disabled' if not raw_url }}>Restore</button>
+    </div>
     <label class="brushctl">
       brush size
       <input type="range" id="brushSize" min="8" max="140" value="40">
     </label>
     <button type="button" class="toolbtn" id="undoBtn">Undo</button>
-    <button type="button" class="toolbtn" id="resetBtn">Reset to original</button>
+    <button type="button" class="toolbtn" id="resetBtn">Reset</button>
   </div>
 
   <div class="touchup-canvaswrap">
@@ -28,12 +36,14 @@
 </div>
 
 <img id="processedSrc" src="{{ url_for('photos', filename=processed_filename) }}" style="display:none">
+{% if raw_url %}<img id="rawSrc" src="{{ raw_url }}" style="display:none">{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script>
 (function () {
   var processedImg = document.getElementById('processedSrc');
+  var rawImg = document.getElementById('rawSrc');  // may be null (no raw on file)
   var canvas = document.getElementById('board');
   var ctx = canvas.getContext('2d');
   var cursor = document.getElementById('brushCursor');
@@ -41,9 +51,10 @@
   var drawing = false;
   var lastPoint = null;
   var undoStack = [];
-  var MAX_UNDO = 12;
-  var originalUrl = {{ original_url | tojson }};
+  var MAX_UNDO = 15;
   var initDone = false;
+  var initialSnapshot = null;   // the canvas exactly as the page opened
+  var mode = 'erase';
 
   function init() {
     if (initDone) return;
@@ -52,6 +63,7 @@
     canvas.width = processedImg.naturalWidth;
     canvas.height = processedImg.naturalHeight;
     ctx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
+    initialSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
     fitCanvas();
     canvas.classList.add('jsready');
   }
@@ -64,41 +76,50 @@
     canvas.style.height = (canvas.height * scale) + 'px';
   }
 
-  if (processedImg.complete) {
-    init();
-  } else {
-    processedImg.addEventListener('load', init);
-  }
+  if (processedImg.complete) { init(); } else { processedImg.addEventListener('load', init); }
   window.addEventListener('resize', fitCanvas);
+
+  document.getElementById('mode-switch').addEventListener('click', function (e) {
+    var btn = e.target.closest('.modebtn');
+    if (!btn || btn.disabled) return;
+    mode = btn.dataset.mode;
+    document.querySelectorAll('.modebtn').forEach(function (b) {
+      b.classList.toggle('active', b === btn);
+    });
+    canvas.classList.toggle('restoring', mode === 'restore');
+  });
 
   function canvasPoint(e) {
     var rect = canvas.getBoundingClientRect();
-    var scaleX = canvas.width / rect.width;
-    var scaleY = canvas.height / rect.height;
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
     };
   }
 
-  function brushRadius() {
-    return parseInt(brushSizeInput.value, 10) / 2;
-  }
+  function brushRadius() { return parseInt(brushSizeInput.value, 10) / 2; }
 
   function dab(x, y) {
     var r = brushRadius();
     ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
+    if (mode === 'restore' && rawImg && rawImg.naturalWidth) {
+      // paint the matching patch of the original photo back into the brush
+      ctx.clip();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(rawImg, 0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fill();
+    }
     ctx.restore();
   }
 
   function strokeTo(pt) {
     if (lastPoint) {
       var dist = Math.hypot(pt.x - lastPoint.x, pt.y - lastPoint.y);
-      var steps = Math.max(1, Math.ceil(dist / Math.max(2, brushRadius() * 0.5)));
+      var steps = Math.max(1, Math.ceil(dist / Math.max(2, brushRadius() * 0.4)));
       for (var i = 1; i <= steps; i++) {
         var t = i / steps;
         dab(lastPoint.x + (pt.x - lastPoint.x) * t, lastPoint.y + (pt.y - lastPoint.y) * t);
@@ -139,38 +160,11 @@
     var prev = undoStack.pop();
     if (prev) ctx.putImageData(prev, 0, 0);
   });
-  var resetBtn = document.getElementById('resetBtn');
-  resetBtn.addEventListener('click', function () {
-    if (!initDone || resetBtn.disabled) return;
-    resetBtn.disabled = true;
-    var label = resetBtn.textContent;
-    resetBtn.textContent = 'resetting…';
-    // Always pull a fresh copy of the pristine upload straight from the
-    // server — never trust any in-page image/canvas that's been sitting
-    // around, since that's exactly what made Reset unreliable before.
-    // Crucially: don't touch the visible canvas until the fetch AND the
-    // decode have both succeeded, so a failure never leaves it blank.
-    fetch(originalUrl, { cache: 'no-store' })
-      .then(function (res) {
-        if (!res.ok) throw new Error('fetch failed: ' + res.status);
-        return res.blob();
-      })
-      .then(function (blob) {
-        return createImageBitmap(blob);
-      })
-      .then(function (bitmap) {
-        pushUndo();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      })
-      .catch(function (err) {
-        console.error('Reset to original failed:', err);
-        alert("Couldn't reset — check your connection and try again.");
-      })
-      .finally(function () {
-        resetBtn.disabled = false;
-        resetBtn.textContent = label;
-      });
+
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    if (!initDone || !initialSnapshot) return;
+    pushUndo();
+    ctx.putImageData(initialSnapshot, 0, 0);
   });
 
   document.getElementById('saveBtn').addEventListener('click', function () {

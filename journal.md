@@ -106,6 +106,19 @@
   Dropped _run_column_migrations too — no migrations left; pattern's in git
   history (ece8f76) if needed again.
 
+## 2026-09-09 (batch 2) — drag-reorder, touch-up fix, calendar
+- 3 new todos (TODO.md items 5/6/7). Beck: calendar logs both items AND
+  outfits, backfill any past day, keep "Worn today" wired to it.
+- #6 (touch-up) done first. The damaged items are the 3 UNNAMED ones
+  (028/039/040) — rembg ate the sleeves against wood-floor backgrounds.
+  Root cause of "restore doesn't work": the originals backup was captured
+  lazily from disk on first touch-up open, so for these it was already the
+  broken cutout. Fixed Reset to a synchronous page-load snapshot, added a
+  Restore brush that paints back from the raw photo (new /photo/<i>/raw
+  route, EXIF-rotated + resized to cutout dims). Verified on 028 in browser
+  — painted the sleeve back. Removed the dead data/originals/ machinery.
+  Beck will re-fix 028/039/040 himself with the new tool.
+
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but
   `_outfit_render_pieces` returns `.src` — saved-outfit thumbnails render as

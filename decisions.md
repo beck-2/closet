@@ -2,6 +2,24 @@
 
 Why things are built the way they are. Newest first.
 
+## Touch-up tool: a "restore" brush, snapshot-based reset (2026-09-09)
+
+The auto background-removal sometimes eats part of a garment (a grey sleeve on
+a wood floor). The touch-up tool used to only erase, and its "Reset to
+original" restored a `data/originals/` backup that, for older items, had been
+captured lazily from disk *after* the damage — so reset did nothing useful.
+
+Now:
+- **Reset** reverts to a `getImageData` snapshot taken the moment the page
+  loaded. Synchronous, always correct, no server round-trip.
+- A **Restore brush** paints the garment back from the original uploaded
+  photo. `/item/<id>/photo/<i>/raw` serves that photo EXIF-rotated and resized
+  to exactly the cutout's dimensions, so `drawImage(raw, 0,0,w,h)` lines up.
+  It paints the raw's background back too — you then switch to Erase to clean
+  around the restored part. Predictable beats clever.
+- The `data/originals/` backup machinery is gone — the raw photo is the real
+  original, and the backup only ever confused the reset logic.
+
 ## Closet filters: collapsed multi-select dropdowns, OR within a facet (2026-09-09)
 
 Type/color/season/source each become a small dropdown button ("Type ▾") that

@@ -1,3 +1,41 @@
+# TODO
+
+## Batch 2 (requested 2026-09-09)
+
+### 5. Drag to rearrange the closet grid; persist the order
+- [ ] Manual sort order per item (`items.sort_order INTEGER`, migration for
+      existing DBs). `closet()` sorts by it (then id for unset).
+- [ ] Drag-and-drop reordering on the grid; clicking a card still navigates.
+- [ ] `POST` the new order; it sticks across reloads.
+- [ ] Plays nice with search-ranking (manual order = the "normal position").
+
+### 6. Fix the touch-up "restore to original" bug  ✅ DONE
+- [x] Root cause confirmed: the "original" backup was captured lazily from
+      whatever was on disk when the touch-up page first opened, so for
+      rembg-mangled items it was already the broken cutout — "Reset" restored
+      the broken version. Also the reset was a flaky async server fetch.
+- [x] "Reset" now restores a synchronous snapshot taken at page load —
+      reliable, always reverts to the opened state.
+- [x] New **Restore brush**: paints the garment back from the original photo
+      (`/item/<id>/photo/<i>/raw` — EXIF-rotated, resized to the cutout's
+      dimensions so it aligns). Disabled when no raw is on file.
+- [x] Damaged items are the 3 unnamed ones (028, 039, 040) — Beck wants to
+      re-fix them himself with the new tool, so no auto-recovery.
+- [x] Removed the now-dead `data/originals/` backup machinery entirely.
+- [x] tests/test_touchup.py (5). Verified the restore brush + reset on item
+      028 in the browser (painted a sleeve back from the raw photo).
+
+### 7. Calendar tab — what was worn each day
+- [ ] New "Calendar" pill in the navbar (Closet / Outfits / Calendar / + Add).
+- [ ] `wear_log` table (date + item and/or outfit).
+- [ ] Month grid; each day shows what was worn; click a day to log/edit.
+- [ ] "Worn today" feeds it; wear_count / cost-per-wear derive from the log.
+- [ ] Open questions (ask Beck): items vs outfits vs both? backfill past
+      days? multiple entries per day?
+- [ ] Tests.
+
+---
+
 # TODO — feature batch (requested 2026-09-09)
 
 ## 1. Flexible "date acquired" — year, or month + year  ✅ DONE

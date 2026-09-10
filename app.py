@@ -17,7 +17,17 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 
-from flask import Flask, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
+from flask import (
+    Flask,
+    Response,
+    abort,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 
 import db
 from pipeline.metadata_schema import (
@@ -43,7 +53,6 @@ BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
-ORIGINALS_DIR = DATA_DIR / "originals"
 THUMBS_DIR = DATA_DIR / "thumbs"
 
 # Grid views (the closet, the outfit-builder tray) only ever show a photo a
@@ -85,28 +94,6 @@ COLOR_HEX = {
 # ------------------------------------------------------------- filesystem --
 # (photo storage stays on disk regardless of what holds the metadata)
 
-def original_rel_for(processed_rel: str) -> str:
-    """'data/processed/023_2.png' -> 'data/originals/023_2.png' — the
-    untouched backup lives alongside processed/ under the same stub name."""
-    return processed_rel.replace("data/processed/", "data/originals/", 1)
-
-
-def ensure_original_backup(processed_rel: str) -> None:
-    """Make sure an original-backup copy of a processed cutout exists.
-    Normally this only ever runs once, right after upload — but it's also
-    called lazily from the touch-up page so any item that predates this
-    backup (or one whose backup went missing) still gets a valid one to
-    reset to, taken from whatever's on disk right now."""
-    from PIL import Image
-
-    original_path = BASE_DIR / original_rel_for(processed_rel)
-    if original_path.exists():
-        return
-    original_path.parent.mkdir(parents=True, exist_ok=True)
-    with Image.open(BASE_DIR / processed_rel) as im:
-        im.save(original_path, format="PNG", optimize=True)
-
-
 def next_item_id() -> str:
     existing = [int(i) for i in db.existing_item_ids() if i.isdigit()]
     return f"{(max(existing) + 1) if existing else 1:03d}"
@@ -142,7 +129,6 @@ def process_upload(file_storage, stub: str, session) -> tuple[str, str]:
         raw_path.unlink(missing_ok=True)
         raise ValueError(result.detail)
     processed_rel = f"data/processed/{stub}{OUTPUT_EXTENSION}"
-    ensure_original_backup(processed_rel)
     return f"data/raw/{stub}{raw_ext}", processed_rel
 
 
@@ -392,7 +378,6 @@ def edit_item(item_id):
         for rel in removed + removed_raw:
             (BASE_DIR / rel).unlink(missing_ok=True)
         for rel in removed:
-            (BASE_DIR / original_rel_for(rel)).unlink(missing_ok=True)
             (THUMBS_DIR / Path(rel).name).unlink(missing_ok=True)
 
         updates = _read_form_item(request.form)
@@ -414,15 +399,43 @@ def touchup_photo(item_id, index):
     if index < 0 or index >= len(images):
         abort(404)
     processed_rel = images[index]
-    ensure_original_backup(processed_rel)
+    raws = item.get("raw_images") or []
+    has_raw = index < len(raws) and bool(raws[index]) and (BASE_DIR / raws[index]).is_file()
     return render_template(
         "touchup.html",
         active="closet",
         item_id=item_id,
         index=index,
         processed_filename=processed_rel.split("/")[-1],
-        original_url=url_for("originals", filename=original_rel_for(processed_rel).split("/")[-1]),
+        raw_url=url_for("photo_raw", item_id=item_id, index=index) if has_raw else None,
     )
+
+
+@app.route("/item/<item_id>/photo/<int:index>/raw")
+def photo_raw(item_id, index):
+    """The original uploaded photo (EXIF-rotated, scaled to match the processed
+    cutout) — the touch-up tool's 'restore' brush paints from this to bring
+    back anything the automatic cutout wrongly removed."""
+    import io
+
+    from PIL import Image, ImageOps
+
+    item = db.get_item(item_id)
+    if item is None:
+        abort(404)
+    images = item.get("images") or []
+    raws = item.get("raw_images") or []
+    if index < 0 or index >= len(images):
+        abort(404)
+    raw_rel = raws[index] if index < len(raws) else None
+    if not raw_rel or not (BASE_DIR / raw_rel).is_file():
+        abort(404)
+
+    with Image.open(BASE_DIR / raw_rel) as raw, Image.open(BASE_DIR / images[index]) as proc:
+        oriented = ImageOps.exif_transpose(raw).convert("RGB").resize(proc.size, Image.LANCZOS)
+        buf = io.BytesIO()
+        oriented.save(buf, format="JPEG", quality=88)
+    return Response(buf.getvalue(), mimetype="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
 @app.route("/item/<item_id>/photo/<int:index>/touchup", methods=["POST"])
@@ -671,11 +684,6 @@ def thumbs(filename):
 @app.route("/photos/<path:filename>")
 def photos(filename):
     return send_from_directory(PROCESSED_DIR, filename)
-
-
-@app.route("/originals/<path:filename>")
-def originals(filename):
-    return send_from_directory(ORIGINALS_DIR, filename)
 
 
 if __name__ == "__main__":
