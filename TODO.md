@@ -25,16 +25,18 @@
 - [x] Tests in tests/test_filters.py (4) + updated test_app. Verified in
       browser (type/name/combined/clear/no-match all work).
 
-## 4. Outfit board + outfits list
-- [ ] Verify the already-built board behaviour works: drag from closet,
-      resize, right-click front/back, drag auto-raises to top.
-- [ ] Outfits-list thumbnail: render the actual arranged board (scaled),
-      not a plain row of pieces. (`_outfit_render_pieces` already computes
-      the percentages; the template just doesn't use them — also fixes the
-      current empty-boxes bug.)
-- [ ] "edit" button next to "+ new outfit" → an edit-mode toggle; in edit
-      mode each outfit card shows edit + delete.
-- [ ] Tests.
+## 4. Outfit board + outfits list  ✅ DONE
+- [x] Verified in browser — drag-from-closet, corner-handle resize,
+      right-click front/back/remove, drag-auto-to-top all already worked.
+      No code change needed there.
+- [x] Outfits-list thumbnail: real arranged mini-board (`.miniboard` with
+      absolutely-positioned `.minipiece` at the saved %s + rotation).
+      Fixes the old empty-boxes bug. Uses `/thumbs/` for the piece images
+      (new `thumb_src` on `_outfit_render_pieces`).
+- [x] "edit" button next to "+ new outfit" → JS edit-mode toggle; in edit
+      mode each card shows ✎ edit + 🗑 delete (delete confirms).
+- [x] Tests in tests/test_outfits.py (6). Verified end-to-end: built an
+      outfit in the browser, saved, saw the arrangement in the list.
 
 ## Found along the way (not requested — for later)
 - Editing an item drops any color not in the checkbox suggestions: the

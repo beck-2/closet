@@ -535,9 +535,11 @@ def _outfit_render_pieces(outfit: dict, items: dict) -> list[dict]:
         item = items.get(placement["id"])
         if item is None or not item.get("images"):
             continue
+        filename = item["images"][0].split("/")[-1]
         pieces.append({
             "item_id": placement["id"],
-            "src": url_for("photos", filename=item["images"][0].split("/")[-1]),
+            "src": url_for("photos", filename=filename),
+            "thumb_src": url_for("thumbs", filename=filename),
             "alt": item.get("name") or item.get("item_type") or "item",
             # Percentages of the fixed board size, for the outfits-list
             # thumbnail; raw px (the actual saved values) for reopening

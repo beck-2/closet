@@ -66,6 +66,15 @@
   Dropped the old server `?type=` param (updated the one test that used
   it). name + vibes are substring text search; type/color/season/source
   are dropdowns. Verified all paths in the browser.
+- #4 (outfits) done + committed. Turns out the board already did
+  everything Beck asked (drag/resize/right-click reorder/auto-top) — I
+  drove it all in the browser to confirm, no code change. Real work was:
+  the outfits-list thumbnail is now the actual arranged mini-board (was
+  rendering empty boxes — the old `piece.images` bug), and an edit-mode
+  toggle next to "+ new outfit" reveals per-card edit + delete.
+- Verified end to end: built a fit in the builder, resized a piece, sent
+  it to back, saved → the list thumbnail matched the arrangement exactly.
+- ALL 4 TODO ITEMS DONE. 69 tests green.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but

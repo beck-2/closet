@@ -564,19 +564,66 @@ a:hover { color: #a61e4d; }
   display: inline-block;
   margin-bottom: 28px;
 }
+.pg-outfitslist .outfitstoolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+.pg-outfitslist .newoutfitbtn { margin-bottom: 0; }
+.pg-outfitslist .editoutfitsbtn {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 15px;
+  color: #2b2140;
+  background: #fff;
+  border: 3px solid #2b2140;
+  border-radius: 999px;
+  padding: 11px 22px;
+  box-shadow: 3px 3px 0 #2b2140;
+  cursor: pointer;
+}
+.pg-outfitslist .editoutfitsbtn.active { background: #ffd447; }
 .pg-outfitslist .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
-.pg-outfitslist .card {
+.pg-outfitslist .outfitcard {
   background: #ffffff;
   border: 3px solid #2b2140;
   border-radius: 14px;
   box-shadow: 5px 5px 0 rgba(43,33,64,0.14);
   padding: 18px;
 }
+.pg-outfitslist .miniboard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 600 / 620;
+  background: #fbf6ea;
+  border: 2px solid #2b2140;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.pg-outfitslist .minipiece { position: absolute; object-fit: contain; }
 .pg-outfitslist .outfitname { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 18px; color: #2b2140; margin: 0 0 4px; }
-.pg-outfitslist .outfitdate { font-size: 12px; font-weight: 700; color: #7c7192; margin: 0 0 14px; }
-.pg-outfitslist .piecerow { display: flex; gap: 10px; flex-wrap: wrap; }
-.pg-outfitslist .piece { width: 64px; height: 64px; background: #f7efe0; border: 2px solid #2b2140; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-.pg-outfitslist .piece img { max-width: 80%; max-height: 80%; object-fit: contain; }
+.pg-outfitslist .outfitdate { font-size: 12px; font-weight: 700; color: #7c7192; margin: 0 0 4px; }
+.pg-outfitslist .outfitactions { display: none; gap: 10px; align-items: center; margin-top: 12px; }
+.pg-outfitslist .grid.editing .outfitactions { display: flex; }
+.pg-outfitslist .miniedit {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #2b2140;
+  background: #c9a6ff;
+  border: 2.5px solid #2b2140;
+  border-radius: 999px;
+  padding: 6px 16px;
+}
+.pg-outfitslist .minidelete {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #fff;
+  background: #e0393e;
+  border: 2.5px solid #2b2140;
+  border-radius: 999px;
+  padding: 6px 16px;
+  cursor: pointer;
+}
+.pg-outfitslist .outfitactions form { margin: 0; }
 .pg-outfitslist .empty { font-family: 'Baloo 2', cursive; font-size: 18px; color: #7c7192; text-align: center; padding: 60px 0; }
 
 /* ================= add / edit item form ================= */

@@ -1,20 +1,31 @@
 {% extends "base.html" %}
 {% set pageclass = "pg-outfitslist" %}
 {% block content %}
-<a class="newoutfitbtn" href="{{ url_for('outfit_builder') }}">+ new outfit</a>
+<div class="outfitstoolbar">
+  <a class="newoutfitbtn" href="{{ url_for('outfit_builder') }}">+ new outfit</a>
+  {% if outfits %}
+  <button type="button" class="editoutfitsbtn" id="edit-toggle">edit</button>
+  {% endif %}
+</div>
 
 {% if outfits %}
-<div class="grid">
+<div class="grid" id="outfits-grid">
   {% for outfit in outfits %}
-  <div class="card">
-    <p class="outfitname">{{ outfit.name }}</p>
-    <p class="outfitdate">{{ outfit.created_at[:10] }}{% if outfit.vibes %} · {{ outfit.vibes|join(', ') }}{% endif %}</p>
-    <div class="piecerow">
+  <div class="outfitcard">
+    <div class="miniboard">
       {% for piece in outfit.pieces %}
-      <div class="piece">
-        {% if piece.images %}<img src="{{ url_for('photos', filename=piece.images[0].split('/')[-1]) }}" alt="">{% endif %}
-      </div>
+      <img class="minipiece" src="{{ piece.thumb_src }}" alt=""
+           style="left: {{ piece.left_pct }}%; top: {{ piece.top_pct }}%; width: {{ piece.width_pct }}%; transform: rotate({{ piece.rot }}deg);">
       {% endfor %}
+    </div>
+    <p class="outfitname">{{ outfit.name }}</p>
+    <p class="outfitdate">{{ outfit.created_at[:10] }}{% if outfit.vibes %} · {{ outfit.vibes | join(', ') }}{% endif %}</p>
+    <div class="outfitactions">
+      <a class="miniedit" href="{{ url_for('edit_outfit', outfit_id=outfit.id) }}">✎ edit</a>
+      <form method="post" action="{{ url_for('delete_outfit', outfit_id=outfit.id) }}"
+            onsubmit="return confirm('Delete “{{ outfit.name }}”? This can’t be undone.');">
+        <button type="submit" class="minidelete">🗑 delete</button>
+      </form>
     </div>
   </div>
   {% endfor %}
@@ -22,4 +33,19 @@
 {% else %}
 <p class="empty">no outfits saved yet — build one on the board</p>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var toggle = document.getElementById('edit-toggle');
+  var grid = document.getElementById('outfits-grid');
+  if (!toggle || !grid) return;
+  toggle.addEventListener('click', function () {
+    var editing = grid.classList.toggle('editing');
+    toggle.classList.toggle('active', editing);
+    toggle.textContent = editing ? 'done' : 'edit';
+  });
+})();
+</script>
 {% endblock %}
