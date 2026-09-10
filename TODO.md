@@ -15,12 +15,15 @@
       duplicated below. Gold border + corner star badge.
 - [x] Tests in tests/test_gold_stars.py (8). Verified in browser.
 
-## 3. Richer closet filtering + name search
-- [ ] Dropdowns: item_type, color, season, source.
-- [ ] Text search: name, and vibes (substring).
-- [ ] Filters combine (AND). Client-side over the rendered grid.
-- [ ] Gold-star section stays pinned; filtering applies within it too.
-- [ ] Tests.
+## 3. Richer closet filtering + name search  ✅ DONE
+- [x] Dropdowns: type, color, season, source (options = values present).
+- [x] Text search: name + vibes (substring, live).
+- [x] Filters AND together, client-side over every rendered `.card`.
+- [x] Gold section hides itself when nothing starred matches; "nothing
+      matches" message; a "clear" button appears when any filter is active.
+- [x] Server side: `?type=` query filter removed (now client-side).
+- [x] Tests in tests/test_filters.py (4) + updated test_app. Verified in
+      browser (type/name/combined/clear/no-match all work).
 
 ## 4. Outfit board + outfits list
 - [ ] Verify the already-built board behaviour works: drag from closet,

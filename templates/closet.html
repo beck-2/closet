@@ -2,7 +2,14 @@
 {% set pageclass = "pg-closet" %}
 
 {% macro card(item) %}
-  <a class="card {{ 'starred' if item.starred }}" href="{{ url_for('item_view', item_id=item.id) }}">
+  <a class="card {{ 'starred' if item.starred }}"
+     href="{{ url_for('item_view', item_id=item.id) }}"
+     data-name="{{ (item.name or '') | lower }}"
+     data-type="{{ item.item_type or '' }}"
+     data-color="{{ item.color | join(' ') }}"
+     data-season="{{ item.season | join(' ') }}"
+     data-source="{{ item.source or '' }}"
+     data-vibes="{{ item.vibes | join(' ') | lower }}">
     {% if item.starred %}<span class="cardstar" title="gold star">★</span>{% endif %}
     <div class="swatch">
       {% if item.images %}
@@ -19,16 +26,29 @@
   </a>
 {% endmacro %}
 
+{% macro filter_select(field, label, options) %}
+  <label class="filtersel">
+    <span>{{ label }}</span>
+    <select data-filter="{{ field }}">
+      <option value="">any</option>
+      {% for opt in options %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}
+    </select>
+  </label>
+{% endmacro %}
+
 {% block content %}
-<div class="filterrow">
-  <a class="chip {{ 'selected' if not active_type }}" href="{{ url_for('closet') }}">All</a>
-  {% for t in types %}
-    <a class="chip {{ 'selected' if active_type == t }}" href="{{ url_for('closet', type=t) }}">{{ t }}</a>
-  {% endfor %}
+<div class="filterbar" id="filterbar">
+  <input type="search" id="filter-name" class="filtertext" placeholder="search by name…" autocomplete="off">
+  <input type="search" id="filter-vibes" class="filtertext" placeholder="search vibes…" autocomplete="off">
+  {{ filter_select('type', 'Type', filter_options.type) }}
+  {{ filter_select('color', 'Color', filter_options.color) }}
+  {{ filter_select('season', 'Season', filter_options.season) }}
+  {{ filter_select('source', 'Source', filter_options.source) }}
+  <button type="button" class="filterclear" id="filter-clear" hidden>clear</button>
 </div>
 
 {% if starred_cards %}
-<div class="goldsection">
+<div class="goldsection" id="gold-section">
   <p class="goldlabel">★ gold stars</p>
   <div class="grid">
     {% for item in starred_cards %}{{ card(item) }}{% endfor %}
@@ -37,15 +57,76 @@
 {% endif %}
 
 {% if cards %}
-<div class="grid">
+<div class="grid" id="main-grid">
   {% for item in cards %}{{ card(item) }}{% endfor %}
 </div>
 {% elif not starred_cards %}
 <p class="empty">nothing here yet — try a different filter, or add a piece</p>
 {% endif %}
+
+<p class="empty" id="no-matches" hidden>nothing matches those filters</p>
 {% endblock %}
 
 {% block scripts %}
+<script>
+(function () {
+  var nameInput = document.getElementById('filter-name');
+  var vibesInput = document.getElementById('filter-vibes');
+  var selects = Array.prototype.slice.call(document.querySelectorAll('#filterbar select[data-filter]'));
+  var clearBtn = document.getElementById('filter-clear');
+  var goldSection = document.getElementById('gold-section');
+  var noMatches = document.getElementById('no-matches');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+
+  function norm(s) { return (s || '').trim().toLowerCase(); }
+
+  function tokenList(value) { return (value || '').split(/\s+/).filter(Boolean); }
+
+  function matches(card, name, vibes, wanted) {
+    if (name && card.dataset.name.indexOf(name) === -1) return false;
+    if (vibes && card.dataset.vibes.indexOf(vibes) === -1) return false;
+    if (wanted.type && card.dataset.type !== wanted.type) return false;
+    if (wanted.source && card.dataset.source !== wanted.source) return false;
+    if (wanted.color && tokenList(card.dataset.color).indexOf(wanted.color) === -1) return false;
+    if (wanted.season && tokenList(card.dataset.season).indexOf(wanted.season) === -1) return false;
+    return true;
+  }
+
+  function apply() {
+    var name = norm(nameInput.value);
+    var vibes = norm(vibesInput.value);
+    var wanted = {};
+    selects.forEach(function (sel) { wanted[sel.dataset.filter] = sel.value; });
+
+    var active = !!(name || vibes) || selects.some(function (s) { return s.value; });
+    clearBtn.hidden = !active;
+
+    var anyVisible = false;
+    cards.forEach(function (card) {
+      var show = matches(card, name, vibes, wanted);
+      card.hidden = !show;
+      if (show) anyVisible = true;
+    });
+
+    if (goldSection) {
+      var goldVisible = goldSection.querySelectorAll('.card:not([hidden])').length > 0;
+      goldSection.hidden = !goldVisible;
+    }
+    noMatches.hidden = anyVisible;
+  }
+
+  nameInput.addEventListener('input', apply);
+  vibesInput.addEventListener('input', apply);
+  selects.forEach(function (sel) { sel.addEventListener('change', apply); });
+  clearBtn.addEventListener('click', function () {
+    nameInput.value = '';
+    vibesInput.value = '';
+    selects.forEach(function (sel) { sel.value = ''; });
+    apply();
+  });
+})();
+</script>
+
 <script>
 (function () {
   var STORAGE_KEY = 'closetScrollY';

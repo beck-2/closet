@@ -199,32 +199,47 @@ def block_cross_site_writes():
 
 # ------------------------------------------------------------------ views --
 
+def _distinct_values(items: list[dict], key: str) -> list[str]:
+    """Every value present for `key` across the closet, sorted. Handles both
+    scalar fields (item_type, source) and list fields (color, season)."""
+    vals: set[str] = set()
+    for item in items:
+        v = item.get(key)
+        if isinstance(v, list):
+            vals.update(v)
+        elif v:
+            vals.add(v)
+    return sorted(vals)
+
+
 @app.route("/")
 def closet():
     items = db.load_items()
-    type_filter = request.args.get("type") or ""
-    types_present = sorted({v.get("item_type") for v in items.values() if v.get("item_type")})
+    all_items = list(items.values())
 
     starred = db.starred_items()
     starred_ids = {it["id"] for it in starred}
     starred_cards = [{**it, "rating": avg_rating(it)} for it in starred]
+    cards = [
+        {**items[i], "rating": avg_rating(items[i])}
+        for i in sorted(items)
+        if i not in starred_ids
+    ]
 
-    cards = []
-    for item_id in sorted(items.keys()):
-        if item_id in starred_ids:
-            continue  # pinned separately at the top
-        item = items[item_id]
-        if type_filter and item.get("item_type") != type_filter:
-            continue
-        cards.append({"id": item_id, **item, "rating": avg_rating(item)})
+    # Options for the filter dropdowns — filtering itself is done client-side.
+    filter_options = {
+        "type": _distinct_values(all_items, "item_type"),
+        "color": _distinct_values(all_items, "color"),
+        "season": _distinct_values(all_items, "season"),
+        "source": _distinct_values(all_items, "source"),
+    }
 
     return render_template(
         "closet.html",
         active="closet",
         cards=cards,
         starred_cards=starred_cards,
-        types=types_present,
-        active_type=type_filter,
+        filter_options=filter_options,
     )
 
 

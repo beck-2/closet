@@ -16,12 +16,14 @@ def test_index_lists_items(client, add_item):
     assert b"cozy longsleeve" in resp.data
 
 
-def test_index_type_filter(client, add_item):
+def test_index_renders_all_items_filtering_is_client_side(client, add_item):
     add_item("001", item_type="top", name="a-top")
     add_item("002", item_type="shoes", name="z-shoes")
-    resp = client.get("/?type=shoes")
+    resp = client.get("/")
+    # Every card is in the HTML; the filter dropdowns narrow it in the browser.
     assert b"z-shoes" in resp.data
-    assert b"a-top" not in resp.data
+    assert b"a-top" in resp.data
+    assert b'data-filter="type"' in resp.data
 
 
 def test_item_view_and_404(client, add_item):

@@ -74,5 +74,8 @@ def test_closet_pins_starred_section_and_does_not_duplicate(client, add_item):
     client.post("/item/001/star")
     body = client.get("/").data.decode()
     assert "gold star" in body.lower()
-    assert body.count("pinned piece") == 1
-    assert "ordinary piece" in body
+
+    gold, _, main = body.partition('id="main-grid"')
+    assert "pinned piece" in gold
+    assert "pinned piece" not in main   # not repeated in the normal grid
+    assert "ordinary piece" in main

@@ -61,6 +61,11 @@
 - Decision: a star is a plain form POST like "Worn today" (no JS), toggles,
   redirects back to the item. Survives item edits because save_item's
   UPDATE clause never names starred_at.
+- #3 (filters) done + committed. Went client-side: server renders every
+  card with data-* attrs + the dropdown option lists, JS filters live.
+  Dropped the old server `?type=` param (updated the one test that used
+  it). name + vibes are substring text search; type/color/season/source
+  are dropdowns. Verified all paths in the browser.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but
