@@ -248,8 +248,116 @@ def save_closet_order():
 def mark_worn(item_id):
     if db.get_item(item_id) is None:
         abort(404)
-    db.increment_wear_count(item_id)
+    db.log_items_worn(datetime.date.today().isoformat(), [item_id])
     return redirect(url_for("item_view", item_id=item_id))
+
+
+# --------------------------------------------------------------- calendar --
+
+def _day_thumbs(info: dict, items: dict, outfits: dict) -> list[str]:
+    """A few representative thumbnail URLs for a day's worth of wears."""
+    urls: list[str] = []
+    for iid in info["item_ids"]:
+        it = items.get(iid)
+        if it and it.get("images"):
+            urls.append(url_for("thumbs", filename=it["images"][0].split("/")[-1]))
+    for oid in info["outfit_ids"]:
+        outfit = outfits.get(oid)
+        if outfit:
+            pieces = _outfit_render_pieces(outfit, items)
+            if pieces:
+                urls.append(pieces[0]["thumb_src"])
+    return urls[:4]
+
+
+@app.route("/calendar")
+@app.route("/calendar/<int:year>/<int:month>")
+def calendar_view(year: int | None = None, month: int | None = None):
+    today = datetime.date.today()
+    if year is None:
+        year, month = today.year, today.month
+    if not (1 <= month <= 12) or not (1900 <= year <= 2200):
+        abort(404)
+
+    items = db.load_items()
+    outfits = {o["id"]: o for o in db.load_outfits()}
+    summary = db.wear_summary_for_month(year, month)
+    days = {
+        d: {"thumbs": _day_thumbs(info, items, outfits),
+            "count": len(info["item_ids"]) + len(info["outfit_ids"])}
+        for d, info in summary.items()
+    }
+
+    weeks = calendar.Calendar(firstweekday=6).monthdatescalendar(year, month)
+    first = datetime.date(year, month, 1)
+    prev_d = first - datetime.timedelta(days=1)
+    next_d = (first + datetime.timedelta(days=32)).replace(day=1)
+    return render_template(
+        "calendar.html",
+        active="calendar",
+        year=year,
+        month=month,
+        month_name=calendar.month_name[month],
+        weeks=weeks,
+        days=days,
+        today=today,
+        prev=(prev_d.year, prev_d.month),
+        next=(next_d.year, next_d.month),
+    )
+
+
+def _parse_day(date: str) -> datetime.date:
+    try:
+        return datetime.date.fromisoformat(date)
+    except ValueError:
+        abort(404)
+
+
+@app.route("/calendar/day/<date>")
+def calendar_day(date):
+    d = _parse_day(date)
+    if d > datetime.date.today():
+        abort(404)
+    items = db.load_items()
+    worn = db.wears_on(date)
+    for outfit in worn["outfits"]:
+        outfit["pieces"] = _outfit_render_pieces(outfit, items)
+    return render_template(
+        "calendar_day.html",
+        active="calendar",
+        date=date,
+        pretty_date=d.strftime("%A, %B ") + str(d.day) + d.strftime(", %Y"),
+        worn_items=worn["items"],
+        worn_outfits=worn["outfits"],
+        tray=[{"id": i, **items[i]} for i in items],
+        outfits=db.load_outfits(),
+    )
+
+
+@app.route("/calendar/day/<date>", methods=["POST"])
+def calendar_day_log(date):
+    d = _parse_day(date)
+    if d > datetime.date.today():
+        abort(400, description="can't log a day that hasn't happened yet")
+    item_ids = [i for i in request.form.getlist("item_id") if i]
+    outfit_id = (request.form.get("outfit_id") or "").strip()
+    if item_ids:
+        db.log_items_worn(date, item_ids)
+    if outfit_id:
+        db.log_outfit_worn(date, outfit_id)
+    return redirect(url_for("calendar_day", date=date))
+
+
+@app.route("/calendar/day/<date>/remove", methods=["POST"])
+def calendar_day_remove(date):
+    _parse_day(date)
+    kind = request.form.get("kind")
+    target = request.form.get("id")
+    if kind == "item" and target:
+        db.unlog_item(date, target)
+    elif kind == "outfit" and target:
+        db.unlog_outfit(date, target)
+    return redirect(url_for("calendar_day", date=date))
 
 
 def _read_form_item(form) -> dict:

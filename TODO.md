@@ -30,14 +30,22 @@
 - [x] tests/test_touchup.py (5). Verified the restore brush + reset on item
       028 in the browser (painted a sleeve back from the raw photo).
 
-### 7. Calendar tab — what was worn each day
-- [ ] New "Calendar" pill in the navbar (Closet / Outfits / Calendar / + Add).
-- [ ] `wear_log` table (date + item and/or outfit).
-- [ ] Month grid; each day shows what was worn; click a day to log/edit.
-- [ ] "Worn today" feeds it; wear_count / cost-per-wear derive from the log.
-- [ ] Open questions (ask Beck): items vs outfits vs both? backfill past
-      days? multiple entries per day?
-- [ ] Tests.
+### 7. Calendar tab — what was worn each day  ✅ DONE
+- [x] "Calendar" pill in the navbar.
+- [x] `wear_log` table: one row per piece worn (outfit_id set when the piece
+      came from logging a whole outfit, NULL when it's a loose item).
+- [x] Month grid (`/calendar`, `/calendar/<y>/<m>`) — days with wears show
+      thumbnails; today ringed; future days greyed and not clickable.
+- [x] Day detail (`/calendar/day/<date>`) — what's logged (with ✕ remove),
+      plus a searchable tile picker + outfit dropdown to add. Any past day.
+- [x] "Worn today" now logs into the calendar for today; every item's
+      wear_count / cost-per-wear derives from wear_log (the stored
+      items.wear_count column is retired — kept in the schema, unread).
+- [x] Beck's answers: log both items AND outfits; backfill any past day;
+      keep "Worn today" wired to it.
+- [x] tests/test_calendar.py (12). Verified the whole flow in the browser:
+      log items + an outfit on a past day, see them on the month grid, "Worn
+      today" → today's entry, remove, wear count follows.
 
 ---
 

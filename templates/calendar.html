@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% set pageclass = "pg-calendar" %}
+
+{% macro daycell(day) %}
+  {% set iso = day.isoformat() %}
+  {% set info = days.get(iso) %}
+  {% set classes = 'calday'
+     ~ (' othermonth' if day.month != month else '')
+     ~ (' today' if day == today else '')
+     ~ (' future' if day > today else '')
+     ~ (' hasworn' if info else '') %}
+  {% if day > today %}
+  <div class="{{ classes }}">
+    <span class="caldaynum">{{ day.day }}</span>
+  </div>
+  {% else %}
+  <a class="{{ classes }}" href="{{ url_for('calendar_day', date=iso) }}">
+    <span class="caldaynum">{{ day.day }}</span>
+    {% if info %}
+    <div class="calthumbs">
+      {% for t in info.thumbs %}<img src="{{ t }}" alt="">{% endfor %}
+    </div>
+    {% endif %}
+  </a>
+  {% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="calheader">
+  <a class="calnav" href="{{ url_for('calendar_view', year=prev[0], month=prev[1]) }}" aria-label="previous month">‹</a>
+  <h2 class="calmonth">{{ month_name }} {{ year }}</h2>
+  <a class="calnav" href="{{ url_for('calendar_view', year=next[0], month=next[1]) }}" aria-label="next month">›</a>
+</div>
+
+<div class="calgrid">
+  {% for dow in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] %}
+  <div class="caldow">{{ dow }}</div>
+  {% endfor %}
+  {% for week in weeks %}{% for day in week %}{{ daycell(day) }}{% endfor %}{% endfor %}
+</div>
+{% endblock %}

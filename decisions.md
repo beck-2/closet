@@ -2,6 +2,28 @@
 
 Why things are built the way they are. Newest first.
 
+## Calendar & wear log (2026-09-09)
+
+`wear_log` is the single source of truth for what was worn when. Shape: **one
+row per garment worn**, with `outfit_id` set when that row came from logging a
+whole outfit and NULL for a loose item. So:
+- item wear count = `COUNT(*) FROM wear_log WHERE item_id = ?` — dead simple,
+  and logging an outfit correctly counts a wear for each of its pieces.
+- a day's outfits = `DISTINCT outfit_id` for that date; loose items = rows with
+  NULL outfit_id.
+- removing a logged outfit = delete that date's rows with that outfit_id.
+
+`items.wear_count` is **retired** — `_item_from_row` derives it. The column
+stays in the schema (the JSON import still writes it, harmless) but nothing
+reads it. Beck had essentially no historical counts, so deriving lost nothing.
+
+"Worn today" on the item page now inserts a wear_log row for today instead of
+bumping a counter. Past days are backfillable; future days 404 / 400.
+
+Jinja footgun met here: `{{ worn.items }}` resolves to the dict's `.items`
+*method*, not the `"items"` key. The day route passes `worn_items` /
+`worn_outfits` as separate template vars.
+
 ## Closet drag-to-reorder (2026-09-09)
 
 `items.sort_order INTEGER`, nullable. `load_items()` orders

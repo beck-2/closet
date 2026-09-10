@@ -10,7 +10,7 @@ def test_save_and_get_item_roundtrip(flask_app):
         "name": "striped tee", "item_type": "tshirt", "color": ["red", "white"],
         "comfort": 3, "fit": 2, "condition": 3, "vibes": ["daytime"],
         "source": "thrifted", "price": 12.5, "date_acquired": "2025-03",
-        "season": ["summer"], "wear_count": 4, "notes": "soft",
+        "season": ["summer"], "notes": "soft",
         "images": ["data/processed/001.png", "data/processed/001_2.png"],
         "raw_images": ["data/raw/001.jpeg", "data/raw/001_2.jpeg"],
     }
@@ -42,12 +42,14 @@ def test_save_item_replaces_images_not_appends(flask_app, add_item):
     assert got["images"] == ["data/processed/002.png"]
 
 
-def test_increment_wear_count_is_atomic_add(flask_app, add_item):
-    add_item("003", wear_count=5)
+def test_wear_count_is_derived_from_the_wear_log(flask_app, add_item):
+    add_item("003")
     with flask_app.app_context():
-        db_module.increment_wear_count("003")
-        db_module.increment_wear_count("003")
-        assert db_module.get_item("003")["wear_count"] == 7
+        assert db_module.get_item("003")["wear_count"] == 0
+        db_module.log_items_worn("2026-09-01", ["003"])
+        db_module.log_items_worn("2026-09-05", ["003"])
+        db_module.log_items_worn("2026-09-05", ["003"])  # same day again: no-op
+        assert db_module.get_item("003")["wear_count"] == 2
 
 
 def test_count_and_existing_ids(flask_app, add_item):

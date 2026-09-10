@@ -17,6 +17,7 @@ live data source anymore.
 """
 from __future__ import annotations
 
+import datetime
 import json
 import sqlite3
 from pathlib import Path
@@ -84,6 +85,16 @@ CREATE TABLE IF NOT EXISTS outfit_items (
     position  INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_outfit_items_outfit ON outfit_items(outfit_id);
+
+CREATE TABLE IF NOT EXISTS wear_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    worn_on    TEXT NOT NULL,              -- 'YYYY-MM-DD'
+    item_id    TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    outfit_id  TEXT,                       -- set when this row came from logging a whole outfit
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_wear_log_date ON wear_log(worn_on);
+CREATE INDEX IF NOT EXISTS idx_wear_log_item ON wear_log(item_id);
 """
 
 
@@ -196,6 +207,10 @@ def _item_from_row(db: sqlite3.Connection, row: sqlite3.Row) -> dict:
     ):
         images.append(img["path"])
         raw_images.append(img["raw_path"])
+    # wear_count is derived from the calendar (wear_log), not stored on the row.
+    wear_count = db.execute(
+        "SELECT COUNT(*) FROM wear_log WHERE item_id = ?", (row["id"],)
+    ).fetchone()[0]
     return {
         "id": row["id"],
         "name": row["name"],
@@ -209,7 +224,7 @@ def _item_from_row(db: sqlite3.Connection, row: sqlite3.Row) -> dict:
         "price": row["price"],
         "date_acquired": row["date_acquired"],
         "season": json.loads(row["season"]),
-        "wear_count": row["wear_count"],
+        "wear_count": wear_count,
         "notes": row["notes"],
         "sort_order": row["sort_order"],
         "images": images,
@@ -248,14 +263,14 @@ def save_item(item_id: str, item: dict) -> None:
     db = get_db()
     db.execute(
         """INSERT INTO items (id, name, item_type, color, comfort, fit, condition, vibes,
-                               source, price, date_acquired, season, wear_count, notes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               source, price, date_acquired, season, notes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET
              name=excluded.name, item_type=excluded.item_type, color=excluded.color,
              comfort=excluded.comfort, fit=excluded.fit, condition=excluded.condition,
              vibes=excluded.vibes, source=excluded.source, price=excluded.price,
              date_acquired=excluded.date_acquired, season=excluded.season,
-             wear_count=excluded.wear_count, notes=excluded.notes""",
+             notes=excluded.notes""",
         (
             item_id, item.get("name"), item.get("item_type"),
             json.dumps(item.get("color") or []),
@@ -263,7 +278,6 @@ def save_item(item_id: str, item: dict) -> None:
             json.dumps(item.get("vibes") or []),
             item.get("source"), item.get("price"), item.get("date_acquired"),
             json.dumps(item.get("season") or []),
-            item.get("wear_count") or 0,
             item.get("notes") or "",
         ),
     )
@@ -279,14 +293,6 @@ def save_item(item_id: str, item: dict) -> None:
     db.commit()
 
 
-def increment_wear_count(item_id: str) -> None:
-    """A real atomic UPDATE — no read-modify-write race like the JSON
-    version had."""
-    db = get_db()
-    db.execute("UPDATE items SET wear_count = wear_count + 1 WHERE id = ?", (item_id,))
-    db.commit()
-
-
 def set_closet_order(ordered_ids: list[str]) -> None:
     """Stamp sort_order = 0, 1, 2, … onto the items in the given order. Ids
     that aren't real items are ignored."""
@@ -295,6 +301,111 @@ def set_closet_order(ordered_ids: list[str]) -> None:
     for pos, item_id in enumerate(i for i in ordered_ids if i in known):
         db.execute("UPDATE items SET sort_order = ? WHERE id = ?", (pos, item_id))
     db.commit()
+
+
+# ------------------------------------------------------- calendar / wear --
+# wear_log is the single source of truth for "what was worn when". A logged
+# outfit is stored as one row per piece with outfit_id set; a loose item is
+# one row with outfit_id NULL. Every item's wear_count derives from here.
+
+def _now() -> str:
+    return datetime.datetime.now().isoformat(timespec="seconds")
+
+
+def log_items_worn(worn_on: str, item_ids: list[str]) -> None:
+    db = get_db()
+    known = {row["id"] for row in db.execute("SELECT id FROM items")}
+    for item_id in item_ids:
+        if item_id not in known:
+            continue
+        already = db.execute(
+            "SELECT 1 FROM wear_log WHERE worn_on = ? AND item_id = ? AND outfit_id IS NULL",
+            (worn_on, item_id),
+        ).fetchone()
+        if already:
+            continue
+        db.execute(
+            "INSERT INTO wear_log (worn_on, item_id, outfit_id, created_at) VALUES (?, ?, NULL, ?)",
+            (worn_on, item_id, _now()),
+        )
+    db.commit()
+
+
+def log_outfit_worn(worn_on: str, outfit_id: str) -> None:
+    db = get_db()
+    if db.execute("SELECT 1 FROM outfits WHERE id = ?", (outfit_id,)).fetchone() is None:
+        return
+    db.execute(
+        "DELETE FROM wear_log WHERE worn_on = ? AND outfit_id = ?", (worn_on, outfit_id)
+    )
+    for r in db.execute(
+        "SELECT DISTINCT item_id FROM outfit_items WHERE outfit_id = ?", (outfit_id,)
+    ):
+        db.execute(
+            "INSERT INTO wear_log (worn_on, item_id, outfit_id, created_at) VALUES (?, ?, ?, ?)",
+            (worn_on, r["item_id"], outfit_id, _now()),
+        )
+    db.commit()
+
+
+def unlog_item(worn_on: str, item_id: str) -> None:
+    db = get_db()
+    db.execute(
+        "DELETE FROM wear_log WHERE worn_on = ? AND item_id = ? AND outfit_id IS NULL",
+        (worn_on, item_id),
+    )
+    db.commit()
+
+
+def unlog_outfit(worn_on: str, outfit_id: str) -> None:
+    db = get_db()
+    db.execute(
+        "DELETE FROM wear_log WHERE worn_on = ? AND outfit_id = ?", (worn_on, outfit_id)
+    )
+    db.commit()
+
+
+def wears_on(worn_on: str) -> dict:
+    """What was worn on one day: loose items and whole outfits, each fully
+    hydrated."""
+    db = get_db()
+    items = [
+        get_item(r["item_id"])
+        for r in db.execute(
+            "SELECT item_id FROM wear_log WHERE worn_on = ? AND outfit_id IS NULL ORDER BY id",
+            (worn_on,),
+        )
+    ]
+    outfit_ids = [
+        r["outfit_id"]
+        for r in db.execute(
+            "SELECT DISTINCT outfit_id FROM wear_log WHERE worn_on = ? AND outfit_id IS NOT NULL ORDER BY outfit_id",
+            (worn_on,),
+        )
+    ]
+    return {
+        "items": [it for it in items if it],
+        "outfits": [o for o in (get_outfit(oid) for oid in outfit_ids) if o],
+    }
+
+
+def wear_summary_for_month(year: int, month: int) -> dict:
+    """{ 'YYYY-MM-DD': {'item_ids': [...], 'outfit_ids': [...]} } for every day
+    in the month that has anything logged."""
+    db = get_db()
+    like = f"{year:04d}-{month:02d}-%"
+    out: dict = {}
+    for r in db.execute(
+        "SELECT worn_on, item_id, outfit_id FROM wear_log WHERE worn_on LIKE ? ORDER BY id",
+        (like,),
+    ):
+        day = out.setdefault(r["worn_on"], {"item_ids": [], "outfit_ids": []})
+        if r["outfit_id"]:
+            if r["outfit_id"] not in day["outfit_ids"]:
+                day["outfit_ids"].append(r["outfit_id"])
+        elif r["item_id"] not in day["item_ids"]:
+            day["item_ids"].append(r["item_id"])
+    return out
 
 
 # -------------------------------------------------------------- outfits --

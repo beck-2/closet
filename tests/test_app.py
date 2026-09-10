@@ -32,13 +32,13 @@ def test_item_view_and_404(client, add_item):
     assert client.get("/item/999").status_code == 404
 
 
-def test_mark_worn_increments_and_redirects(client, flask_app, add_item):
-    add_item("001", wear_count=2)
+def test_mark_worn_logs_today_and_redirects(client, flask_app, add_item):
+    add_item("001")
     resp = client.post("/item/001/worn")
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/item/001")
     with flask_app.app_context():
-        assert db_module.get_item("001")["wear_count"] == 3
+        assert db_module.get_item("001")["wear_count"] == 1
 
 
 def test_mark_worn_missing_item_404(client):

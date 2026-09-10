@@ -51,7 +51,6 @@ def add_item(flask_app):
             "price": 10.0,
             "date_acquired": None,
             "season": [],
-            "wear_count": 0,
             "notes": "",
             "images": ["data/processed/%s.png" % item_id],
             "raw_images": ["data/raw/%s.jpeg" % item_id],

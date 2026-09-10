@@ -123,6 +123,18 @@
   Pointer-based drag with a 6px click/drag threshold, merged into the
   filter IIFE so originalOrder stays in sync. Disabled while filtering.
   Verified real mouse drag + persist + click-navigation in the browser.
+- #7 (calendar) done — the big one. New wear_log table (CREATE IF NOT
+  EXISTS, no ALTER needed). Model: one row per piece worn, outfit_id set
+  when it came from logging an outfit. wear_count is now DERIVED from
+  wear_log — retired items.wear_count (kept in schema, unread; Beck had
+  basically no historical counts so nothing lost). Month grid + day-detail
+  pages, "Calendar" nav pill. "Worn today" logs into today. Backfill any
+  past day; future days blocked. Jinja gotcha: `worn.items` resolves to
+  dict.items() — passed worn_items/worn_outfits as separate vars.
+  Fixed 3 wear_count tests for the derived model. Verified end to end in
+  the browser (log items+outfit on Sept 8, month grid thumbnails, "Worn
+  today" → Sept 9, remove).
+- ALL 3 BATCH-2 TODOS DONE (#5 #6 #7). 86 tests.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but

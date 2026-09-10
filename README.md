@@ -39,14 +39,19 @@ nothing leaves your machine.
 - **Closet** — browse everything; filter by type / color / season / source
   (multi-select dropdowns), and search by name or vibe — search reorders the
   grid by relevance rather than hiding anything.
+- Drag pieces around the closet grid to rearrange them — the order sticks.
 - **Outfits** — build a look on a scrapbook-style board (drag pieces around,
   resize them, right-click to reorder), save it, and see saved outfits as
   little arranged boards. Click one to reopen it; hit **manage** to delete.
+- **Calendar** — log what you wore each day (loose pieces and/or a saved
+  outfit; any past day). The month grid shows it back to you, and every
+  item's wear count / cost-per-wear comes straight from the log.
 - **+ Add Item** — upload a new photo; it runs through the same
   background-removal + resize pipeline automatically and gets the next item
-  ID.
+  ID. The photo **touch-up** tool can erase stray background *or* paint a
+  wrongly-removed part (a sleeve, a hem) back in from the original photo.
 - Every item page has an **Edit item** button and a **Worn today** button
-  (bumps wear count, which feeds cost-per-wear).
+  (logs today on the calendar).
 - "Date acquired" takes a year on its own, or a year and month.
 
 ## Development

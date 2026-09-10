@@ -17,6 +17,7 @@
     <div class="navrow">
       <a class="navpill {{ 'active closet' if active == 'closet' else '' }}" href="{{ url_for('closet') }}">Closet</a>
       <a class="navpill {{ 'active outfits' if active == 'outfits' else '' }}" href="{{ url_for('outfits_list') }}">Outfits</a>
+      <a class="navpill {{ 'active calendar' if active == 'calendar' else '' }}" href="{{ url_for('calendar_view') }}">Calendar</a>
       <a class="navpill {{ 'active add' if active == 'add' else '' }}" href="{{ url_for('add_item') }}">+ Add Item</a>
     </div>
     {% block content %}{% endblock %}

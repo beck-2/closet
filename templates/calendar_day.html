@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% set pageclass = "pg-calday" %}
+{% block content %}
+<a class="backchip" href="{{ url_for('calendar_view') }}">← calendar</a>
+<h2 class="caldaytitle">{{ pretty_date }}</h2>
+
+<div class="worn-section">
+  <p class="section-label">worn this day</p>
+  {% if not worn_items and not worn_outfits %}
+  <p class="worn-empty">nothing logged yet</p>
+  {% endif %}
+  <div class="worn-grid">
+    {% for o in worn_outfits %}
+    <div class="worn-card worn-outfit">
+      <div class="worn-miniboard">
+        {% for piece in o.pieces %}
+        <img class="minipiece" src="{{ piece.thumb_src }}" alt=""
+             style="left: {{ piece.left_pct }}%; top: {{ piece.top_pct }}%; width: {{ piece.width_pct }}%; transform: rotate({{ piece.rot }}deg);">
+        {% endfor %}
+      </div>
+      <span class="worn-label">outfit · {{ o.name }}</span>
+      <form method="post" action="{{ url_for('calendar_day_remove', date=date) }}">
+        <input type="hidden" name="kind" value="outfit">
+        <input type="hidden" name="id" value="{{ o.id }}">
+        <button type="submit" class="worn-remove" title="remove">✕</button>
+      </form>
+    </div>
+    {% endfor %}
+    {% for it in worn_items %}
+    <div class="worn-card">
+      {% if it.images %}<img class="worn-thumb" src="{{ url_for('thumbs', filename=it.images[0].split('/')[-1]) }}" alt="">{% endif %}
+      <span class="worn-label">{{ it.name or it.item_type or 'item' }}</span>
+      <form method="post" action="{{ url_for('calendar_day_remove', date=date) }}">
+        <input type="hidden" name="kind" value="item">
+        <input type="hidden" name="id" value="{{ it.id }}">
+        <button type="submit" class="worn-remove" title="remove">✕</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('calendar_day_log', date=date) }}" class="logform">
+  <p class="section-label">add what you wore</p>
+  <input type="search" id="tray-search" class="filtertext" placeholder="search your closet…" autocomplete="off">
+  <div class="logtray" id="logtray">
+    {% for item in tray %}{% if item.images %}
+    <label class="logtile" data-name="{{ ((item.name or '') ~ ' ' ~ (item.item_type or '')) | lower }}">
+      <input type="checkbox" name="item_id" value="{{ item.id }}">
+      <img src="{{ url_for('thumbs', filename=item.images[0].split('/')[-1]) }}" alt="" loading="lazy">
+      <span>{{ item.name or item.item_type or 'item' }}</span>
+    </label>
+    {% endif %}{% endfor %}
+  </div>
+  {% if outfits %}
+  <label class="logoutfit">
+    …or a whole outfit:
+    <select name="outfit_id">
+      <option value="">— none —</option>
+      {% for o in outfits %}<option value="{{ o.id }}">{{ o.name }}</option>{% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <button type="submit" class="savebtn">log it</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var search = document.getElementById('tray-search');
+  var tiles = Array.prototype.slice.call(document.querySelectorAll('#logtray .logtile'));
+  if (!search) return;
+  search.addEventListener('input', function () {
+    var q = search.value.trim().toLowerCase();
+    tiles.forEach(function (t) {
+      t.hidden = q && t.dataset.name.indexOf(q) === -1;
+    });
+  });
+})();
+</script>
+{% endblock %}
