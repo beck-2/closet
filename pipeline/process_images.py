@@ -36,6 +36,13 @@ from .config import (
     TARGET_LONG_EDGE,
 )
 
+# Cap how many pixels Pillow will decode from any one image. Guards against a
+# small, highly-compressed "decompression bomb" upload blowing up memory.
+# 64MP clears current phone sensors with room to spare; Pillow raises
+# DecompressionBombError past 2x this. Set here because every uploaded photo
+# passes through this module, and it's a process-wide PIL setting.
+Image.MAX_IMAGE_PIXELS = 64_000_000
+
 log = logging.getLogger("closet.pipeline")
 
 # The rembg session owns the loaded background-removal model (~175MB on

@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
 
@@ -150,6 +151,38 @@ def avg_rating(item: dict):
 def inject_globals():
     total = db.count_items()
     return {"total_str": f"{total:03d}" if total < 1000 else str(total)}
+
+
+# --------------------------------------------------------- request guard --
+# This app has no login and binds to localhost, but a web page open in the
+# same browser can still fire POSTs at http://127.0.0.1:8000 (classic CSRF —
+# bump wear counts, delete outfits, etc.). Browsers attach an Origin (or at
+# least a Referer) to any state-changing request, so we reject a write whose
+# Origin/Referer names a different host. A request carrying neither header
+# (curl, the test client, local scripts) is let through — that's not a
+# browser and isn't the threat this guards against.
+
+_SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+
+
+def _same_host(url: str | None) -> bool:
+    if not url:
+        return False
+    return urlparse(url).netloc == request.host
+
+
+@app.before_request
+def block_cross_site_writes():
+    if request.method in _SAFE_METHODS:
+        return
+    origin = request.headers.get("Origin")
+    if origin is not None:
+        if not _same_host(origin):
+            abort(403)
+        return
+    referer = request.headers.get("Referer")
+    if referer is not None and not _same_host(referer):
+        abort(403)
 
 
 # ------------------------------------------------------------------ views --
@@ -479,11 +512,35 @@ def edit_outfit(outfit_id):
     )
 
 
+def _clean_placements(raw) -> list[dict] | None:
+    """Coerce the board layout from a request into the exact shape the
+    storage layer expects. Returns None if any entry is missing a field or
+    has a non-numeric coordinate, so a malformed payload is a clean 400
+    instead of a KeyError 500 deeper in."""
+    if not isinstance(raw, list):
+        return None
+    cleaned = []
+    for p in raw:
+        try:
+            cleaned.append({
+                "id": str(p["id"]),
+                "x": float(p["x"]),
+                "y": float(p["y"]),
+                "w": float(p["w"]),
+                "rot": float(p["rot"]),
+            })
+        except (KeyError, TypeError, ValueError):
+            return None
+    return cleaned
+
+
 def _outfit_payload_from_request():
     import datetime
 
     payload = request.get_json(force=True, silent=True) or {}
-    placements = payload.get("items") or []
+    placements = _clean_placements(payload.get("items") or [])
+    if placements is None:
+        return None, jsonify({"ok": False, "error": "malformed item placement"}), 400
     if not placements:
         return None, jsonify({"ok": False, "error": "no items placed"}), 400
     outfit = {

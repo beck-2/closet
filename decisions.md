@@ -2,6 +2,32 @@
 
 Why things are built the way they are. Newest first.
 
+## Cross-site write protection via Origin/Referer, not CSRF tokens (2026-09-09)
+
+**What:** A `before_request` guard rejects any non-GET whose `Origin` (or,
+absent that, `Referer`) names a host other than the one being served. A
+request with neither header (curl, the test client, local scripts) passes.
+
+**Why this and not Flask-WTF `CSRFProtect`:** the app has no login and no
+sessions, so a CSRF token would just be a value the page hands back to itself.
+The actual risk is a web page in the same browser POSTing to
+`http://127.0.0.1:8000`. Browsers always attach `Origin` (or at least
+`Referer`) to a state-changing request, and this check is the OWASP-endorsed
+same-site defense. Token plumbing across 5 templates + 3 `fetch()` calls is a
+lot of surface for a single-user localhost tool; this is one function.
+
+**Why header-less requests are allowed:** anyone who can send a header-less
+POST to localhost already runs code on the machine — not the threat model.
+Keeping them allowed means tests and local scripts need no ceremony.
+
+## Pixel cap + outfit payload validation (2026-09-09)
+
+`Image.MAX_IMAGE_PIXELS = 64_000_000` in the pipeline module (process-wide,
+and every upload goes through there) so a small highly-compressed
+"decompression bomb" can't blow up memory. `_clean_placements()` coerces the
+outfit board layout to exact types and returns a 400 on anything malformed,
+instead of a `KeyError` 500 landing in the storage layer.
+
 ## Cached rembg session + on-disk thumbnails (2026-09-09)
 
 **Session:** `add_item` / `edit_item` each called `rembg.new_session()` per

@@ -25,4 +25,13 @@
   `piece.images` but `_outfit_render_pieces` returns `.src` — so saved-outfit
   thumbnails render as empty boxes. NOT mine to fix under the perf task;
   flagged to Beck.
-- Next: step 3, security (CSRF + upload validation).
+- Step 3 (security) done. Cross-site write guard (Origin/Referer check in
+  before_request), Pillow pixel cap, outfit payload validation. Verified with
+  curl (evil Origin → 403, same-origin → 302, headerless → 302) and clicked
+  "Worn today" through the browser — works. 44 tests green.
+- Lesson: I ran a curl POST against the REAL data/closet.db during testing and
+  double-bumped item 001's wear_count. Caught it, reset to 0. For the browser
+  check I copied the DB to a temp file and used CLOSET_DB_PATH. Do that from
+  the start next time.
+- Next: step 4, cleanup (unpinned deps, stale data files, naive timestamps,
+  the outfits_list.html empty-thumbnail bug).
