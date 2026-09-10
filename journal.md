@@ -75,6 +75,11 @@
 - Verified end to end: built a fit in the builder, resized a piece, sent
   it to back, saved → the list thumbnail matched the arrangement exactly.
 - ALL 4 TODO ITEMS DONE. 69 tests green.
+- Follow-up from Beck: filter dropdowns → checkbox chips, multi-select
+  within a group = OR ("from sat or bauer"). Done. Had to switch the card
+  data-attrs from space-join to pipe-join because source values contain
+  spaces ("from sat"). Verified OR-within / AND-across / clear-all in the
+  browser. 71 tests.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but

@@ -2,6 +2,20 @@
 
 Why things are built the way they are. Newest first.
 
+## Closet filters: checkbox chips, OR within a facet (2026-09-09)
+
+Type/color/season/source are checkbox chip groups, not `<select>` dropdowns —
+one click applies (no "open, pick, close"). Checking several boxes in one
+group **widens** the results (OR): "everything from sat or bauer". Different
+groups still narrow (AND).
+
+The card filter data-attributes are pipe-joined (`data-color="blue|black"`),
+not space-joined, because some values legitimately contain spaces (`from sat`,
+`from bauer`, `from mom`) and whitespace tokenising split them apart. `vibes`
+stays space-joined — it's a substring search, not a token match.
+
+A facet with no values across the whole closet renders no group at all.
+
 ## Cross-site write protection via Origin/Referer, not CSRF tokens (2026-09-09)
 
 **What:** A `before_request` guard rejects any non-GET whose `Origin` (or,

@@ -1,5 +1,5 @@
 # ABOUTME: Tests for the closet filter bar — the server side of it: the
-# ABOUTME: per-card data attributes and the dropdown option lists.
+# ABOUTME: per-card data attributes and the checkbox option lists.
 from __future__ import annotations
 
 import re
@@ -12,28 +12,36 @@ def test_cards_carry_all_filter_data_attributes(client, add_item):
         item_type="jacket",
         color=["blue", "black"],
         season=["winter"],
-        source="thrifted",
+        source="from sat",
         vibes=["Cozy", "Warm"],
     )
     body = client.get("/").data.decode()
     assert 'data-name="blue winter jacket"' in body
     assert 'data-type="jacket"' in body
-    assert 'data-color="blue black"' in body
+    assert 'data-color="blue|black"' in body        # pipe-joined: values can contain spaces
     assert 'data-season="winter"' in body
-    assert 'data-source="thrifted"' in body
+    assert 'data-source="from sat"' in body
     assert 'data-vibes="cozy warm"' in body
 
 
-def test_dropdowns_list_every_value_present(client, add_item):
-    add_item("001", item_type="jacket", color=["blue"], season=["winter"], source="thrifted")
-    add_item("002", item_type="dress", color=["red"], season=["summer"], source="gift")
+def test_filters_are_checkboxes_not_dropdowns(client, add_item):
+    add_item("001", item_type="top", source="from sat")
     body = client.get("/").data.decode()
-    for token in ("jacket", "dress", "blue", "red", "winter", "summer", "thrifted", "gift"):
-        assert f'value="{token}"' in body
+    assert "<select" not in body
+    assert 'type="checkbox" data-filter="type"' in body
+    assert 'type="checkbox" data-filter="source"' in body
 
 
-def test_filter_bar_controls_present(client, add_item):
-    add_item("001")
+def test_every_present_value_gets_a_checkbox(client, add_item):
+    add_item("001", item_type="jacket", color=["blue"], season=["winter"], source="from sat")
+    add_item("002", item_type="dress", color=["red"], season=["summer"], source="from bauer")
+    body = client.get("/").data.decode()
+    for value in ("jacket", "dress", "blue", "red", "winter", "summer", "from sat", "from bauer"):
+        assert f'value="{value}"' in body
+
+
+def test_filter_bar_search_boxes_present(client, add_item):
+    add_item("001", item_type="top", color=["black"], season=["summer"], source="thrifted")
     body = client.get("/").data.decode()
     assert 'id="filter-name"' in body
     assert 'id="filter-vibes"' in body
@@ -41,10 +49,16 @@ def test_filter_bar_controls_present(client, add_item):
         assert f'data-filter="{field}"' in body
 
 
-def test_dropdown_options_are_sorted_and_deduped(client, add_item):
+def test_empty_facet_renders_no_group(client, add_item):
+    add_item("001", item_type="top", color=[], season=[], source="thrifted")
+    body = client.get("/").data.decode()
+    assert 'data-filter="color"' not in body   # nothing has a color yet
+    assert 'data-filter="type"' in body
+
+
+def test_checkbox_options_are_sorted_and_deduped(client, add_item):
     add_item("001", color=["red", "blue"])
     add_item("002", color=["blue", "green"])
     body = client.get("/").data.decode()
-    colors_section = body.split('data-filter="color"')[1].split("</select>")[0]
-    values = [v for v in re.findall(r'<option value="([^"]*)"', colors_section) if v]
-    assert values == ["blue", "green", "red"]
+    color_values = re.findall(r'data-filter="color" value="([^"]*)"', body)
+    assert color_values == ["blue", "green", "red"]

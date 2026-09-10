@@ -6,8 +6,8 @@
      href="{{ url_for('item_view', item_id=item.id) }}"
      data-name="{{ (item.name or '') | lower }}"
      data-type="{{ item.item_type or '' }}"
-     data-color="{{ item.color | join(' ') }}"
-     data-season="{{ item.season | join(' ') }}"
+     data-color="{{ item.color | join('|') }}"
+     data-season="{{ item.season | join('|') }}"
      data-source="{{ item.source or '' }}"
      data-vibes="{{ item.vibes | join(' ') | lower }}">
     {% if item.starred %}<span class="cardstar" title="gold star">★</span>{% endif %}
@@ -26,25 +26,30 @@
   </a>
 {% endmacro %}
 
-{% macro filter_select(field, label, options) %}
-  <label class="filtersel">
-    <span>{{ label }}</span>
-    <select data-filter="{{ field }}">
-      <option value="">any</option>
-      {% for opt in options %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}
-    </select>
-  </label>
+{% macro filter_group(field, label, options) %}
+  {% if options %}
+  <div class="filtergroup">
+    <span class="filterlabel">{{ label }}</span>
+    <div class="filterchips">
+      {% for opt in options %}
+      <label class="fchip"><input type="checkbox" data-filter="{{ field }}" value="{{ opt }}"> {{ opt }}</label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 {% endmacro %}
 
 {% block content %}
 <div class="filterbar" id="filterbar">
-  <input type="search" id="filter-name" class="filtertext" placeholder="search by name…" autocomplete="off">
-  <input type="search" id="filter-vibes" class="filtertext" placeholder="search vibes…" autocomplete="off">
-  {{ filter_select('type', 'Type', filter_options.type) }}
-  {{ filter_select('color', 'Color', filter_options.color) }}
-  {{ filter_select('season', 'Season', filter_options.season) }}
-  {{ filter_select('source', 'Source', filter_options.source) }}
-  <button type="button" class="filterclear" id="filter-clear" hidden>clear</button>
+  <div class="filtersearch">
+    <input type="search" id="filter-name" class="filtertext" placeholder="search by name…" autocomplete="off">
+    <input type="search" id="filter-vibes" class="filtertext" placeholder="search vibes…" autocomplete="off">
+    <button type="button" class="filterclear" id="filter-clear" hidden>clear all</button>
+  </div>
+  {{ filter_group('type', 'Type', filter_options.type) }}
+  {{ filter_group('color', 'Color', filter_options.color) }}
+  {{ filter_group('season', 'Season', filter_options.season) }}
+  {{ filter_group('source', 'Source', filter_options.source) }}
 </div>
 
 {% if starred_cards %}
@@ -72,56 +77,64 @@
 (function () {
   var nameInput = document.getElementById('filter-name');
   var vibesInput = document.getElementById('filter-vibes');
-  var selects = Array.prototype.slice.call(document.querySelectorAll('#filterbar select[data-filter]'));
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#filterbar input[type="checkbox"][data-filter]')
+  );
   var clearBtn = document.getElementById('filter-clear');
   var goldSection = document.getElementById('gold-section');
   var noMatches = document.getElementById('no-matches');
   var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
 
+  // color/season are lists on a card (an item can be several); type/source
+  // are single. Either way, checking more than one box in a group widens
+  // the results (OR) — "everything from sat or bauer".
+  var LIST_FACET = { color: true, season: true, type: false, source: false };
+
   function norm(s) { return (s || '').trim().toLowerCase(); }
 
-  function tokenList(value) { return (value || '').split(/\s+/).filter(Boolean); }
-
-  function matches(card, name, vibes, wanted) {
-    if (name && card.dataset.name.indexOf(name) === -1) return false;
-    if (vibes && card.dataset.vibes.indexOf(vibes) === -1) return false;
-    if (wanted.type && card.dataset.type !== wanted.type) return false;
-    if (wanted.source && card.dataset.source !== wanted.source) return false;
-    if (wanted.color && tokenList(card.dataset.color).indexOf(wanted.color) === -1) return false;
-    if (wanted.season && tokenList(card.dataset.season).indexOf(wanted.season) === -1) return false;
-    return true;
+  function facetOk(cardValue, wantedSet, isList) {
+    if (wantedSet.size === 0) return true;
+    if (isList) {
+      return (cardValue || '').split('|').some(function (v) { return wantedSet.has(v); });
+    }
+    return wantedSet.has(cardValue);
   }
 
   function apply() {
     var name = norm(nameInput.value);
     var vibes = norm(vibesInput.value);
-    var wanted = {};
-    selects.forEach(function (sel) { wanted[sel.dataset.filter] = sel.value; });
+    var wanted = { type: new Set(), color: new Set(), season: new Set(), source: new Set() };
+    checkboxes.forEach(function (cb) { if (cb.checked) wanted[cb.dataset.filter].add(cb.value); });
 
-    var active = !!(name || vibes) || selects.some(function (s) { return s.value; });
+    var active = !!(name || vibes) || checkboxes.some(function (cb) { return cb.checked; });
     clearBtn.hidden = !active;
 
     var anyVisible = false;
     cards.forEach(function (card) {
-      var show = matches(card, name, vibes, wanted);
+      var show =
+        (!name || card.dataset.name.indexOf(name) !== -1) &&
+        (!vibes || card.dataset.vibes.indexOf(vibes) !== -1) &&
+        facetOk(card.dataset.type, wanted.type, LIST_FACET.type) &&
+        facetOk(card.dataset.source, wanted.source, LIST_FACET.source) &&
+        facetOk(card.dataset.color, wanted.color, LIST_FACET.color) &&
+        facetOk(card.dataset.season, wanted.season, LIST_FACET.season);
       card.hidden = !show;
       if (show) anyVisible = true;
     });
 
     if (goldSection) {
-      var goldVisible = goldSection.querySelectorAll('.card:not([hidden])').length > 0;
-      goldSection.hidden = !goldVisible;
+      goldSection.hidden = goldSection.querySelectorAll('.card:not([hidden])').length === 0;
     }
     noMatches.hidden = anyVisible;
   }
 
   nameInput.addEventListener('input', apply);
   vibesInput.addEventListener('input', apply);
-  selects.forEach(function (sel) { sel.addEventListener('change', apply); });
+  checkboxes.forEach(function (cb) { cb.addEventListener('change', apply); });
   clearBtn.addEventListener('click', function () {
     nameInput.value = '';
     vibesInput.value = '';
-    selects.forEach(function (sel) { sel.value = ''; });
+    checkboxes.forEach(function (cb) { cb.checked = false; });
     apply();
   });
 })();

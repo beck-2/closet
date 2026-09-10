@@ -16,14 +16,22 @@
 - [x] Tests in tests/test_gold_stars.py (8). Verified in browser.
 
 ## 3. Richer closet filtering + name search  ✅ DONE
-- [x] Dropdowns: type, color, season, source (options = values present).
 - [x] Text search: name + vibes (substring, live).
 - [x] Filters AND together, client-side over every rendered `.card`.
 - [x] Gold section hides itself when nothing starred matches; "nothing
       matches" message; a "clear" button appears when any filter is active.
 - [x] Server side: `?type=` query filter removed (now client-side).
-- [x] Tests in tests/test_filters.py (4) + updated test_app. Verified in
-      browser (type/name/combined/clear/no-match all work).
+- [x] Tests + browser verification.
+
+### 3b. Filters → checkboxes (2026-09-09, follow-up)  ✅ DONE
+- [x] Type/color/season/source are now checkbox chips, not dropdowns —
+      one click applies instantly.
+- [x] Multiple boxes in one group = OR ("everything from sat OR bauer");
+      groups still AND together.
+- [x] Card data-attrs pipe-joined (`data-color="blue|black"`) so values
+      with spaces ("from sat") match cleanly.
+- [x] An empty facet renders no group. "clear all" resets everything.
+- [x] tests/test_filters.py rewritten; verified OR/AND/clear in browser.
 
 ## 4. Outfit board + outfits list  ✅ DONE
 - [x] Verified in browser — drag-from-closet, corner-handle resize,
