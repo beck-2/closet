@@ -22,7 +22,7 @@
       <form method="post" action="{{ url_for('calendar_day_remove', date=date) }}">
         <input type="hidden" name="kind" value="outfit">
         <input type="hidden" name="id" value="{{ o.id }}">
-        <button type="submit" class="worn-remove" title="remove">✕</button>
+        <button type="submit" class="worn-remove" title="remove">&times;</button>
       </form>
     </div>
     {% endfor %}
@@ -33,7 +33,7 @@
       <form method="post" action="{{ url_for('calendar_day_remove', date=date) }}">
         <input type="hidden" name="kind" value="item">
         <input type="hidden" name="id" value="{{ it.id }}">
-        <button type="submit" class="worn-remove" title="remove">✕</button>
+        <button type="submit" class="worn-remove" title="remove">&times;</button>
       </form>
     </div>
     {% endfor %}

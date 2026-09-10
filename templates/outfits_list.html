@@ -25,7 +25,7 @@
     <div class="outfitactions">
       <form method="post" action="{{ url_for('delete_outfit', outfit_id=outfit.id) }}"
             onsubmit="return confirm('Delete “{{ outfit.name }}”? This can’t be undone.');">
-        <button type="submit" class="minidelete">🗑 delete</button>
+        <button type="submit" class="minidelete">delete</button>
       </form>
     </div>
   </div>

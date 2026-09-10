@@ -149,6 +149,14 @@
   hidden / after programmatic scroll) — verified layout via getBoundingClientRect
   + innerText instead, which was reliable.
 - 95 tests.
+- Beck review of the dashboard: NO EMOJIS in the UI (reads as AI-gen), and
+  NO instructional helper text — asked me to remember both. Stripped all
+  emojis app-wide (💰 🗑 ✎; ✕→×). Removed the grey hint lines: closet
+  draghint, outfit-builder top hint + sidebar hint, stats "N pieces logged".
+  Saved as a memory. Most-worn card: capped width, scrolls after ~5.
+  Money section: solid border, title "PRICE" + caret, no show/hide button.
+  Also: excluded $0 pieces from "best value" (a free gift at $0/wear isn't
+  a value story) — avg CPW went $16.17 → $24.25.
 
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but

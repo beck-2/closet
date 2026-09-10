@@ -54,7 +54,6 @@
 </div>
 
 {% if cards %}
-<p class="draghint" id="drag-hint">drag pieces to rearrange — the order sticks</p>
 <div class="grid" id="main-grid">
   {% for item in cards %}{{ card(item) }}{% endfor %}
 </div>
@@ -77,7 +76,6 @@
   );
   var clearBtn = document.getElementById('filter-clear');
   var noMatches = document.getElementById('no-matches');
-  var dragHint = document.getElementById('drag-hint');
   var cards = Array.prototype.slice.call(grid.querySelectorAll('.card'));
   var originalOrder = cards.slice();  // the current saved order
 
@@ -152,9 +150,7 @@
     ordered.forEach(function (card) { grid.appendChild(card); });
 
     // Reordering by hand only makes sense in the natural, unfiltered view.
-    var filtering = searching || anyBox;
-    grid.classList.toggle('filtering', filtering);
-    if (dragHint) dragHint.hidden = filtering;
+    grid.classList.toggle('filtering', searching || anyBox);
 
     updateBadges();
   }

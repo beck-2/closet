@@ -20,8 +20,8 @@
         {% for img in item.images %}
         <div class="photothumb">
           <img src="{{ url_for('photos', filename=img.split('/')[-1]) }}" alt="">
-          <a class="fixlink" href="{{ url_for('touchup_photo', item_id=item_id, index=loop.index0) }}" title="touch up this photo">✎ fix</a>
-          <label class="delcheck"><input type="checkbox" name="delete_image" value="{{ img }}"> remove 🗑</label>
+          <a class="fixlink" href="{{ url_for('touchup_photo', item_id=item_id, index=loop.index0) }}" title="touch up this photo">fix</a>
+          <label class="delcheck"><input type="checkbox" name="delete_image" value="{{ img }}"> remove</label>
         </div>
         {% endfor %}
         <label class="photothumb addphoto" for="new-photos-input">

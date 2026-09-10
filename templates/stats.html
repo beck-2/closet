@@ -24,7 +24,6 @@
 
 {% block content %}
 <h2 class="statshead">your closet, by the numbers</h2>
-<p class="statssub">{{ total_items }} pieces logged</p>
 
 <section class="statsection">
   <h3 class="statsection-title">Wardrobe</h3>
@@ -75,10 +74,10 @@
       {% endfor %}
     </div>
 
-    <div class="statcard statcard-wide">
+    <div class="statcard">
       <p class="statcard-title">Most worn</p>
       {% if most_worn %}
-      <div class="statitemlist">
+      <div class="statitemlist scrolllist">
         {% for row in most_worn %}{{ itemrow(row, row.count ~ '×') }}{% endfor %}
       </div>
       {% else %}
@@ -90,8 +89,8 @@
 
 <details class="moneysection" id="money-section">
   <summary>
-    <span class="money-title">💰 Money</span>
-    <span class="money-toggle">show / hide</span>
+    <span class="money-title">price</span>
+    <span class="money-caret" aria-hidden="true">▾</span>
   </summary>
   <div class="statcards">
     <div class="statcard">
@@ -104,7 +103,7 @@
       <p class="bignum">{{ ('$%.2f' | format(money.avg_cpw)) if money.avg_cpw is not none else '—' }}</p>
       <p class="statsmall">priced pieces you've actually worn</p>
     </div>
-    <div class="statcard statcard-wide">
+    <div class="statcard">
       <p class="statcard-title">Best value</p>
       {% if money.best_value %}
       <div class="statitemlist">
@@ -114,7 +113,7 @@
       <p class="statempty">no priced-and-worn pieces yet</p>
       {% endif %}
     </div>
-    <div class="statcard statcard-wide">
+    <div class="statcard">
       <p class="statcard-title">Closet regrets</p>
       <p class="statsmall">priced, never worn</p>
       {% if money.regrets %}

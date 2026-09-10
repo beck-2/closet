@@ -427,7 +427,7 @@ def stats_view():
     most_worn = [
         {"id": it["id"], "name": it.get("name") or it.get("item_type") or "item",
          "count": it["wear_count"], "thumb": thumb(it)}
-        for it in worn_items[:8]
+        for it in worn_items[:25]
     ]
     today = datetime.date.today()
     util = {
@@ -471,7 +471,6 @@ def stats_view():
     return render_template(
         "stats.html",
         active="stats",
-        total_items=n,
         colors=colors,
         color_donut=_donut(colors),
         types=types,

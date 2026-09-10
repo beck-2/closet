@@ -1,16 +1,14 @@
 {% extends "base.html" %}
 {% set pageclass = "pg-outfits" %}
 {% block content %}
-<p class="hint">drag a piece from your closet onto the board (or tap it) — drag to move, use the corner handle to resize, right-click for front/back</p>
 <div class="layout">
   <div class="board" id="board">
-    <div class="boardempty" id="board-empty">the board is empty — add pieces from your closet on the right</div>
+    <div class="boardempty" id="board-empty">the board is empty</div>
     <input class="namefield" id="outfit-name" type="text" placeholder="name this outfit..." value="{{ outfit.name if outfit else '' }}">
   </div>
 
   <div class="sidebar">
     <p class="sidebartitle">your closet</p>
-    <p class="sidebarhint">drag or tap a piece to add it to the board</p>
     <div class="filterrow" id="tray-filters">
       <div class="chip selected" data-type="">All</div>
       {% for t in tray|map(attribute='item_type')|reject('none')|unique|sort %}

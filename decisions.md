@@ -2,6 +2,15 @@
 
 Why things are built the way they are. Newest first.
 
+## No emojis, no instruction microcopy (2026-09-10)
+
+Beck's standing rule for this app: no emojis in the UI (they read as
+AI-generated), and no explanatory helper text ("drag pieces to rearrange",
+"N items logged"). The UI should be intuitive on its own; ask before adding
+any hint. Close/remove buttons use a plain `×` (U+00D7), not `✕`; carets use
+`▾`. If an affordance seems genuinely non-obvious, raise it — don't paper
+over it with microcopy.
+
 ## Analytics dashboard (2026-09-10)
 
 A `/stats` page, three sections: Wardrobe (composition), Wear (usage), Money.
