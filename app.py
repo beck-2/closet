@@ -144,6 +144,14 @@ def avg_rating(item: dict):
     return round(sum(vals) / len(vals)) if vals else 0
 
 
+def _pretty_day(iso: str | None) -> str | None:
+    """'2026-09-09' -> 'Sep 9, 2026'."""
+    if not iso:
+        return None
+    d = datetime.date.fromisoformat(iso)
+    return f"{d.strftime('%b')} {d.day}, {d.year}"
+
+
 @app.context_processor
 def inject_globals():
     total = db.count_items()
@@ -231,6 +239,7 @@ def item_view(item_id):
         item_id=item_id,
         color_hex=COLOR_HEX,
         cost_per_wear=cost_per_wear(item),
+        last_worn=_pretty_day(db.last_worn(item_id)),
     )
 
 
@@ -358,6 +367,125 @@ def calendar_day_remove(date):
     elif kind == "outfit" and target:
         db.unlog_outfit(date, target)
     return redirect(url_for("calendar_day", date=date))
+
+
+# ------------------------------------------------------------------ stats --
+
+def _counter(pairs: list, labeller=lambda v: v) -> list[dict]:
+    """[(label, count), …] biggest first, from an iterable of raw values."""
+    tally: dict = {}
+    for value in pairs:
+        key = labeller(value) if value else labeller(None)
+        tally[key] = tally.get(key, 0) + 1
+    return [
+        {"label": k, "count": n}
+        for k, n in sorted(tally.items(), key=lambda kv: (-kv[1], str(kv[0])))
+    ]
+
+
+def _donut(segments: list[dict], radius: float = 60, stroke: float = 26) -> dict:
+    """Turn [{label,count,color}, …] into ready-to-draw SVG donut segments."""
+    total = sum(s["count"] for s in segments) or 1
+    circ = 2 * 3.141592653589793 * radius
+    offset = 0.0
+    drawn = []
+    for s in segments:
+        frac = s["count"] / total
+        drawn.append({
+            **s,
+            "pct": round(frac * 100),
+            "dash": round(frac * circ, 2),
+            "gap": round(circ - frac * circ, 2),
+            "offset": round(-offset, 2),
+        })
+        offset += frac * circ
+    return {"radius": radius, "stroke": stroke, "circ": round(circ, 2), "segments": drawn}
+
+
+@app.route("/stats")
+def stats_view():
+    items = list(db.load_items().values())
+    n = len(items)
+    counts = db.wear_counts()  # {id: days worn}
+    for it in items:
+        it["wear_count"] = counts.get(it["id"], 0)
+
+    def thumb(it):
+        return url_for("thumbs", filename=it["images"][0].split("/")[-1]) if it.get("images") else None
+
+    # --- wardrobe ---
+    colors = _counter([c for it in items for c in (it.get("color") or [])])
+    for c in colors:
+        c["color"] = COLOR_HEX.get(c["label"], "#d8cdb0")
+    types = _counter([it.get("item_type") for it in items], lambda v: v or "unlabeled")
+    sources = _counter([it.get("source") for it in items], lambda v: v or "unknown")
+
+    # --- wear ---
+    worn_items = sorted(
+        (it for it in items if it["wear_count"]), key=lambda it: -it["wear_count"]
+    )
+    most_worn = [
+        {"id": it["id"], "name": it.get("name") or it.get("item_type") or "item",
+         "count": it["wear_count"], "thumb": thumb(it)}
+        for it in worn_items[:8]
+    ]
+    today = datetime.date.today()
+    util = {
+        window: {
+            "worn": len(db.items_worn_since((today - datetime.timedelta(days=window)).isoformat())),
+            "total": n,
+        }
+        for window in (30, 90)
+    }
+
+    # --- money (rendered inside a collapsed section) ---
+    priced = [it for it in items if it.get("price") is not None]
+    total_spent = round(sum(it["price"] for it in priced), 2)
+    # "value" only makes sense for pieces that actually cost something
+    paid_and_worn = [it for it in priced if it["price"] and it["wear_count"]]
+    total_wears_paid = sum(it["wear_count"] for it in paid_and_worn)
+    avg_cpw = (
+        round(sum(it["price"] for it in paid_and_worn) / total_wears_paid, 2)
+        if total_wears_paid
+        else None
+    )
+    best_value = sorted(
+        paid_and_worn, key=lambda it: it["price"] / it["wear_count"]
+    )[:5]
+    best_value = [
+        {"id": it["id"], "name": it.get("name") or it.get("item_type") or "item",
+         "cpw": round(it["price"] / it["wear_count"], 2), "count": it["wear_count"],
+         "thumb": thumb(it)}
+        for it in best_value
+    ]
+    regrets = sorted(
+        (it for it in priced if not it["wear_count"] and it["price"]),
+        key=lambda it: -it["price"],
+    )[:5]
+    regrets = [
+        {"id": it["id"], "name": it.get("name") or it.get("item_type") or "item",
+         "price": it["price"], "thumb": thumb(it)}
+        for it in regrets
+    ]
+
+    return render_template(
+        "stats.html",
+        active="stats",
+        total_items=n,
+        colors=colors,
+        color_donut=_donut(colors),
+        types=types,
+        sources=sources,
+        most_worn=most_worn,
+        util=util,
+        money={
+            "total_spent": total_spent,
+            "priced_count": len(priced),
+            "avg_cpw": avg_cpw,
+            "best_value": best_value,
+            "regrets": regrets,
+        },
+    )
 
 
 def _read_form_item(form) -> dict:

@@ -1,5 +1,18 @@
 # TODO
 
+## Batch 3 — analytics dashboard (requested 2026-09-10)  ✅ DONE
+- [x] New "Stats" nav pill + `/stats` page. Three sections.
+- [x] Wardrobe: colour donut (hand-rolled SVG), item-type bars, source bars.
+- [x] Wear: closet-in-rotation (worn N of 74 in last 30/90 days), most-worn list.
+- [x] Money (collapsed `<details>`, choice remembered in localStorage): total
+      spent, blended avg cost-per-wear, best value, closet regrets.
+- [x] Per-item cost-per-wear stays on the item page; added "last worn Sep 8".
+- [x] No new deps — SVG + CSS charts.
+- [x] tests/test_stats.py (9). Verified in the browser.
+- Beck's picks: type + source breakdowns; utilization %; best value + regrets;
+  money section starts collapsed. Skipped: season coverage, worn-once club,
+  activity-over-time, spend-by-source/type (for now).
+
 ## Batch 2 (requested 2026-09-09)
 
 ### 5. Drag to rearrange the closet grid; persist the order  ✅ DONE

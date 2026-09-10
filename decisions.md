@@ -2,6 +2,23 @@
 
 Why things are built the way they are. Newest first.
 
+## Analytics dashboard (2026-09-10)
+
+A `/stats` page, three sections: Wardrobe (composition), Wear (usage), Money.
+
+- **Charts are hand-rolled** — an SVG donut built from `stroke-dasharray`
+  segments, bars are CSS-width divs. The app has zero JS dependencies and no
+  build step; a chart library would be the first crack in that.
+- **Money is a `<details>`** that starts closed; the open/closed choice is
+  remembered in `localStorage` (a per-device convenience, not shared state).
+  Closed-by-default so a glance at the screen doesn't show finances.
+- **"Blended" avg cost-per-wear** = total spent on priced-and-worn pieces ÷
+  their total wears, not the mean of per-item ratios (which a single
+  worn-once expensive piece would dominate). price = 0 pieces are excluded
+  from value stats — a $0 gift at $0/wear isn't a "best value" story.
+- Per-item cost-per-wear stays on the item page (it was already a stat card
+  there); the dashboard is closet-wide aggregates only.
+
 ## Calendar & wear log (2026-09-09)
 
 `wear_log` is the single source of truth for what was worn when. Shape: **one

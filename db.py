@@ -408,6 +408,33 @@ def wear_summary_for_month(year: int, month: int) -> dict:
     return out
 
 
+def wear_counts() -> dict:
+    """{item_id: number of days it was worn} for every item that has any."""
+    return {
+        r["item_id"]: r["n"]
+        for r in get_db().execute(
+            "SELECT item_id, COUNT(DISTINCT worn_on) AS n FROM wear_log GROUP BY item_id"
+        )
+    }
+
+
+def items_worn_since(cutoff: str) -> set[str]:
+    """Set of item ids worn on or after `cutoff` (a 'YYYY-MM-DD' string)."""
+    return {
+        r["item_id"]
+        for r in get_db().execute(
+            "SELECT DISTINCT item_id FROM wear_log WHERE worn_on >= ?", (cutoff,)
+        )
+    }
+
+
+def last_worn(item_id: str) -> str | None:
+    row = get_db().execute(
+        "SELECT MAX(worn_on) AS d FROM wear_log WHERE item_id = ?", (item_id,)
+    ).fetchone()
+    return row["d"] if row else None
+
+
 # -------------------------------------------------------------- outfits --
 
 def load_outfits() -> list[dict]:

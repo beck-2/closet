@@ -46,6 +46,9 @@ nothing leaves your machine.
 - **Calendar** — log what you wore each day (loose pieces and/or a saved
   outfit; any past day). The month grid shows it back to you, and every
   item's wear count / cost-per-wear comes straight from the log.
+- **Stats** — colour / type / source breakdowns, what's actually in
+  rotation, most-worn pieces, and a collapsible money section (total spent,
+  cost per wear, best value, closet regrets).
 - **+ Add Item** — upload a new photo; it runs through the same
   background-removal + resize pipeline automatically and gets the next item
   ID. The photo **touch-up** tool can erase stray background *or* paint a

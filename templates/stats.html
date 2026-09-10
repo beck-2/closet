@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% set pageclass = "pg-stats" %}
+
+{% macro bars(rows) %}
+  {% set top = rows[0].count if rows else 1 %}
+  <div class="barlist">
+    {% for r in rows %}
+    <div class="statbar">
+      <span class="statbar-label">{{ r.label }}</span>
+      <div class="statbar-track"><div class="statbar-fill" style="width: {{ (r.count / top * 100) | round(1) }}%"></div></div>
+      <span class="statbar-count">{{ r.count }}</span>
+    </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro itemrow(row, trailing) %}
+  <a class="statitem" href="{{ url_for('item_view', item_id=row.id) }}">
+    {% if row.thumb %}<img src="{{ row.thumb }}" alt="">{% endif %}
+    <span class="statitem-name">{{ row.name }}</span>
+    <span class="statitem-trail">{{ trailing }}</span>
+  </a>
+{% endmacro %}
+
+{% block content %}
+<h2 class="statshead">your closet, by the numbers</h2>
+<p class="statssub">{{ total_items }} pieces logged</p>
+
+<section class="statsection">
+  <h3 class="statsection-title">Wardrobe</h3>
+  <div class="statcards">
+    <div class="statcard">
+      <p class="statcard-title">Colors</p>
+      <div class="donutwrap">
+        <svg viewBox="0 0 160 160" class="donut" role="img" aria-label="colour breakdown">
+          <g transform="rotate(-90 80 80)">
+            {% for s in color_donut.segments %}
+            <circle cx="80" cy="80" r="{{ color_donut.radius }}" fill="none"
+                    stroke="{{ s.color }}" stroke-width="{{ color_donut.stroke }}"
+                    stroke-dasharray="{{ s.dash }} {{ s.gap }}"
+                    stroke-dashoffset="{{ s.offset }}"></circle>
+            {% endfor %}
+          </g>
+        </svg>
+        <ul class="donutlegend">
+          {% for c in colors %}
+          <li><span class="swatchdot" style="background: {{ c.color }}"></span>{{ c.label }} <b>{{ c.count }}</b></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="statcard">
+      <p class="statcard-title">Item types</p>
+      {{ bars(types) }}
+    </div>
+
+    <div class="statcard">
+      <p class="statcard-title">Where it came from</p>
+      {{ bars(sources) }}
+    </div>
+  </div>
+</section>
+
+<section class="statsection">
+  <h3 class="statsection-title">Wear</h3>
+  <div class="statcards">
+    <div class="statcard">
+      <p class="statcard-title">Closet in rotation</p>
+      {% for window, u in util.items() %}
+      <div class="utilrow">
+        <div class="utilbar"><div class="utilbar-fill" style="width: {{ ((u.worn / u.total * 100) | round(0)) if u.total else 0 }}%"></div></div>
+        <span class="utiltext"><b>{{ u.worn }}</b> of {{ u.total }} worn in the last {{ window }} days</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="statcard statcard-wide">
+      <p class="statcard-title">Most worn</p>
+      {% if most_worn %}
+      <div class="statitemlist">
+        {% for row in most_worn %}{{ itemrow(row, row.count ~ '×') }}{% endfor %}
+      </div>
+      {% else %}
+      <p class="statempty">nothing logged on the calendar yet</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<details class="moneysection" id="money-section">
+  <summary>
+    <span class="money-title">💰 Money</span>
+    <span class="money-toggle">show / hide</span>
+  </summary>
+  <div class="statcards">
+    <div class="statcard">
+      <p class="statcard-title">Total spent</p>
+      <p class="bignum">${{ '%.0f' | format(money.total_spent) }}</p>
+      <p class="statsmall">across {{ money.priced_count }} priced pieces</p>
+    </div>
+    <div class="statcard">
+      <p class="statcard-title">Average cost per wear</p>
+      <p class="bignum">{{ ('$%.2f' | format(money.avg_cpw)) if money.avg_cpw is not none else '—' }}</p>
+      <p class="statsmall">priced pieces you've actually worn</p>
+    </div>
+    <div class="statcard statcard-wide">
+      <p class="statcard-title">Best value</p>
+      {% if money.best_value %}
+      <div class="statitemlist">
+        {% for row in money.best_value %}{{ itemrow(row, '$%.2f/wear · %d×' | format(row.cpw, row.count)) }}{% endfor %}
+      </div>
+      {% else %}
+      <p class="statempty">no priced-and-worn pieces yet</p>
+      {% endif %}
+    </div>
+    <div class="statcard statcard-wide">
+      <p class="statcard-title">Closet regrets</p>
+      <p class="statsmall">priced, never worn</p>
+      {% if money.regrets %}
+      <div class="statitemlist">
+        {% for row in money.regrets %}{{ itemrow(row, '$%.0f' | format(row.price)) }}{% endfor %}
+      </div>
+      {% else %}
+      <p class="statempty">none — every priced piece has been worn</p>
+      {% endif %}
+    </div>
+  </div>
+</details>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var d = document.getElementById('money-section');
+  if (!d) return;
+  try {
+    if (localStorage.getItem('statsMoneyOpen') === '1') d.open = true;
+  } catch (e) {}
+  d.addEventListener('toggle', function () {
+    try { localStorage.setItem('statsMoneyOpen', d.open ? '1' : '0'); } catch (e) {}
+  });
+})();
+</script>
+{% endblock %}

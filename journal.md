@@ -136,6 +136,20 @@
   today" → Sept 9, remove).
 - ALL 3 BATCH-2 TODOS DONE (#5 #6 #7). 86 tests.
 
+## 2026-09-10 — analytics dashboard
+- Brainstormed ~13 widgets, Beck picked a subset. Built /stats: Wardrobe
+  (colour donut + type/source bars), Wear (rotation % + most-worn), Money
+  (collapsed <details>, localStorage-remembered: total spent, blended CPW,
+  best value, regrets). Hand-rolled SVG donut (stroke-dasharray segments) —
+  no chart library, keeps the zero-dep setup.
+- Item page: added "last worn <date>".
+- Gotcha: filtered price=0 items out of "best value" (gifts showing $0/wear
+  isn't a value story).
+- Browser-pane screenshots were flaky mid-session (blank captures when
+  hidden / after programmatic scroll) — verified layout via getBoundingClientRect
+  + innerText instead, which was reliable.
+- 95 tests.
+
 ## Outstanding (step 4, not done — for later)
 - BUG: templates/outfits_list.html checks `piece.images` but
   `_outfit_render_pieces` returns `.src` — saved-outfit thumbnails render as
