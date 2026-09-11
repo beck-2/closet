@@ -372,6 +372,7 @@ def calendar_day(date):
         day_log=db.get_day_log(date),
         rating_min=RATING_MIN,
         rating_max=RATING_MAX,
+        calendar_url=url_for("calendar_view", year=d.year, month=d.month),
     )
 
 

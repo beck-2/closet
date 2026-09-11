@@ -1,5 +1,14 @@
 # TODO
 
+## Batch 6 — day-page polish (requested 2026-09-11)  ✅ DONE
+- [x] Saving the day board now redirects to the calendar month grid instead
+      of reloading the day page — and to the *day's own* month (via
+      `d.year`/`d.month` on the route), not always the current one. The
+      "← calendar" back chip got the same fix for consistency (same latent
+      bug, same file).
+- [x] Removed the grey "what you wore" section label above the board.
+- [x] 113 tests. Verified in browser: save → landed on `/calendar/2026/9`.
+
 ## Batch 5 — the day's loose items become a real board (requested 2026-09-11)  ✅ DONE
 - [x] Beck's feedback on batch 4's month-grid tiles: loose-item squares were
       still inconsistent sizing next to an outfit's arranged board. Ask:

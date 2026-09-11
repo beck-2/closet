@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% set pageclass = "pg-calday" %}
 {% block content %}
-<a class="backchip" href="{{ url_for('calendar_view') }}">← calendar</a>
+<a class="backchip" href="{{ calendar_url }}">← calendar</a>
 <h2 class="caldaytitle">{{ pretty_date }}</h2>
 
 {% if worn_outfits %}
@@ -28,7 +28,6 @@
 {% endif %}
 
 <div class="dayboard-section">
-  <p class="section-label">what you wore</p>
   <div class="layout">
     <div class="board" id="board">
       <div class="boardempty" id="board-empty">nothing placed yet</div>
@@ -112,7 +111,7 @@
       body: JSON.stringify({ items: editor.getPieces() })
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (data.ok) {
-        window.location.reload();
+        window.location.href = {{ calendar_url|tojson }};
       } else {
         msg.textContent = data.error || 'something went wrong';
       }

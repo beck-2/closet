@@ -219,3 +219,13 @@
   exactly 103x106px regardless of piece count; dragged a 3rd piece onto a
   day's board, saved, reloaded, confirmed day_layout + wear_log rows in
   the DB directly; outfit builder unchanged through the shared JS.
+
+## 2026-09-11 (later still) — day-page polish
+- Two quick Beck asks: (1) saving the day board should go back to the
+  calendar, not reload the day; (2) drop the grey "what you wore" label.
+- Did (1) properly rather than the literal minimum: redirect target is the
+  day's own year/month (passed from the route as `calendar_url`), not
+  always today's — otherwise editing a January day while looking at
+  September would bounce you to September. Fixed the "← calendar" back
+  chip the same way while in the file, since it had the identical bug.
+- 113 tests. Verified in browser: click save -> landed on /calendar/2026/9.

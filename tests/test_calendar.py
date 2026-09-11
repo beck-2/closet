@@ -115,6 +115,14 @@ def test_calendar_page_renders(client, add_item):
     assert client.get("/calendar/2026/13").status_code == 404
 
 
+def test_day_page_links_back_to_its_own_month(client):
+    # Saving the board (and the "back" chip) should return to the month the
+    # day is actually in, not always today's — e.g. editing a January day
+    # from a September session shouldn't dump you into September.
+    body = client.get("/calendar/day/2026-01-15").data.decode()
+    assert '/calendar/2026/1"' in body
+
+
 def test_day_page_board_save_and_resave_flow(client, flask_app, add_item):
     add_item("001", name="the shirt")
     add_item("002", name="the pants")
