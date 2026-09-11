@@ -263,20 +263,38 @@ def mark_worn(item_id):
 
 # --------------------------------------------------------------- calendar --
 
-def _day_thumbs(info: dict, items: dict, outfits: dict) -> list[str]:
-    """A few representative thumbnail URLs for a day's worth of wears."""
-    urls: list[str] = []
+DAY_CELL_MAX_ITEMS = 4
+DAY_CELL_MAX_OUTFITS = 2
+
+
+def _day_display(info: dict, items: dict, outfits: dict) -> dict:
+    """What to show in one month-grid day cell: loose items as thumbnails,
+    logged outfits as the same little arranged board used everywhere else
+    (not just their first piece)."""
+    day_items = []
     for iid in info["item_ids"]:
         it = items.get(iid)
         if it and it.get("images"):
-            urls.append(url_for("thumbs", filename=it["images"][0].split("/")[-1]))
+            day_items.append({
+                "id": iid,
+                "thumb": url_for("thumbs", filename=it["images"][0].split("/")[-1]),
+            })
+    day_outfits = []
     for oid in info["outfit_ids"]:
         outfit = outfits.get(oid)
-        if outfit:
-            pieces = _outfit_render_pieces(outfit, items)
-            if pieces:
-                urls.append(pieces[0]["thumb_src"])
-    return urls[:4]
+        if outfit is None:
+            continue
+        pieces = _outfit_render_pieces(outfit, items)
+        if pieces:
+            day_outfits.append({"id": oid, "name": outfit["name"], "pieces": pieces})
+    return {
+        # NB: not "items" — dicts already have an .items() method, and Jinja's
+        # attribute lookup would resolve `info.items` to that instead of this key.
+        "loose_items": day_items[:DAY_CELL_MAX_ITEMS],
+        "more_items": max(0, len(day_items) - DAY_CELL_MAX_ITEMS),
+        "outfits": day_outfits[:DAY_CELL_MAX_OUTFITS],
+        "more_outfits": max(0, len(day_outfits) - DAY_CELL_MAX_OUTFITS),
+    }
 
 
 @app.route("/calendar")
@@ -291,11 +309,7 @@ def calendar_view(year: int | None = None, month: int | None = None):
     items = db.load_items()
     outfits = {o["id"]: o for o in db.load_outfits()}
     summary = db.wear_summary_for_month(year, month)
-    days = {
-        d: {"thumbs": _day_thumbs(info, items, outfits),
-            "count": len(info["item_ids"]) + len(info["outfit_ids"])}
-        for d, info in summary.items()
-    }
+    days = {d: _day_display(info, items, outfits) for d, info in summary.items()}
 
     weeks = calendar.Calendar(firstweekday=6).monthdatescalendar(year, month)
     first = datetime.date(year, month, 1)
@@ -340,6 +354,9 @@ def calendar_day(date):
         worn_outfits=worn["outfits"],
         tray=[{"id": i, **items[i]} for i in items],
         outfits=db.load_outfits(),
+        day_log=db.get_day_log(date),
+        rating_min=RATING_MIN,
+        rating_max=RATING_MAX,
     )
 
 
@@ -354,6 +371,16 @@ def calendar_day_log(date):
         db.log_items_worn(date, item_ids)
     if outfit_id:
         db.log_outfit_worn(date, outfit_id)
+    return redirect(url_for("calendar_day", date=date))
+
+
+@app.route("/calendar/day/<date>/note", methods=["POST"])
+def calendar_day_note(date):
+    _parse_day(date)
+    raw = (request.form.get("comfort") or "").strip()
+    comfort = int(raw) if raw.isdigit() and RATING_MIN <= int(raw) <= RATING_MAX else None
+    notes = (request.form.get("notes") or "").strip()
+    db.save_day_log(date, comfort, notes)
     return redirect(url_for("calendar_day", date=date))
 
 

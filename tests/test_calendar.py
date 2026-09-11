@@ -105,3 +105,68 @@ def test_worn_today_button_logs_into_the_calendar(client, flask_app, add_item):
     today = datetime.date.today().isoformat()
     with flask_app.app_context():
         assert [it["id"] for it in db_module.wears_on(today)["items"]] == ["001"]
+
+
+# ------------------------------------------------------- day comfort/notes --
+
+def test_day_log_round_trips(flask_app):
+    with flask_app.app_context():
+        assert db_module.get_day_log("2026-09-05") == {"comfort": None, "notes": ""}
+        db_module.save_day_log("2026-09-05", 3, "cozy and warm")
+        assert db_module.get_day_log("2026-09-05") == {"comfort": 3, "notes": "cozy and warm"}
+
+
+def test_day_log_saving_both_empty_clears_the_row(flask_app):
+    with flask_app.app_context():
+        db_module.save_day_log("2026-09-05", 2, "note")
+        db_module.save_day_log("2026-09-05", None, "")
+        assert db_module.get_day_log("2026-09-05") == {"comfort": None, "notes": ""}
+
+
+def test_day_log_note_only_is_fine(flask_app):
+    with flask_app.app_context():
+        db_module.save_day_log("2026-09-05", None, "just notes, no rating")
+        assert db_module.get_day_log("2026-09-05") == {"comfort": None, "notes": "just notes, no rating"}
+
+
+def test_note_route_saves_and_shows_on_the_day_page(client):
+    resp = client.post("/calendar/day/2026-09-05/note", data={"comfort": "2", "notes": "great fit"})
+    assert resp.status_code == 302
+    body = client.get("/calendar/day/2026-09-05").data.decode()
+    assert "great fit" in body
+    assert 'value="2" checked' in body
+
+
+def test_note_route_ignores_out_of_range_comfort(client, flask_app):
+    client.post("/calendar/day/2026-09-05/note", data={"comfort": "99", "notes": "x"})
+    with flask_app.app_context():
+        assert db_module.get_day_log("2026-09-05")["comfort"] is None
+
+
+def test_note_fields_are_optional_and_independent_of_logged_items(client, add_item):
+    add_item("001", name="a shirt")
+    client.post("/calendar/day/2026-09-05", data={"item_id": ["001"]})
+    client.post("/calendar/day/2026-09-05/note", data={"notes": "wore it to the park"})
+    body = client.get("/calendar/day/2026-09-05").data.decode()
+    assert "a shirt" in body
+    assert "wore it to the park" in body
+
+
+# --------------------------------------------------- month grid: outfits --
+
+def test_month_grid_shows_an_outfit_as_an_arranged_board(client, flask_app, add_item):
+    _outfit(flask_app, add_item, items=("001", "002"))
+    with flask_app.app_context():
+        db_module.log_outfit_worn("2026-09-06", "o0001")
+    body = client.get("/calendar/2026/9").data.decode()
+    assert "calminiboard" in body
+    assert "left: " in body and "top: " in body   # positioned pieces, not a flat row
+
+
+def test_month_grid_caps_loose_item_thumbnails(client, flask_app, add_item):
+    for i in range(1, 7):
+        add_item(f"{i:03d}")
+    with flask_app.app_context():
+        db_module.log_items_worn("2026-09-05", [f"{i:03d}" for i in range(1, 7)])
+    body = client.get("/calendar/2026/9").data.decode()
+    assert "+2" in body   # 6 items, 4 shown, 2 more

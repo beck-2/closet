@@ -44,8 +44,10 @@ nothing leaves your machine.
   resize them, right-click to reorder), save it, and see saved outfits as
   little arranged boards. Click one to reopen it; hit **manage** to delete.
 - **Calendar** — log what you wore each day (loose pieces and/or a saved
-  outfit; any past day). The month grid shows it back to you, and every
-  item's wear count / cost-per-wear comes straight from the log.
+  outfit; any past day). The month grid shows it back to you — a logged
+  outfit as its arranged board, loose pieces as thumbnails — and every
+  item's wear count / cost-per-wear comes straight from the log. Open a day
+  to optionally rate how it felt (1–3) and jot a note.
 - **Stats** — colour / type / source breakdowns, what's actually in
   rotation, most-worn pieces, and a collapsible money section (total spent,
   cost per wear, best value, closet regrets).

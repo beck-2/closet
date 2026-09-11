@@ -2,6 +2,24 @@
 
 Why things are built the way they are. Newest first.
 
+## Calendar: outfits as mini-boards, day notes separate from wear_log (2026-09-11)
+
+Month-grid day cells previously flattened everything worn that day into a row
+of same-size icons, with a logged outfit contributing only its first piece.
+Now a logged outfit renders as the same absolutely-positioned mini-board used
+in outfit_builder / outfits_list / the day-detail page — one visual language
+for "an outfit" everywhere it appears. Loose items still get plain thumbnails,
+just bigger (30px -> 46px) since that was the actual complaint (screenshot:
+"you can hardly tell what item it is").
+
+The per-day comfort rating + notes live in their own `day_log` table
+(`worn_on` primary key), not on `wear_log` — they're a property of the day,
+independent of what got logged as worn or later removed. Both fields are
+optional; saving with neither set deletes the row rather than leaving an
+empty one. Shown only on the day-detail page, which was already reached by
+clicking a day — no new disclosure UI needed for "only when you click on that
+day."
+
 ## No emojis, no instruction microcopy (2026-09-10)
 
 Beck's standing rule for this app: no emojis in the UI (they read as

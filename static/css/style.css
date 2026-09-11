@@ -971,7 +971,7 @@ a:hover { color: #a61e4d; }
 .pg-calendar .calday {
   position: relative;
   display: block;
-  min-height: 96px;
+  min-height: 150px;
   border: 2.5px solid #2b2140;
   border-radius: 10px;
   background: #f7efe0;
@@ -983,13 +983,30 @@ a:hover { color: #a61e4d; }
 .pg-calendar .calday.today { border-color: #5c9a63; box-shadow: 0 0 0 2px #5c9a63; }
 .pg-calendar .calday.hasworn { background: #fffdf7; }
 .pg-calendar .caldaynum { font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 13px; }
-.pg-calendar .calthumbs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.pg-calendar .calworn { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
+.pg-calendar .calminiboard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 600 / 620;
+  background: #fbf6ea;
+  border: 1.5px solid #2b2140;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.pg-calendar .calminiboard img { position: absolute; object-fit: contain; }
+.pg-calendar .calthumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .pg-calendar .calthumbs img {
-  width: 30px;
-  height: 30px;
+  width: 46px;
+  height: 46px;
   object-fit: contain;
   background: #f0e8d6;
-  border-radius: 5px;
+  border-radius: 6px;
+}
+.pg-calendar .calmore {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  color: #7c7192;
 }
 
 /* ================= calendar day ================= */
@@ -1068,6 +1085,33 @@ a:hover { color: #a61e4d; }
   font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 16px;
   color: #fff; background: #5c9a63; border: 3px solid #2b2140;
   border-radius: 999px; padding: 11px 28px; box-shadow: 3px 3px 0 #2b2140; cursor: pointer;
+}
+.pg-calday .dayfeel { margin-bottom: 34px; max-width: 440px; }
+.pg-calday .dayfeel-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.pg-calday .dots { display: flex; gap: 8px; }
+.pg-calday .dots label { cursor: pointer; }
+.pg-calday .dots input { display: none; }
+.pg-calday .dot { width: 20px; height: 20px; border-radius: 50%; background: #ffffff; border: 2.5px solid #2b2140; display: block; }
+.pg-calday .dots input:checked ~ .dot { background: #ff6fa5; }
+.pg-calday .clearrating {
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 12px;
+  color: #7c7192; background: none; border: none; cursor: pointer; text-decoration: underline;
+  padding: 0;
+}
+.pg-calday textarea.notesarea {
+  background: #fffef8;
+  background-image: repeating-linear-gradient(#fffef8 0 25px, #e7dfca 25px 27px);
+  border: 2.5px solid #2b2140;
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-height: 80px;
+  font-size: 14px;
+  color: #2b2140;
+  font-family: 'Nunito', sans-serif;
+  width: 100%;
+  resize: vertical;
+  display: block;
+  margin-bottom: 14px;
 }
 
 /* ================= stats dashboard ================= */

@@ -4,11 +4,12 @@
 {% macro daycell(day) %}
   {% set iso = day.isoformat() %}
   {% set info = days.get(iso) %}
+  {% set hasworn = info and (info.loose_items or info.outfits) %}
   {% set classes = 'calday'
      ~ (' othermonth' if day.month != month else '')
      ~ (' today' if day == today else '')
      ~ (' future' if day > today else '')
-     ~ (' hasworn' if info else '') %}
+     ~ (' hasworn' if hasworn else '') %}
   {% if day > today %}
   <div class="{{ classes }}">
     <span class="caldaynum">{{ day.day }}</span>
@@ -16,9 +17,23 @@
   {% else %}
   <a class="{{ classes }}" href="{{ url_for('calendar_day', date=iso) }}">
     <span class="caldaynum">{{ day.day }}</span>
-    {% if info %}
-    <div class="calthumbs">
-      {% for t in info.thumbs %}<img src="{{ t }}" alt="">{% endfor %}
+    {% if hasworn %}
+    <div class="calworn">
+      {% for o in info.outfits %}
+      <div class="calminiboard" title="{{ o.name }}">
+        {% for piece in o.pieces %}
+        <img src="{{ piece.thumb_src }}" alt=""
+             style="left: {{ piece.left_pct }}%; top: {{ piece.top_pct }}%; width: {{ piece.width_pct }}%; transform: rotate({{ piece.rot }}deg);">
+        {% endfor %}
+      </div>
+      {% endfor %}
+      {% if info.more_outfits %}<span class="calmore">+{{ info.more_outfits }} outfit{{ 's' if info.more_outfits > 1 }}</span>{% endif %}
+      {% if info.loose_items %}
+      <div class="calthumbs">
+        {% for it in info.loose_items %}<img src="{{ it.thumb }}" alt="">{% endfor %}
+        {% if info.more_items %}<span class="calmore">+{{ info.more_items }}</span>{% endif %}
+      </div>
+      {% endif %}
     </div>
     {% endif %}
   </a>

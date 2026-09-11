@@ -40,6 +40,25 @@
   </div>
 </div>
 
+<form method="post" action="{{ url_for('calendar_day_note', date=date) }}" class="dayfeel">
+  <p class="section-label">how did it feel</p>
+  <div class="dayfeel-row">
+    <div class="dots" id="comfort-dots">
+      {% for i in range(rating_min, rating_max + 1) %}
+      <label>
+        <input type="radio" name="comfort" value="{{ i }}" {{ 'checked' if day_log.comfort == i }}>
+        <span class="dot"></span>
+      </label>
+      {% endfor %}
+    </div>
+    {% if day_log.comfort %}
+    <button type="button" class="clearrating" id="clear-rating">clear</button>
+    {% endif %}
+  </div>
+  <textarea class="notesarea" name="notes" placeholder="anything about today's outfit...">{{ day_log.notes }}</textarea>
+  <button type="submit" class="savebtn">save</button>
+</form>
+
 <form method="post" action="{{ url_for('calendar_day_log', date=date) }}" class="logform">
   <p class="section-label">add what you wore</p>
   <input type="search" id="tray-search" class="filtertext" placeholder="search your closet…" autocomplete="off">
@@ -67,6 +86,15 @@
 
 {% block scripts %}
 <script>
+(function () {
+  var clearBtn = document.getElementById('clear-rating');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      document.querySelectorAll('#comfort-dots input').forEach(function (r) { r.checked = false; });
+      clearBtn.hidden = true;
+    });
+  }
+})();
 (function () {
   var search = document.getElementById('tray-search');
   var tiles = Array.prototype.slice.call(document.querySelectorAll('#logtray .logtile'));

@@ -1,5 +1,23 @@
 # TODO
 
+## Batch 4 — calendar polish (requested 2026-09-11)  ✅ DONE
+- [x] Month-grid day cells: loose-item thumbnails enlarged 30px → 46px; a
+      logged outfit now renders as the same arranged mini-board used in
+      outfit_builder/outfits_list/day-detail, not a flat row of pieces.
+      Capped at 4 items / 2 outfit-boards per cell with a "+N" overflow badge.
+      (Had to rename the day-info dict's "items" key to "loose_items" — it
+      was colliding with dict.items() in Jinja's attribute lookup.)
+- [x] Optional per-day comfort rating (1-3 dots, same pattern as item
+      ratings) + free-text notes, new `day_log` table (worn_on PK), only
+      shown on the day-detail page (`/calendar/day/<date>`) — nothing new
+      in the month grid. A "clear" link unchecks an accidental rating.
+      Saving both empty deletes the row instead of leaving clutter.
+- [x] The day-detail page already rendered a logged outfit as a mini-board
+      (built in the earlier calendar batch) — confirmed, no change needed.
+- [x] tests/test_calendar.py (+13). Verified in browser against a copy of
+      the real DB: mini-board renders 3 arranged pieces, thumbs visibly
+      bigger, rating+notes save/clear round-trip.
+
 ## Batch 3 — analytics dashboard (requested 2026-09-10)  ✅ DONE
 - [x] New "Stats" nav pill + `/stats` page. Three sections.
 - [x] Wardrobe: colour donut (hand-rolled SVG), item-type bars, source bars.

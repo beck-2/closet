@@ -95,6 +95,14 @@ CREATE TABLE IF NOT EXISTS wear_log (
 );
 CREATE INDEX IF NOT EXISTS idx_wear_log_date ON wear_log(worn_on);
 CREATE INDEX IF NOT EXISTS idx_wear_log_item ON wear_log(item_id);
+
+-- One optional comfort rating + notes per day, independent of what was
+-- logged as worn. Both fields are optional; a day with neither set has no row.
+CREATE TABLE IF NOT EXISTS day_log (
+    worn_on TEXT PRIMARY KEY,
+    comfort INTEGER,
+    notes   TEXT NOT NULL DEFAULT ''
+);
 """
 
 
@@ -433,6 +441,29 @@ def last_worn(item_id: str) -> str | None:
         "SELECT MAX(worn_on) AS d FROM wear_log WHERE item_id = ?", (item_id,)
     ).fetchone()
     return row["d"] if row else None
+
+
+def get_day_log(worn_on: str) -> dict:
+    row = get_db().execute(
+        "SELECT comfort, notes FROM day_log WHERE worn_on = ?", (worn_on,)
+    ).fetchone()
+    return {"comfort": row["comfort"], "notes": row["notes"]} if row else {"comfort": None, "notes": ""}
+
+
+def save_day_log(worn_on: str, comfort: int | None, notes: str) -> None:
+    """Optional per-day comfort rating + notes. Saving with both empty clears
+    the row rather than leaving a blank one behind."""
+    db = get_db()
+    notes = (notes or "").strip()
+    if comfort is None and not notes:
+        db.execute("DELETE FROM day_log WHERE worn_on = ?", (worn_on,))
+    else:
+        db.execute(
+            """INSERT INTO day_log (worn_on, comfort, notes) VALUES (?, ?, ?)
+               ON CONFLICT(worn_on) DO UPDATE SET comfort=excluded.comfort, notes=excluded.notes""",
+            (worn_on, comfort, notes),
+        )
+    db.commit()
 
 
 # -------------------------------------------------------------- outfits --

@@ -169,3 +169,21 @@
 - /photos and /originals have no Cache-Control (only /thumbs does).
 - Naive `datetime.now()` for outfit created_at.
 - No prod server story (app.run only) — waitress is a 1-liner if ever needed.
+
+## 2026-09-11 — calendar polish
+- Month grid: loose-item thumbs 30px -> 46px. Outfits now render as the
+  arranged mini-board (same technique as outfits_list/day-detail) instead
+  of just the first piece mixed into a flat row — this is what Beck's
+  screenshot was actually complaining about (tiny, indistinguishable icons).
+- Gotcha: called the day-info dict key "items" — collided with Python
+  dict.items(), so Jinja's `info.items` resolved to the bound method, not
+  the key, and crashed. Renamed to "loose_items".
+- New optional per-day comfort rating (1-3 dots) + notes, `day_log` table.
+  Lives only on the day-detail page (already gated behind clicking a day —
+  no new "click to reveal" needed). "clear" link unchecks an accidental
+  radio pick. Saving both blank deletes the row.
+- The day-detail page already used the mini-board for logged outfits (built
+  earlier) — verified, nothing to change there.
+- 104 tests. Verified end-to-end in the browser against a copy of the real
+  DB: Sept 8's 3-piece outfit renders as a proper arranged board, rated it
+  3/3 with a note, reloaded and it stuck, cleared the rating.
