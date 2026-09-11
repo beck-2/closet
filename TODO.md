@@ -1,5 +1,39 @@
 # TODO
 
+## Batch 5 — the day's loose items become a real board (requested 2026-09-11)  ✅ DONE
+- [x] Beck's feedback on batch 4's month-grid tiles: loose-item squares were
+      still inconsistent sizing next to an outfit's arranged board. Ask:
+      reuse the outfit builder itself so every day is one standard-size
+      board, sized however Beck wants.
+- [x] Extracted the outfit builder's drag/resize/reorder JS into a shared
+      `static/js/board-editor.js` (`createBoardEditor(initialPieces)`,
+      returns `{isEmpty, getPieces}`) — used by both outfit_builder.html and
+      the new calendar day board. Broadened the `.pg-outfits` board/tray CSS
+      to also match `.pg-calday`, so it's one visual language, not a copy.
+- [x] New `day_layout` table (worn_on/item_id/x/y/w/rot/position) — the
+      day's ad-hoc arrangement, same shape as an outfit's layout. Saving it
+      (`db.save_day_layout`) also syncs wear_log's loose rows for that date:
+      placing a piece logs it worn, removing it un-logs it. `POST
+      /calendar/day/<date>/board` (JSON, reuses `_clean_placements`) is the
+      new save endpoint.
+- [x] `_day_board_pieces()`: any loose item already logged (e.g. via the
+      item page's quick "Worn today") but with no saved position yet gets
+      auto-placed the same staggered way a freshly dragged-in piece would —
+      nothing you've logged is ever missing from the board.
+- [x] calendar_day.html's old checkbox tray + individual item cards are
+      gone, replaced by one live, editable board (identical UI to the
+      outfit builder). Saved Outfits still show as their own card + remove
+      button above it — logging/removing a named Outfit is unchanged.
+- [x] Month grid: each day is now "tiles" (saved outfits + the day's ad-hoc
+      board, if any), each the same board shape, capped at 1 shown with a
+      "+N" badge — replaces the old items-vs-outfits split rendering.
+- [x] tests/test_calendar.py rewritten around the board flow (+~15 net).
+      Verified in the browser against a copy of the real DB: all-boards-
+      same-size on the month grid (measured: 103×106px regardless of piece
+      count), dragged a 3rd piece onto a day's board, saved, reloaded,
+      confirmed both day_layout and wear_log rows persisted correctly;
+      outfit builder still works unchanged through the shared JS.
+
 ## Batch 4 — calendar polish (requested 2026-09-11)  ✅ DONE
 - [x] Month-grid day cells: loose-item thumbnails enlarged 30px → 46px; a
       logged outfit now renders as the same arranged mini-board used in

@@ -2,6 +2,42 @@
 
 Why things are built the way they are. Newest first.
 
+## Logging a day reuses the outfit builder itself (2026-09-11)
+
+The month-grid mini-boards (previous entry below) fixed outfits, but loose
+items logged for a day still showed as plain same-size squares next to them —
+Beck: "still a little weird," and asked to just reuse the outfit builder so
+every day is one standard-size board he can arrange however he wants.
+
+**`static/js/board-editor.js`** is the outfit builder's drag/resize/right-click
+engine, pulled out verbatim into a shared file rather than copy-pasted into
+the calendar day page. `createBoardEditor(initialPieces)` owns the board DOM
+and returns `{isEmpty, getPieces}`; each page keeps its own save button and
+payload shape. One editor, two callers — a change to how dragging works only
+needs to happen once. The board/tray CSS (`.board`, `.cutout`, `.traygrid`,
+etc.) is now selector-shared between `.pg-outfits` and `.pg-calday` for the
+same reason: it's the same visual thing in both places, not a look-alike.
+
+**`day_layout`** is a new table, same shape as `outfit_items` (`x/y/w/rot`),
+keyed by date instead of by outfit id — the day's own unnamed, non-reusable
+arrangement. Saving it (`db.save_day_layout`) is now *also* how loose items
+get logged or unlogged for that day: whatever's on the board when you hit
+save is what's logged, full stop. That folded the separate checkbox tray,
+the per-item remove button, and the item-id branch of `calendar_day_log`
+into one mechanism.
+
+**Auto-placement for already-logged, unpositioned items**
+(`_day_board_pieces`): the item page's "Worn today" button logs an item with
+no board position. Rather than rendering those separately (the old
+inconsistency), the day board gives them a default staggered spot — same
+math the JS uses when you drag a fresh piece in — so opening a day's board
+always shows everything you've logged for it, never a silent gap.
+
+**Month grid** collapsed to a flat list of "tiles" — each saved outfit plus
+the day's ad-hoc board if it has anything on it — capped at 1 shown with a
+"+N" badge, since every tile is now the same board shape and stacking more
+than one starts hurting the grid's compactness more than it helps.
+
 ## Calendar: outfits as mini-boards, day notes separate from wear_log (2026-09-11)
 
 Month-grid day cells previously flattened everything worn that day into a row

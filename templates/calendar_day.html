@@ -4,11 +4,9 @@
 <a class="backchip" href="{{ url_for('calendar_view') }}">← calendar</a>
 <h2 class="caldaytitle">{{ pretty_date }}</h2>
 
+{% if worn_outfits %}
 <div class="worn-section">
-  <p class="section-label">worn this day</p>
-  {% if not worn_items and not worn_outfits %}
-  <p class="worn-empty">nothing logged yet</p>
-  {% endif %}
+  <p class="section-label">saved outfits worn</p>
   <div class="worn-grid">
     {% for o in worn_outfits %}
     <div class="worn-card worn-outfit">
@@ -18,27 +16,67 @@
              style="left: {{ piece.left_pct }}%; top: {{ piece.top_pct }}%; width: {{ piece.width_pct }}%; transform: rotate({{ piece.rot }}deg);">
         {% endfor %}
       </div>
-      <span class="worn-label">outfit · {{ o.name }}</span>
+      <span class="worn-label">{{ o.name }}</span>
       <form method="post" action="{{ url_for('calendar_day_remove', date=date) }}">
-        <input type="hidden" name="kind" value="outfit">
         <input type="hidden" name="id" value="{{ o.id }}">
-        <button type="submit" class="worn-remove" title="remove">&times;</button>
-      </form>
-    </div>
-    {% endfor %}
-    {% for it in worn_items %}
-    <div class="worn-card">
-      {% if it.images %}<img class="worn-thumb" src="{{ url_for('thumbs', filename=it.images[0].split('/')[-1]) }}" alt="">{% endif %}
-      <span class="worn-label">{{ it.name or it.item_type or 'item' }}</span>
-      <form method="post" action="{{ url_for('calendar_day_remove', date=date) }}">
-        <input type="hidden" name="kind" value="item">
-        <input type="hidden" name="id" value="{{ it.id }}">
         <button type="submit" class="worn-remove" title="remove">&times;</button>
       </form>
     </div>
     {% endfor %}
   </div>
 </div>
+{% endif %}
+
+<div class="dayboard-section">
+  <p class="section-label">what you wore</p>
+  <div class="layout">
+    <div class="board" id="board">
+      <div class="boardempty" id="board-empty">nothing placed yet</div>
+    </div>
+
+    <div class="sidebar">
+      <p class="sidebartitle">your closet</p>
+      <div class="filterrow" id="tray-filters">
+        <div class="chip selected" data-type="">All</div>
+        {% for t in tray|map(attribute='item_type')|reject('none')|unique|sort %}
+        <div class="chip" data-type="{{ t }}">{{ t }}</div>
+        {% endfor %}
+      </div>
+      <div class="traygrid" id="traygrid">
+        {% for item in tray %}
+          {% if item.images %}
+          <div class="trayitem" draggable="true" data-id="{{ item.id }}" data-type="{{ item.item_type or '' }}" data-src="{{ url_for('photos', filename=item.images[0].split('/')[-1]) }}" data-alt="{{ item.name or item.item_type or 'item' }}" title="{{ item.name or item.item_type or '' }}">
+            <img src="{{ url_for('thumbs', filename=item.images[0].split('/')[-1]) }}" alt="{{ item.name or item.item_type or 'item' }}" loading="lazy">
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="dayboard-bottom">
+    <span class="savemsg" id="board-msg"></span>
+    <button class="savebtn" id="board-save-btn">save</button>
+  </div>
+</div>
+
+<div class="ctxmenu" id="ctx-menu" hidden>
+  <button type="button" data-action="front">Bring to front</button>
+  <button type="button" data-action="back">Send to back</button>
+  <button type="button" data-action="remove">Remove</button>
+</div>
+
+{% if outfits %}
+<form method="post" action="{{ url_for('calendar_day_log', date=date) }}" class="logoutfitform">
+  <label class="logoutfit">
+    …or log a whole saved outfit:
+    <select name="outfit_id">
+      <option value="">— none —</option>
+      {% for o in outfits %}<option value="{{ o.id }}">{{ o.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <button type="submit" class="savebtn">log it</button>
+</form>
+{% endif %}
 
 <form method="post" action="{{ url_for('calendar_day_note', date=date) }}" class="dayfeel">
   <p class="section-label">how did it feel</p>
@@ -58,34 +96,30 @@
   <textarea class="notesarea" name="notes" placeholder="anything about today's outfit...">{{ day_log.notes }}</textarea>
   <button type="submit" class="savebtn">save</button>
 </form>
-
-<form method="post" action="{{ url_for('calendar_day_log', date=date) }}" class="logform">
-  <p class="section-label">add what you wore</p>
-  <input type="search" id="tray-search" class="filtertext" placeholder="search your closet…" autocomplete="off">
-  <div class="logtray" id="logtray">
-    {% for item in tray %}{% if item.images %}
-    <label class="logtile" data-name="{{ ((item.name or '') ~ ' ' ~ (item.item_type or '')) | lower }}">
-      <input type="checkbox" name="item_id" value="{{ item.id }}">
-      <img src="{{ url_for('thumbs', filename=item.images[0].split('/')[-1]) }}" alt="" loading="lazy">
-      <span>{{ item.name or item.item_type or 'item' }}</span>
-    </label>
-    {% endif %}{% endfor %}
-  </div>
-  {% if outfits %}
-  <label class="logoutfit">
-    …or a whole outfit:
-    <select name="outfit_id">
-      <option value="">— none —</option>
-      {% for o in outfits %}<option value="{{ o.id }}">{{ o.name }}</option>{% endfor %}
-    </select>
-  </label>
-  {% endif %}
-  <button type="submit" class="savebtn">log it</button>
-</form>
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/board-editor.js') }}"></script>
 <script>
+(function () {
+  var editor = createBoardEditor({{ board_pieces|tojson }});
+  document.getElementById('board-save-btn').addEventListener('click', function () {
+    var msg = document.getElementById('board-msg');
+    msg.textContent = 'saving...';
+    fetch({{ url_for('calendar_day_board', date=date)|tojson }}, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: editor.getPieces() })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.ok) {
+        window.location.reload();
+      } else {
+        msg.textContent = data.error || 'something went wrong';
+      }
+    }).catch(function () { msg.textContent = 'something went wrong'; });
+  });
+})();
+
 (function () {
   var clearBtn = document.getElementById('clear-rating');
   if (clearBtn) {
@@ -94,17 +128,6 @@
       clearBtn.hidden = true;
     });
   }
-})();
-(function () {
-  var search = document.getElementById('tray-search');
-  var tiles = Array.prototype.slice.call(document.querySelectorAll('#logtray .logtile'));
-  if (!search) return;
-  search.addEventListener('input', function () {
-    var q = search.value.trim().toLowerCase();
-    tiles.forEach(function (t) {
-      t.hidden = q && t.dataset.name.indexOf(q) === -1;
-    });
-  });
 })();
 </script>
 {% endblock %}

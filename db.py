@@ -103,6 +103,22 @@ CREATE TABLE IF NOT EXISTS day_log (
     comfort INTEGER,
     notes   TEXT NOT NULL DEFAULT ''
 );
+
+-- The day's ad-hoc arrangement of loose (non-outfit) pieces on the same
+-- fixed board used by outfits — same x/y/w/rot shape as outfit_items, keyed
+-- by date instead of an outfit id. Saving this is also what logs/unlogs
+-- those pieces as worn that day (see db.save_day_layout).
+CREATE TABLE IF NOT EXISTS day_layout (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    worn_on  TEXT NOT NULL,
+    item_id  TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    x        REAL NOT NULL,
+    y        REAL NOT NULL,
+    w        REAL NOT NULL,
+    rot      REAL NOT NULL,
+    position INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_day_layout_date ON day_layout(worn_on);
 """
 
 
@@ -370,6 +386,51 @@ def unlog_outfit(worn_on: str, outfit_id: str) -> None:
     db.execute(
         "DELETE FROM wear_log WHERE worn_on = ? AND outfit_id = ?", (worn_on, outfit_id)
     )
+    db.commit()
+
+
+def get_day_layout(worn_on: str) -> list[dict]:
+    """The day's ad-hoc board arrangement, in stacking order — same shape as
+    an outfit's layout."""
+    return [
+        {"id": r["item_id"], "x": r["x"], "y": r["y"], "w": r["w"], "rot": r["rot"]}
+        for r in get_db().execute(
+            "SELECT * FROM day_layout WHERE worn_on = ? ORDER BY position", (worn_on,)
+        )
+    ]
+
+
+def save_day_layout(worn_on: str, placements: list[dict]) -> None:
+    """Replace the day's ad-hoc board arrangement, and keep wear_log's loose
+    (non-outfit) rows for that date in sync with what's actually on the
+    board — placing a piece logs it worn that day, removing it un-logs it."""
+    db = get_db()
+    known = {row["id"] for row in db.execute("SELECT id FROM items")}
+    cleaned = [p for p in placements if p["id"] in known]
+
+    keep_ids = {p["id"] for p in cleaned}
+    currently_loose = {
+        r["item_id"] for r in db.execute(
+            "SELECT item_id FROM wear_log WHERE worn_on = ? AND outfit_id IS NULL", (worn_on,)
+        )
+    }
+    for item_id in currently_loose - keep_ids:
+        db.execute(
+            "DELETE FROM wear_log WHERE worn_on = ? AND item_id = ? AND outfit_id IS NULL",
+            (worn_on, item_id),
+        )
+    for item_id in keep_ids - currently_loose:
+        db.execute(
+            "INSERT INTO wear_log (worn_on, item_id, outfit_id, created_at) VALUES (?, ?, NULL, ?)",
+            (worn_on, item_id, _now()),
+        )
+
+    db.execute("DELETE FROM day_layout WHERE worn_on = ?", (worn_on,))
+    for pos, p in enumerate(cleaned):
+        db.execute(
+            "INSERT INTO day_layout (worn_on, item_id, x, y, w, rot, position) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (worn_on, p["id"], p["x"], p["y"], p["w"], p["rot"], pos),
+        )
     db.commit()
 
 

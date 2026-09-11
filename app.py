@@ -263,38 +263,53 @@ def mark_worn(item_id):
 
 # --------------------------------------------------------------- calendar --
 
-DAY_CELL_MAX_ITEMS = 4
-DAY_CELL_MAX_OUTFITS = 2
+# A month-grid day cell shows at most this many "tiles" (each tile is one
+# board — either a saved outfit or the day's ad-hoc arrangement) so every
+# cell stays a uniform, compact size; anything past this is a "+N" badge.
+DAY_CELL_MAX_TILES = 1
 
 
-def _day_display(info: dict, items: dict, outfits: dict) -> dict:
-    """What to show in one month-grid day cell: loose items as thumbnails,
-    logged outfits as the same little arranged board used everywhere else
-    (not just their first piece)."""
-    day_items = []
-    for iid in info["item_ids"]:
-        it = items.get(iid)
-        if it and it.get("images"):
-            day_items.append({
-                "id": iid,
-                "thumb": url_for("thumbs", filename=it["images"][0].split("/")[-1]),
-            })
-    day_outfits = []
+def _day_board_pieces(worn_on: str, items: dict, loose_items: list[dict]) -> list[dict]:
+    """The day's ad-hoc board: pieces already given a saved position, plus
+    any loose item logged for the day that doesn't have one yet — those get
+    auto-placed the same staggered way a freshly-dragged-in piece would, so
+    nothing you've logged is ever missing from the board."""
+    layout = db.get_day_layout(worn_on)
+    positioned_ids = {p["id"] for p in layout}
+    start = len(layout)
+    default_w = 220
+    unplaced = [it for it in loose_items if it["id"] not in positioned_ids]
+    for i, it in enumerate(unplaced):
+        idx = start + i
+        layout.append({
+            "id": it["id"],
+            "x": 60 + (idx * 40) % (OUTFIT_BOARD_W - default_w - 40),
+            "y": 40 + (idx * 55) % (OUTFIT_BOARD_H - 160),
+            "w": default_w,
+            "rot": 0,
+        })
+    return _outfit_render_pieces({"layout": layout}, items)
+
+
+def _day_tiles(info: dict, items: dict, outfits: dict, worn_on: str) -> dict:
+    """What to show in one month-grid day cell — each saved outfit logged
+    that day, plus the day's ad-hoc board if it has anything on it. Every
+    tile is the same board shape, capped at DAY_CELL_MAX_TILES with a
+    "+N" badge for the rest."""
+    tiles = []
     for oid in info["outfit_ids"]:
         outfit = outfits.get(oid)
         if outfit is None:
             continue
         pieces = _outfit_render_pieces(outfit, items)
         if pieces:
-            day_outfits.append({"id": oid, "name": outfit["name"], "pieces": pieces})
-    return {
-        # NB: not "items" — dicts already have an .items() method, and Jinja's
-        # attribute lookup would resolve `info.items` to that instead of this key.
-        "loose_items": day_items[:DAY_CELL_MAX_ITEMS],
-        "more_items": max(0, len(day_items) - DAY_CELL_MAX_ITEMS),
-        "outfits": day_outfits[:DAY_CELL_MAX_OUTFITS],
-        "more_outfits": max(0, len(day_outfits) - DAY_CELL_MAX_OUTFITS),
-    }
+            tiles.append({"name": outfit["name"], "pieces": pieces})
+    loose = [items[iid] for iid in info["item_ids"] if iid in items]
+    if loose:
+        pieces = _day_board_pieces(worn_on, items, loose)
+        if pieces:
+            tiles.append({"name": None, "pieces": pieces})
+    return {"tiles": tiles[:DAY_CELL_MAX_TILES], "more": max(0, len(tiles) - DAY_CELL_MAX_TILES)}
 
 
 @app.route("/calendar")
@@ -309,7 +324,7 @@ def calendar_view(year: int | None = None, month: int | None = None):
     items = db.load_items()
     outfits = {o["id"]: o for o in db.load_outfits()}
     summary = db.wear_summary_for_month(year, month)
-    days = {d: _day_display(info, items, outfits) for d, info in summary.items()}
+    days = {d: _day_tiles(info, items, outfits, d) for d, info in summary.items()}
 
     weeks = calendar.Calendar(firstweekday=6).monthdatescalendar(year, month)
     first = datetime.date(year, month, 1)
@@ -350,8 +365,8 @@ def calendar_day(date):
         active="calendar",
         date=date,
         pretty_date=d.strftime("%A, %B ") + str(d.day) + d.strftime(", %Y"),
-        worn_items=worn["items"],
         worn_outfits=worn["outfits"],
+        board_pieces=_day_board_pieces(date, items, worn["items"]),
         tray=[{"id": i, **items[i]} for i in items],
         outfits=db.load_outfits(),
         day_log=db.get_day_log(date),
@@ -365,13 +380,23 @@ def calendar_day_log(date):
     d = _parse_day(date)
     if d > datetime.date.today():
         abort(400, description="can't log a day that hasn't happened yet")
-    item_ids = [i for i in request.form.getlist("item_id") if i]
     outfit_id = (request.form.get("outfit_id") or "").strip()
-    if item_ids:
-        db.log_items_worn(date, item_ids)
     if outfit_id:
         db.log_outfit_worn(date, outfit_id)
     return redirect(url_for("calendar_day", date=date))
+
+
+@app.route("/calendar/day/<date>/board", methods=["POST"])
+def calendar_day_board(date):
+    d = _parse_day(date)
+    if d > datetime.date.today():
+        return jsonify({"ok": False, "error": "can't log a day that hasn't happened yet"}), 400
+    payload = request.get_json(force=True, silent=True) or {}
+    placements = _clean_placements(payload.get("items") or [])
+    if placements is None:
+        return jsonify({"ok": False, "error": "malformed item placement"}), 400
+    db.save_day_layout(date, placements)
+    return jsonify({"ok": True})
 
 
 @app.route("/calendar/day/<date>/note", methods=["POST"])
@@ -386,13 +411,12 @@ def calendar_day_note(date):
 
 @app.route("/calendar/day/<date>/remove", methods=["POST"])
 def calendar_day_remove(date):
+    """Un-log a saved outfit from this day. Loose ad-hoc pieces are removed
+    by editing the day's board instead (see calendar_day_board)."""
     _parse_day(date)
-    kind = request.form.get("kind")
-    target = request.form.get("id")
-    if kind == "item" and target:
-        db.unlog_item(date, target)
-    elif kind == "outfit" and target:
-        db.unlog_outfit(date, target)
+    outfit_id = request.form.get("id")
+    if outfit_id:
+        db.unlog_outfit(date, outfit_id)
     return redirect(url_for("calendar_day", date=date))
 
 

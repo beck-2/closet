@@ -187,3 +187,35 @@
 - 104 tests. Verified end-to-end in the browser against a copy of the real
   DB: Sept 8's 3-piece outfit renders as a proper arranged board, rated it
   3/3 with a note, reloaded and it stuck, cleared the rating.
+
+## 2026-09-11 (later) — the day board
+- Beck's reaction to the last screenshot: the loose-item squares were
+  "still a little weird" next to the outfit board, and asked to just reuse
+  the outfit builder itself for logging a day — uniform square, resize
+  however he wants.
+- Pulled the outfit builder's whole drag/resize/reorder engine out into
+  static/js/board-editor.js (first static JS file in the app) so the day
+  page and the outfit builder run the identical editor instead of two
+  copies drifting apart. Broadened the shared board/tray CSS from
+  `.pg-outfits` to also match `.pg-calday`.
+- New day_layout table, shaped exactly like outfit_items, keyed by date
+  instead of outfit id. Saving it now IS how you log/unlog loose items for
+  a day — no more separate checkbox tray or per-item remove button.
+  _day_board_pieces() auto-places anything logged-but-unpositioned (e.g.
+  from the item page's quick "Worn today") so the board never silently
+  drops something you've logged.
+- Month grid simplified to a flat "tiles" list (outfits + the day's ad-hoc
+  board), each tile the same board size, capped at 1 with a "+N" badge —
+  replaces the earlier items-vs-outfits split rendering entirely.
+- Rewrote tests/test_calendar.py around the new flow rather than patching —
+  the old item_id-checkbox tests didn't map onto board semantics.
+- Gotcha: a test asserting on `left: ` in the day page HTML passed for the
+  wrong reason — that page renders the ad-hoc board client-side from JSON
+  (no inline `style="left:..."` in the HTML at all), and "+2" showed up
+  coincidentally from "Baloo+2" in the Google Fonts URL in <head>. Both
+  were silently-passing tests that had stopped checking anything real.
+  Rewrote them to assert on the actual JSON payload / exact tile count.
+- 112 tests. Verified in the browser: measured all 4 month-grid boards at
+  exactly 103x106px regardless of piece count; dragged a 3rd piece onto a
+  day's board, saved, reloaded, confirmed day_layout + wear_log rows in
+  the DB directly; outfit builder unchanged through the shared JS.

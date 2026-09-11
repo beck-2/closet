@@ -366,8 +366,12 @@ a:hover { color: #a61e4d; }
 }
 
 /* ================= outfit builder ================= */
-.pg-outfits .layout { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
-.pg-outfits .board {
+/* The board + closet tray is the one editing surface used both for saving
+   a named, reusable Outfit (pg-outfits) and for arranging a single day's
+   loose pieces on the calendar (pg-calday) — same board-editor.js drives
+   both, so they share this styling rather than each keeping their own. */
+.pg-outfits .layout, .pg-calday .layout { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+.pg-outfits .board, .pg-calday .board {
   /* Fixed size (not flex/responsive) on purpose: saved x/y/w coordinates
      are raw pixels against this exact box, so a fixed canonical size is
      what makes those coordinates reproducible later — in the thumbnail on
@@ -381,27 +385,27 @@ a:hover { color: #a61e4d; }
   position: relative;
   overflow: visible;
 }
-.pg-outfits .boardempty {
+.pg-outfits .boardempty, .pg-calday .boardempty {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   font-family: 'Baloo 2', cursive; font-size: 16px; color: #b6ac96; text-align: center; padding: 40px;
   pointer-events: none;
 }
-.pg-outfits .cutout {
+.pg-outfits .cutout, .pg-calday .cutout {
   position: absolute;
   cursor: grab;
   user-select: none;
   -webkit-user-drag: none;
   touch-action: none;
 }
-.pg-outfits .cutout:active { cursor: grabbing; }
-.pg-outfits .cutout img {
+.pg-outfits .cutout:active, .pg-calday .cutout:active { cursor: grabbing; }
+.pg-outfits .cutout img, .pg-calday .cutout img {
   width: 100%;
   display: block;
   filter: drop-shadow(0 10px 14px rgba(43,33,64,0.28));
   pointer-events: none;
 }
-.pg-outfits .cutout .remove {
+.pg-outfits .cutout .remove, .pg-calday .cutout .remove {
   position: absolute;
   top: -10px; right: -10px;
   width: 24px; height: 24px;
@@ -417,12 +421,12 @@ a:hover { color: #a61e4d; }
   opacity: 0;
   transition: opacity 0.15s;
 }
-.pg-outfits .cutout:hover .remove { opacity: 1; }
-.pg-outfits .cutout.selected {
+.pg-outfits .cutout:hover .remove, .pg-calday .cutout:hover .remove { opacity: 1; }
+.pg-outfits .cutout.selected, .pg-calday .cutout.selected {
   outline: 2.5px dashed #7c3aa0;
   outline-offset: 4px;
 }
-.pg-outfits .resizehandle {
+.pg-outfits .resizehandle, .pg-calday .resizehandle {
   position: absolute;
   bottom: -10px;
   right: -10px;
@@ -450,7 +454,7 @@ a:hover { color: #a61e4d; }
   width: calc(100% - 48px);
 }
 .pg-outfits .namefield::placeholder { color: #b6ac96; }
-.pg-outfits .sidebar {
+.pg-outfits .sidebar, .pg-calday .sidebar {
   width: 340px;
   flex-shrink: 0;
   background: #ffffff;
@@ -464,9 +468,9 @@ a:hover { color: #a61e4d; }
   max-height: 620px;
   overflow-y: auto;
 }
-.pg-outfits .sidebartitle { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 18px; color: #2b2140; margin: 0; }
-.pg-outfits .filterrow { display: flex; gap: 8px; flex-wrap: wrap; }
-.pg-outfits .chip {
+.pg-outfits .sidebartitle, .pg-calday .sidebartitle { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 18px; color: #2b2140; margin: 0; }
+.pg-outfits .filterrow, .pg-calday .filterrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.pg-outfits .chip, .pg-calday .chip {
   font-family: 'Nunito', sans-serif;
   font-weight: 800;
   font-size: 12px;
@@ -477,9 +481,9 @@ a:hover { color: #a61e4d; }
   padding: 6px 13px;
   cursor: pointer;
 }
-.pg-outfits .chip.selected { background: #c9a6ff; }
-.pg-outfits .traygrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.pg-outfits .trayitem {
+.pg-outfits .chip.selected, .pg-calday .chip.selected { background: #c9a6ff; }
+.pg-outfits .traygrid, .pg-calday .traygrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.pg-outfits .trayitem, .pg-calday .trayitem {
   background: #f7efe0;
   border: 2.5px solid #2b2140;
   border-radius: 10px;
@@ -489,8 +493,8 @@ a:hover { color: #a61e4d; }
   justify-content: center;
   cursor: grab;
 }
-.pg-outfits .trayitem:active { cursor: grabbing; }
-.pg-outfits .trayitem img { max-width: 78%; max-height: 78%; object-fit: contain; }
+.pg-outfits .trayitem:active, .pg-calday .trayitem:active { cursor: grabbing; }
+.pg-outfits .trayitem img, .pg-calday .trayitem img { max-width: 78%; max-height: 78%; object-fit: contain; }
 .pg-outfits .bottomrow { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; flex-wrap: wrap; gap: 16px; }
 .pg-outfits .vibesinput {
   font-family: 'Nunito', sans-serif;
@@ -971,7 +975,7 @@ a:hover { color: #a61e4d; }
 .pg-calendar .calday {
   position: relative;
   display: block;
-  min-height: 150px;
+  min-height: 176px;
   border: 2.5px solid #2b2140;
   border-radius: 10px;
   background: #f7efe0;
@@ -994,14 +998,6 @@ a:hover { color: #a61e4d; }
   overflow: hidden;
 }
 .pg-calendar .calminiboard img { position: absolute; object-fit: contain; }
-.pg-calendar .calthumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.pg-calendar .calthumbs img {
-  width: 46px;
-  height: 46px;
-  object-fit: contain;
-  background: #f0e8d6;
-  border-radius: 6px;
-}
 .pg-calendar .calmore {
   font-family: 'Nunito', sans-serif;
   font-weight: 800;
@@ -1021,7 +1017,6 @@ a:hover { color: #a61e4d; }
   text-transform: uppercase; color: #7c7192; margin: 0 0 12px;
 }
 .pg-calday .worn-section { margin-bottom: 34px; }
-.pg-calday .worn-empty { font-size: 14px; color: #9a94a6; }
 .pg-calday .worn-grid { display: flex; flex-wrap: wrap; gap: 14px; }
 .pg-calday .worn-card {
   position: relative;
@@ -1032,7 +1027,6 @@ a:hover { color: #a61e4d; }
   padding: 10px;
   box-shadow: 4px 4px 0 rgba(43,33,64,0.14);
 }
-.pg-calday .worn-thumb { width: 100%; height: 100px; object-fit: contain; }
 .pg-calday .worn-miniboard {
   position: relative; width: 100%; aspect-ratio: 600 / 620;
   background: #fbf6ea; border: 2px solid #2b2140; border-radius: 8px; overflow: hidden;
@@ -1051,30 +1045,14 @@ a:hover { color: #a61e4d; }
 }
 .pg-calday .worn-card form { margin: 0; }
 
-.pg-calday .logform .filtertext {
-  font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 14px;
-  color: #2b2140; background: #fffdf7; border: 2.5px solid #2b2140;
-  border-radius: 999px; padding: 8px 16px; min-width: 220px; margin-bottom: 14px;
-}
-.pg-calday .logtray {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px; margin-bottom: 20px;
-}
-.pg-calday .logtile {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  border: 2.5px solid #2b2140; border-radius: 10px; background: #f7efe0;
-  padding: 8px; cursor: pointer; text-align: center;
-}
-.pg-calday .logtile input { display: none; }
-.pg-calday .logtile:has(input:checked) { background: #5c9a63; color: #fff; }
-.pg-calday .logtile img { width: 74px; height: 74px; object-fit: contain; }
-.pg-calday .logtile span {
-  font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 11px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-}
+.pg-calday .dayboard-section { margin-bottom: 34px; }
+.pg-calday .dayboard-bottom { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+.pg-calday .savemsg { font-weight: 800; color: #2b2140; }
+
+.pg-calday .logoutfitform { display: flex; align-items: center; gap: 16px; margin-bottom: 34px; flex-wrap: wrap; }
 .pg-calday .logoutfit {
-  display: block; font-family: 'Nunito', sans-serif; font-weight: 700;
-  font-size: 14px; color: #2b2140; margin-bottom: 18px;
+  font-family: 'Nunito', sans-serif; font-weight: 700;
+  font-size: 14px; color: #2b2140;
 }
 .pg-calday .logoutfit select {
   font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 14px;
