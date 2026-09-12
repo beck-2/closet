@@ -63,3 +63,27 @@ def test_closet_page_renders_cards_in_saved_order(client, flask_app, add_item):
         db_module.set_closet_order(["003", "002", "001"])
     body = client.get("/").data.decode()
     assert body.index(">cee<") < body.index(">bee<") < body.index(">aay<")
+
+
+# --------------------------------------- jewelry/shoes/accessories sort last --
+
+def test_non_clothing_types_sort_after_clothes_by_default(client, flask_app, add_item):
+    add_item("001", item_type="jewelry")
+    add_item("002", item_type="top")
+    add_item("003", item_type="shoes")
+    add_item("004", item_type="hoodie")
+    add_item("005", item_type="accessory")
+    with flask_app.app_context():
+        # ids interleaved on purpose — clothes (002, 004) first in id order,
+        # then the non-clothing types (001, 003, 005) in id order.
+        assert list(db_module.load_items()) == ["002", "004", "001", "003", "005"]
+
+
+def test_non_clothing_types_still_sort_after_clothes_even_when_dragged_first(client, flask_app, add_item):
+    add_item("001", item_type="jewelry")
+    add_item("002", item_type="top")
+    with flask_app.app_context():
+        # Explicitly place the jewelry item first — the category boundary
+        # wins anyway; dragging can only reorder within a group.
+        db_module.set_closet_order(["001", "002"])
+        assert list(db_module.load_items()) == ["002", "001"]

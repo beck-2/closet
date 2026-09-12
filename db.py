@@ -24,6 +24,8 @@ from pathlib import Path
 
 from flask import g
 
+from pipeline.metadata_schema import NON_CLOTHING_TYPES
+
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "closet.db"
@@ -55,7 +57,8 @@ CREATE TABLE IF NOT EXISTS items (
     season        TEXT NOT NULL DEFAULT '[]',
     wear_count    INTEGER NOT NULL DEFAULT 0,
     notes         TEXT NOT NULL DEFAULT '',
-    sort_order    INTEGER
+    sort_order    INTEGER,
+    jewelry_subtype TEXT
 );
 
 CREATE TABLE IF NOT EXISTS item_images (
@@ -196,6 +199,8 @@ def init_db(db_path: Path | None = None) -> None:
         have = {row[1] for row in db.execute("PRAGMA table_info(items)")}
         if "sort_order" not in have:
             db.execute("ALTER TABLE items ADD COLUMN sort_order INTEGER")
+        if "jewelry_subtype" not in have:
+            db.execute("ALTER TABLE items ADD COLUMN jewelry_subtype TEXT")
         if is_new:
             if items_json.exists():
                 n = _migrate_items_json(db, items_json)
@@ -251,15 +256,21 @@ def _item_from_row(db: sqlite3.Connection, row: sqlite3.Row) -> dict:
         "wear_count": wear_count,
         "notes": row["notes"],
         "sort_order": row["sort_order"],
+        "jewelry_subtype": row["jewelry_subtype"],
         "images": images,
         "raw_images": raw_images,
     }
 
 
-# Manually-ordered items first (by sort_order), then anything never dragged,
-# oldest id first. That "unset goes last" is what keeps a brand-new item at
-# the end until you place it.
-_ITEM_ORDER = "ORDER BY sort_order IS NULL, sort_order, id"
+# Jewelry/shoes/accessories always sort after every clothing item, regardless
+# of drag order — within each of those two groups: manually-ordered items
+# first (by sort_order), then anything never dragged, oldest id first. That
+# "unset goes last" is what keeps a brand-new item at the end until you place it.
+_NON_CLOTHING_SQL = ", ".join(f"'{t}'" for t in NON_CLOTHING_TYPES)
+_ITEM_ORDER = (
+    f"ORDER BY CASE WHEN item_type IN ({_NON_CLOTHING_SQL}) THEN 1 ELSE 0 END, "
+    "sort_order IS NULL, sort_order, id"
+)
 
 
 def load_items() -> dict:
@@ -287,14 +298,14 @@ def save_item(item_id: str, item: dict) -> None:
     db = get_db()
     db.execute(
         """INSERT INTO items (id, name, item_type, color, comfort, fit, condition, vibes,
-                               source, price, date_acquired, season, notes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               source, price, date_acquired, season, notes, jewelry_subtype)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET
              name=excluded.name, item_type=excluded.item_type, color=excluded.color,
              comfort=excluded.comfort, fit=excluded.fit, condition=excluded.condition,
              vibes=excluded.vibes, source=excluded.source, price=excluded.price,
              date_acquired=excluded.date_acquired, season=excluded.season,
-             notes=excluded.notes""",
+             notes=excluded.notes, jewelry_subtype=excluded.jewelry_subtype""",
         (
             item_id, item.get("name"), item.get("item_type"),
             json.dumps(item.get("color") or []),
@@ -303,6 +314,7 @@ def save_item(item_id: str, item: dict) -> None:
             item.get("source"), item.get("price"), item.get("date_acquired"),
             json.dumps(item.get("season") or []),
             item.get("notes") or "",
+            item.get("jewelry_subtype"),
         ),
     )
     db.execute("DELETE FROM item_images WHERE item_id = ?", (item_id,))

@@ -1,5 +1,49 @@
 # TODO
 
+## Batch 8 — jewelry, shoes, accessories (requested 2026-09-12)  ✅ DONE
+- [x] `jewelry`, `shoes`, `accessory` were already valid item types but
+      behaved just like clothing. Now they always sort after every clothing
+      item in the closet grid (and the outfit-builder/calendar trays, which
+      share the same `load_items()`), regardless of drag order — a category
+      boundary enforced in the SQL `ORDER BY`, not just a suggestion.
+- [x] Jewelry gets its own subtype field (earrings / bracelet / rings /
+      piercing / necklace / pin / other), shown only when item type is
+      jewelry. New `items.jewelry_subtype` column.
+- [x] Jewelry only tracks a Condition rating (no Comfort/Fit) and has no
+      Season — enforced server-side in `_read_form_item()`, not just hidden
+      client-side, since a hidden field still submits its last value.
+      Shoes and accessories keep every normal field, as asked.
+- [x] Shown wherever the type already showed: closet grid caption + item
+      view badge now read "jewelry · earrings" etc.
+- [x] Shoes stay a single category for now, no subtypes.
+- [x] tests/test_jewelry.py (6) + 2 in test_closet_order.py. 121 tests.
+      Verified in browser against a DB copy: added a real jewelry item
+      through the actual add form (upload → rembg → save), confirmed it
+      landed last on the closet grid, condition-only + subtype persisted.
+
+## Batch 7 (requested 2026-09-12)
+
+### One calendar save button  ✅ DONE
+- [x] Calendar day page had three separate save buttons (board / log a
+      saved outfit / comfort+notes), each its own form bouncing back to
+      the day page. Now one "save" button at the bottom fires all three
+      POSTs in sequence (board → outfit if picked → notes/rating), then
+      redirects to the day's month grid once. Backend routes unchanged.
+- [x] 113 tests. Verified in browser against a DB copy: one click landed
+      an outfit log + comfort rating + notes together.
+
+### Add-item drag-and-drop  ⚠️ AWAITING RETEST
+- [x] The upload zone's copy promised drag-and-drop but only click worked.
+      Wired dragenter/dragover/drop listeners on the zone: drop assigns
+      the dropped file to the hidden input and fires its existing change
+      handler. Verified working via synthetic drop events in the browser.
+- [ ] Beck reported it still doesn't work with a real Finder/browser-tab
+      drag. Likely cause: `app.run(debug=False)` in app.py means Jinja's
+      template auto-reload is off, so the already-running server was
+      still serving the pre-fix compiled template — a page refresh alone
+      wouldn't pick up the change, only a server restart (`python app.py`)
+      would. Waiting on Beck to restart and retest.
+
 ## Batch 6 — day-page polish (requested 2026-09-11)  ✅ DONE
 - [x] Saving the day board now redirects to the calendar month grid instead
       of reloading the day page — and to the *day's own* month (via

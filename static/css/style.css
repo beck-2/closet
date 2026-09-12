@@ -658,12 +658,14 @@ a:hover { color: #a61e4d; }
   text-align: center;
   cursor: pointer;
 }
+.pg-add .uploadzone.dragover { border-color: #ffd447; background: #fffbe9; }
 .pg-add .uploadzone .hint2 { font-weight: 800; color: #2b2140; font-size: 15px; }
 .pg-add .uploadzone .subhint { font-size: 12.5px; color: #7c7192; }
 .pg-add .uploadzone img.preview { max-height: 200px; max-width: 100%; object-fit: contain; }
 .pg-add .fieldsgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 40px; margin-bottom: 30px; }
 .pg-add .field { display: flex; flex-direction: column; gap: 10px; }
 .pg-add .field.full { grid-column: 1 / -1; }
+.pg-add .field[hidden] { display: none; }
 .pg-add .label { font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.4px; color: #2b2140; }
 .pg-add select.select, .pg-add input.textinput, .pg-add input[type="month"], .pg-add input[type="number"] {
   font-family: 'Nunito', sans-serif;
@@ -696,6 +698,7 @@ a:hover { color: #a61e4d; }
 .pg-add .chip:has(input:checked) { background: #c9a6ff; }
 .pg-add .ratinggroup { display: flex; gap: 36px; flex-wrap: wrap; }
 .pg-add .rating { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.pg-add .rating[hidden] { display: none; }
 .pg-add .ratingsublabel { font-size: 11px; font-weight: 800; color: #7c7192; text-transform: uppercase; }
 .pg-add .dots { display: flex; gap: 6px; }
 .pg-add .dots label { cursor: pointer; }

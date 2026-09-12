@@ -34,6 +34,7 @@ from pipeline.metadata_schema import (
     ACQUIRED_MIN_YEAR,
     COLOR_SUGGESTIONS,
     ITEM_TYPES,
+    JEWELRY_SUBTYPES,
     RATING_FIELDS,
     RATING_MAX,
     RATING_MIN,
@@ -564,18 +565,25 @@ def _read_form_item(form) -> dict:
     vibes_raw = (form.get("vibes") or "").strip()
     vibes = [v.strip() for v in vibes_raw.split(",") if v.strip()]
 
+    item_type = form.get("item_type") or None
+    # Jewelry only tracks a condition rating (no comfort/fit) and has no
+    # seasons — enforced here too, not just hidden client-side, since a
+    # field that's merely hidden still submits whatever value it last had.
+    is_jewelry = item_type == "jewelry"
+
     return {
         "name": (form.get("name") or "").strip() or None,
-        "item_type": form.get("item_type") or None,
+        "item_type": item_type,
+        "jewelry_subtype": (form.get("jewelry_subtype") or None) if is_jewelry else None,
         "color": multi("color"),
-        "comfort": rating("comfort"),
-        "fit": rating("fit"),
+        "comfort": None if is_jewelry else rating("comfort"),
+        "fit": None if is_jewelry else rating("fit"),
         "condition": rating("condition"),
         "vibes": vibes,
         "source": form.get("source") or None,
         "price": num("price"),
         "date_acquired": _form_date_acquired(form),
-        "season": multi("season"),
+        "season": [] if is_jewelry else multi("season"),
         "notes": (form.get("notes") or "").strip(),
     }
 
@@ -610,6 +618,7 @@ def _edit_form_kwargs(item_id, item, error=None):
         item_id=item_id,
         item=item,
         item_types=ITEM_TYPES,
+        jewelry_subtypes=JEWELRY_SUBTYPES,
         color_suggestions=COLOR_SUGGESTIONS,
         season_suggestions=SEASON_SUGGESTIONS,
         sources=SOURCES,
@@ -775,6 +784,7 @@ def _add_form_kwargs(error=None):
         item_id=None,
         item={},
         item_types=ITEM_TYPES,
+        jewelry_subtypes=JEWELRY_SUBTYPES,
         color_suggestions=COLOR_SUGGESTIONS,
         season_suggestions=SEASON_SUGGESTIONS,
         sources=SOURCES,

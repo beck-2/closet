@@ -22,7 +22,7 @@
   <div class="meta">
     <h2 class="itemname">{{ item.name or 'unnamed piece' }}</h2>
     <div class="typerow">
-      <div class="typebadge">{{ item.item_type or 'unlabeled' }}</div>
+      <div class="typebadge">{{ item.item_type or 'unlabeled' }}{% if item.jewelry_subtype %} · {{ item.jewelry_subtype }}{% endif %}</div>
       <a class="editbtn" href="{{ url_for('edit_item', item_id=item_id) }}">Edit item</a>
     </div>
 
@@ -44,12 +44,14 @@
       <p class="section-label">How it feels</p>
       <div class="ratings">
         {% for label, key in [('Comfort','comfort'), ('Fit','fit'), ('Condition','condition')] %}
+        {% if item.item_type != 'jewelry' or key == 'condition' %}
         <div class="rating">
           <span class="ratinglabel">{{ label }}</span>
           <div class="dots">
             {% for i in range(1, 4) %}<div class="dot {{ 'filled' if item.get(key) and i <= item.get(key) }}"></div>{% endfor %}
           </div>
         </div>
+        {% endif %}
         {% endfor %}
       </div>
     </div>

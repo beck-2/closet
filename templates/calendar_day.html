@@ -52,10 +52,6 @@
       </div>
     </div>
   </div>
-  <div class="dayboard-bottom">
-    <span class="savemsg" id="board-msg"></span>
-    <button class="savebtn" id="board-save-btn">save</button>
-  </div>
 </div>
 
 <div class="ctxmenu" id="ctx-menu" hidden>
@@ -65,19 +61,18 @@
 </div>
 
 {% if outfits %}
-<form method="post" action="{{ url_for('calendar_day_log', date=date) }}" class="logoutfitform">
+<div class="logoutfitform">
   <label class="logoutfit">
     …or log a whole saved outfit:
-    <select name="outfit_id">
+    <select name="outfit_id" id="outfit-select">
       <option value="">— none —</option>
       {% for o in outfits %}<option value="{{ o.id }}">{{ o.name }}</option>{% endfor %}
     </select>
   </label>
-  <button type="submit" class="savebtn">log it</button>
-</form>
+</div>
 {% endif %}
 
-<form method="post" action="{{ url_for('calendar_day_note', date=date) }}" class="dayfeel">
+<div class="dayfeel">
   <p class="section-label">how did it feel</p>
   <div class="dayfeel-row">
     <div class="dots" id="comfort-dots">
@@ -92,9 +87,13 @@
     <button type="button" class="clearrating" id="clear-rating">clear</button>
     {% endif %}
   </div>
-  <textarea class="notesarea" name="notes" placeholder="anything about today's outfit...">{{ day_log.notes }}</textarea>
-  <button type="submit" class="savebtn">save</button>
-</form>
+  <textarea class="notesarea" id="notes-input" name="notes" placeholder="anything about today's outfit...">{{ day_log.notes }}</textarea>
+</div>
+
+<div class="dayboard-bottom">
+  <span class="savemsg" id="board-msg"></span>
+  <button class="savebtn" id="board-save-btn">save</button>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -102,20 +101,42 @@
 <script>
 (function () {
   var editor = createBoardEditor({{ board_pieces|tojson }});
+  var outfitSelect = document.getElementById('outfit-select');
+  var notesInput = document.getElementById('notes-input');
+
+  // One button saves the whole page: the board, the outfit-dropdown pick
+  // (if any), and the comfort/notes — each still its own endpoint, just
+  // called in sequence instead of three separate forms/buttons.
   document.getElementById('board-save-btn').addEventListener('click', function () {
     var msg = document.getElementById('board-msg');
     msg.textContent = 'saving...';
+    var outfitId = outfitSelect ? outfitSelect.value : '';
+    var comfortInput = document.querySelector('#comfort-dots input:checked');
+
     fetch({{ url_for('calendar_day_board', date=date)|tojson }}, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: editor.getPieces() })
     }).then(function (r) { return r.json(); }).then(function (data) {
-      if (data.ok) {
-        window.location.href = {{ calendar_url|tojson }};
-      } else {
-        msg.textContent = data.error || 'something went wrong';
-      }
-    }).catch(function () { msg.textContent = 'something went wrong'; });
+      if (!data.ok) { throw new Error(data.error || 'something went wrong'); }
+      if (!outfitId) return null;
+      return fetch({{ url_for('calendar_day_log', date=date)|tojson }}, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'outfit_id=' + encodeURIComponent(outfitId)
+      });
+    }).then(function () {
+      return fetch({{ url_for('calendar_day_note', date=date)|tojson }}, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'comfort=' + encodeURIComponent(comfortInput ? comfortInput.value : '') +
+              '&notes=' + encodeURIComponent(notesInput.value)
+      });
+    }).then(function () {
+      window.location.href = {{ calendar_url|tojson }};
+    }).catch(function (err) {
+      msg.textContent = (err && err.message) || 'something went wrong';
+    });
   });
 })();
 

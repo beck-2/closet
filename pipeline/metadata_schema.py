@@ -13,6 +13,13 @@ ITEM_TYPES = [
     "longsleeve", "tshirt", "tanktop", "jacket", "hoodie", "shoes", "accessory", "belt", "bag", "hat", "jewelry", "other",
 ]
 
+# These always sort after every clothing item in the closet grid (and
+# anywhere else load_items() feeds a list) — see db._ITEM_ORDER.
+NON_CLOTHING_TYPES = ["jewelry", "shoes", "accessory"]
+
+# Single-select, only shown/used when item_type == "jewelry".
+JEWELRY_SUBTYPES = ["earrings", "bracelet", "rings", "piercing", "necklace", "pin", "other"]
+
 SOURCES = [
     "thrifted", "new", "from mom", "gift", "from sat", "from bauer",
 ]

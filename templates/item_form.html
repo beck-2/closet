@@ -42,10 +42,20 @@
 
       <div class="field">
         <span class="label">Item type</span>
-        <select class="select" name="item_type">
+        <select class="select" name="item_type" id="item-type-select">
           <option value="">— choose —</option>
           {% for t in item_types %}
           <option value="{{ t }}" {{ 'selected' if item.item_type == t }}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field" id="jewelry-subtype-field">
+        <span class="label">Jewelry type</span>
+        <select class="select" name="jewelry_subtype">
+          <option value="">— choose —</option>
+          {% for st in jewelry_subtypes %}
+          <option value="{{ st }}" {{ 'selected' if item.jewelry_subtype == st }}>{{ st }}</option>
           {% endfor %}
         </select>
       </div>
@@ -76,7 +86,7 @@
         <span class="label">How it feels (1–3)</span>
         <div class="ratinggroup">
           {% for label, key in [('Comfort','comfort'), ('Fit','fit'), ('Condition','condition')] %}
-          <div class="rating">
+          <div class="rating {{ 'jewelry-hide' if key in ('comfort', 'fit') }}">
             <span class="ratingsublabel">{{ label }}</span>
             <div class="dots">
               {% for i in range(1, 4) %}
@@ -91,7 +101,7 @@
         </div>
       </div>
 
-      <div class="field full">
+      <div class="field full jewelry-hide" id="season-field">
         <span class="label">Season (pick any)</span>
         <div class="chiprow">
           {% for s in season_suggestions %}
@@ -167,6 +177,50 @@
         reader.readAsDataURL(input.files[0]);
       }
     });
+
+    // The zone is a <label>, so a click already opens the file picker —
+    // but dragging a file onto it did nothing (the browser's default is
+    // to navigate to the file), even though the hint text promised it
+    // would work. Wire the drop itself up to the same input.
+    var zone = input.closest('.uploadzone');
+    ['dragenter', 'dragover'].forEach(function (evt) {
+      zone.addEventListener(evt, function (e) {
+        e.preventDefault();
+        zone.classList.add('dragover');
+      });
+    });
+    ['dragleave', 'dragend'].forEach(function (evt) {
+      zone.addEventListener(evt, function () {
+        zone.classList.remove('dragover');
+      });
+    });
+    zone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (files && files[0]) {
+        input.files = files;
+        input.dispatchEvent(new Event('change'));
+      }
+    });
+  }
+
+  // Jewelry gets its own subtype dropdown and only tracks a condition
+  // rating, with no seasons — everything else (shoes, accessories, and
+  // every clothing type) keeps the normal fields. This just toggles what's
+  // shown; _read_form_item() on the server is what actually enforces it,
+  // since a hidden field still submits whatever value it last held.
+  var itemTypeSelect = document.getElementById('item-type-select');
+  var subtypeField = document.getElementById('jewelry-subtype-field');
+  if (itemTypeSelect) {
+    var jewelryHideEls = document.querySelectorAll('.jewelry-hide');
+    var updateJewelryFields = function () {
+      var isJewelry = itemTypeSelect.value === 'jewelry';
+      subtypeField.hidden = !isJewelry;
+      jewelryHideEls.forEach(function (el) { el.hidden = isJewelry; });
+    };
+    itemTypeSelect.addEventListener('change', updateJewelryFields);
+    updateJewelryFields();
   }
 
   var newPhotos = document.getElementById('new-photos-input');

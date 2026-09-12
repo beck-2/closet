@@ -2,6 +2,27 @@
 
 Why things are built the way they are. Newest first.
 
+## Jewelry/shoes/accessories sort last, enforced in the query (2026-09-12)
+
+Beck wants jewelry/shoes/accessories to always display after the clothes.
+The obvious quick version would be a display-time sort in the template or
+route. Instead the category boundary went into `db._ITEM_ORDER`'s `ORDER BY`
+itself (a `CASE WHEN item_type IN (...) THEN 1 ELSE 0 END` ahead of the
+existing `sort_order`/`id` clause) — every page that lists items
+(`load_items()`) gets the same grouping for free, and dragging a jewelry
+item earlier in the closet grid doesn't quietly stick past a reload. If the
+sort had lived in one route instead, the outfit-builder and calendar trays
+would've needed the same logic copy-pasted, and a drag that "worked" until
+refresh would've been a confusing bug report waiting to happen.
+
+**Jewelry's reduced fields are enforced server-side, not just hidden.**
+`item_form.html`'s JS hides Comfort/Fit/Season when the item type is
+jewelry, but a hidden `<input>`/`<select>` still submits whatever value it
+last held — so `_read_form_item()` forces comfort/fit to `None` and season
+to `[]` whenever `item_type == "jewelry"`, regardless of what the POST body
+actually contains. The client-side toggle is just UX; the real rule lives
+in the one function every save (add and edit) already runs through.
+
 ## Logging a day reuses the outfit builder itself (2026-09-11)
 
 The month-grid mini-boards (previous entry below) fixed outfits, but loose

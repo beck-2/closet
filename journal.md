@@ -228,4 +228,61 @@
   always today's — otherwise editing a January day while looking at
   September would bounce you to September. Fixed the "← calendar" back
   chip the same way while in the file, since it had the identical bug.
+
+## 2026-09-12 — aesthetics pass tried, then reverted
+- Beck's ask: punk-cyber wordmark font, picture frames on closet items,
+  and a sitewide pink-only accent color. Built all three (font gitignored
+  for licensing — it's personal-use-only and the repo is public — with a
+  README + fallback font so the app still works without the binary).
+- Beck's call after seeing it: didn't like it, revert. Commit had never
+  been pushed, so `git reset --hard` back to the prior commit was clean —
+  no need for `git revert`. 113 tests still green after.
+
+## 2026-09-12 (later) — add-item drag-and-drop, one calendar save button
+- First pass at add-item drag-and-drop (dragover/drop listeners on the
+  upload zone) tested fine via synthetic JS-dispatched events, but Beck
+  reported it still didn't work with a real Finder/browser-tab drag.
+  Root cause: `app.run(debug=False)` means Jinja's template auto-reload is
+  off, so the running server was still serving the pre-fix compiled
+  template — the fix never actually reached his browser. Needs a server
+  restart (`python app.py`) to pick up template edits, not just a
+  page reload; flagged this to Beck rather than guessing further.
+- Calendar day page had three separate save buttons (board / log-outfit /
+  notes), each its own `<form>` posting to a different route and bouncing
+  back to the day page. Beck wants one button at the bottom for all of it.
+  Kept the three backend routes as-is (already tested, independently
+  useful) — stripped the `<form>`/button chrome around the outfit-select
+  and notes/rating sections down to plain `<div>`s, and had the one
+  remaining save button fire all three POSTs in sequence (board, then
+  outfit if one's picked, then notes/rating), redirecting to the day's
+  month grid only once all three land.
+- 113 tests still passing (none were coupled to the removed form markup).
+  Verified the merged save in the browser against a DB copy: picked an
+  outfit, set a rating, typed a note, one click — all three landed in the
+  DB (wear_log outfit row + day_log comfort/notes).
+
+## 2026-09-12 (later still) — jewelry, shoes, accessories
+- `jewelry`/`shoes`/`accessory` were already valid item_type values but got
+  no special treatment. Beck wants them always after the clothes, jewelry
+  with its own subtype + condition-only rating (no comfort/fit/season),
+  shoes/accessories otherwise unchanged.
+- Ordering: added a `CASE WHEN item_type IN (...)` to db._ITEM_ORDER so the
+  category boundary is enforced in the query itself, not just a starting
+  position — dragging a jewelry item earlier doesn't stick past a reload,
+  which is what "always after" should mean. Single source (load_items())
+  used by the closet grid, outfit-builder tray, and calendar-day tray
+  alike, so all three stay consistent for free.
+- New `items.jewelry_subtype` column, additive migration same as
+  sort_order. Comfort/fit/season for jewelry are force-cleared server-side
+  in `_read_form_item()`, not just hidden in the form's JS — a hidden
+  field still submits its last value, so the client-side toggle alone
+  would've been a trap for a later edit.
+- Hit the same `[hidden]` vs `.field { display:flex }` footgun this app's
+  bitten before (closet filters, dropdown panels) — added the explicit
+  `[hidden] { display:none }` overrides for `.field` and `.rating` up
+  front this time instead of rediscovering it.
+- 121 tests (+8). Verified in browser against a DB copy: added a real
+  jewelry item through the actual add form (real upload, real rembg),
+  confirmed condition-only + subtype saved correctly and it landed last
+  on the closet grid.
 - 113 tests. Verified in browser: click save -> landed on /calendar/2026/9.

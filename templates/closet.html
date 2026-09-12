@@ -19,7 +19,7 @@
     </div>
     {% if item.name %}<p class="cardname">{{ item.name }}</p>{% endif %}
     <div class="caption">
-      <span class="itemtype">{{ item.item_type or 'unlabeled' }}</span>
+      <span class="itemtype">{{ item.item_type or 'unlabeled' }}{% if item.jewelry_subtype %} · {{ item.jewelry_subtype }}{% endif %}</span>
       <div class="dots">
         {% for i in range(1, 4) %}<div class="dot {{ 'filled' if i <= item.rating }}"></div>{% endfor %}
       </div>
