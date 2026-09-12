@@ -333,4 +333,36 @@
 - 141 tests (+17). Verified in the browser against a DB copy end to end:
   set an item to loaned with a note, watched it persist and the grid
   badge appear; "Worn today" dirtied a t-shirt but left jewelry clean.
+
+## 2026-09-12 (actually last one) — stale closet-grid thumbnails
+- Beck: touch-up edits showed on the item page but not the closet grid.
+  Root cause was staring right at the docstring — `ensure_thumb()` really
+  does regenerate the thumbnail file correctly on the server the moment
+  the source is newer. The bug was the *browser*: `/thumbs/...` is served
+  with `max_age=30 days`, and the URL for a given item's thumbnail never
+  changes, so a browser that had already loaded the closet grid once just
+  kept serving its own cached copy and never asked the server again —
+  `/photos/...` (the item page) isn't cached that aggressively, which is
+  exactly why the edit showed up there and nowhere else.
+- Fix is the standard one: make the URL change when the content does.
+  `thumb_url()` appends `?v=<mtime>`, registered once as a Jinja global so
+  every template (closet grid, both trays, month grid, outfits list) and
+  every Python call site (stats' three thumb lists, outfit-piece
+  rendering) go through the same function instead of five separate
+  `url_for('thumbs', ...)` call sites drifting out of sync.
+- Verified against the *real* repo, not just a DB copy, since this bug is
+  about a real file's mtime — bumped data/processed/001.png's mtime by an
+  hour with `touch`, confirmed the rendered `?v=` changed, then restored
+  the exact original mtime. No content or git changes either way.
+- 145 tests (+4).
+
+## 2026-09-12 (okay, actually last) — pulled the touch-up gray instructions
+- Beck: "take out the gray instructions you added for touch up! remember, I
+  don't like the gray instructions in general." Right — the Batch 10 work
+  added a `.subhint` paragraph explaining Erase/Paint back/Restore original,
+  which is exactly the pattern the standing no-instructions rule already
+  covers. Should have skipped it or asked; didn't catch myself this time.
+- Removed the paragraph + its now-unused CSS, restored the title's spacing.
+  Updated the memory file with a concrete recurrence note instead of just
+  trusting I'll remember next time.
 - 113 tests. Verified in browser: click save -> landed on /calendar/2026/9.

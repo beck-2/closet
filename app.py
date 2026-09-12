@@ -478,7 +478,7 @@ def stats_view():
         it["wear_count"] = counts.get(it["id"], 0)
 
     def thumb(it):
-        return url_for("thumbs", filename=it["images"][0].split("/")[-1]) if it.get("images") else None
+        return thumb_url(it["images"][0]) if it.get("images") else None
 
     # --- wardrobe ---
     colors = _counter([c for it in items for c in (it.get("color") or [])])
@@ -855,7 +855,7 @@ def _outfit_render_pieces(outfit: dict, items: dict) -> list[dict]:
         pieces.append({
             "item_id": placement["id"],
             "src": url_for("photos", filename=filename),
-            "thumb_src": url_for("thumbs", filename=filename),
+            "thumb_src": thumb_url(item["images"][0]),
             "alt": item.get("name") or item.get("item_type") or "item",
             # Percentages of the fixed board size, for the outfits-list
             # thumbnail; raw px (the actual saved values) for reopening
@@ -991,6 +991,24 @@ def ensure_thumb(processed_filename: str) -> Path:
         im.thumbnail((THUMB_LONG_EDGE, THUMB_LONG_EDGE), Image.LANCZOS)
         im.save(thumb, format="PNG", optimize=True)
     return thumb
+
+
+def thumb_url(image_path: str) -> str:
+    """URL for a cached thumbnail of one processed cutout, cache-busted by
+    the source file's own mtime. /thumbs/ is served with a 30-day browser
+    cache (see the thumbs() route below) since the same filename is reused
+    across touch-ups — without a version query param, a browser that had
+    already cached the old thumbnail would keep showing it after a touch-up
+    for the full 30 days, even though the server had already regenerated
+    it (this is why an edit showed up on the item page's own /photos/ URL,
+    which isn't cached this aggressively, but not on the closet grid)."""
+    filename = image_path.split("/")[-1]
+    src = PROCESSED_DIR / filename
+    version = int(src.stat().st_mtime) if src.is_file() else 0
+    return url_for("thumbs", filename=filename, v=version)
+
+
+app.jinja_env.globals["thumb_url"] = thumb_url
 
 
 @app.route("/thumbs/<path:filename>")

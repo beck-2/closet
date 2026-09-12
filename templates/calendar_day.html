@@ -45,7 +45,7 @@
         {% for item in tray %}
           {% if item.images %}
           <div class="trayitem" draggable="true" data-id="{{ item.id }}" data-type="{{ item.item_type or '' }}" data-src="{{ url_for('photos', filename=item.images[0].split('/')[-1]) }}" data-alt="{{ item.name or item.item_type or 'item' }}" title="{{ item.name or item.item_type or '' }}">
-            <img src="{{ url_for('thumbs', filename=item.images[0].split('/')[-1]) }}" alt="{{ item.name or item.item_type or 'item' }}" loading="lazy">
+            <img src="{{ thumb_url(item.images[0]) }}" alt="{{ item.name or item.item_type or 'item' }}" loading="lazy">
           </div>
           {% endif %}
         {% endfor %}

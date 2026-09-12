@@ -17,7 +17,7 @@
     {% endif %}
     <div class="swatch">
       {% if item.images %}
-        <img src="{{ url_for('thumbs', filename=item.images[0].split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}" loading="lazy">
+        <img src="{{ thumb_url(item.images[0]) }}" alt="{{ item.item_type or 'item' }}" loading="lazy">
       {% endif %}
     </div>
     {% if item.name %}<p class="cardname">{{ item.name }}</p>{% endif %}

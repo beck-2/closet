@@ -1,5 +1,33 @@
 # TODO
 
+## Batch 13 — remove the touch-up gray instructions (requested 2026-09-12)  ✅ DONE
+- [x] The Batch 10 touch-up work added a gray `.subhint` paragraph
+      explaining Erase/Paint back/Restore original — exactly the
+      "gray instructions" Beck has already said he doesn't want anywhere
+      in this app. Removed the paragraph, its now-dead CSS rule, and
+      bumped the title's bottom margin back up so the toolbar isn't
+      cramped without it.
+- [x] Updated the standing memory note — this is a recurrence of a rule
+      that already existed, not a new preference.
+- [x] 145 tests (unaffected — nothing was coupled to that copy).
+
+## Batch 12 — stale thumbnails after a touch-up (requested 2026-09-12)  ✅ DONE
+- [x] Bug: a touch-up's edits showed on the item page (`/photos/...`, not
+      aggressively cached) but not on the closet grid, outfit-builder
+      tray, calendar tray, or stats "most worn" thumbnails — all of those
+      render `/thumbs/...`, which is served with a 30-day browser cache.
+      The server *was* correctly regenerating the thumbnail file, but the
+      URL never changed, so an already-visited browser just kept serving
+      its old cached copy and never asked again.
+- [x] New `thumb_url()` (registered as a Jinja global) appends `?v=<the
+      source photo's mtime>` to every `/thumbs/...` URL, so the URL
+      itself changes the moment the photo does — the one server-side
+      helper now backs every place a thumbnail is rendered.
+- [x] tests/test_thumbs.py +4. 145 tests. Verified against the real repo
+      (mtime-only touch, restored after — no content or git changes):
+      bumped a real photo's mtime by an hour, confirmed the closet
+      page's rendered `src` picked up the new `?v=` value immediately.
+
 ## Batch 11 — item status tags + more sources (requested 2026-09-12)  ✅ DONE
 - [x] Two new Source options: "secondhand", "idk".
 - [x] New item status: clean (default) / dirty / loaned / lost / broken.
