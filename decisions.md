@@ -2,6 +2,31 @@
 
 Why things are built the way they are. Newest first.
 
+## Status lives outside the edit form, on purpose (2026-09-12)
+
+Item status (clean/dirty/loaned/lost/broken) could have been just another
+field on the add/edit form, next to color and season. It isn't — it's its
+own route (`POST /item/<id>/status`) with its own quick-set pills on the
+item page, and `save_item()` (the edit form's save path) never lists
+`status`/`status_note` in its INSERT/UPDATE column list at all.
+
+Two reasons: status changes constantly and casually (you set something
+dirty the moment you take it off, not when you next bother to open the
+full edit form), so it needed a one-click path like the existing "Worn
+today" button, not a form field buried among a dozen others. And more
+importantly, keeping it out of `save_item()`'s column list entirely means
+editing an item's name or price can *never* accidentally reset its status
+back to whatever the edit form happened to load — there's no shared code
+path where that mistake could even be written.
+
+Auto-dirtying on wear went into the three places that actually insert a new
+`wear_log` row (`log_items_worn`, `log_outfit_worn`, `save_day_layout`'s
+newly-placed set) rather than one central function, because there isn't
+one — wear gets logged three different ways depending on which page you're
+on. Only genuinely *new* wear rows trigger it, so resaving a day's board
+with the same items already on it won't re-dirty something you manually
+set back to clean in the meantime.
+
 ## Touch-up: a one-click full restore, kept separate from Reset and Paint back (2026-09-12)
 
 The touch-up page already had two ways to "undo" the AI's cutout mistakes —

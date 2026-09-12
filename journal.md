@@ -312,4 +312,25 @@
   both raw-dependent buttons disable correctly when there's no raw photo
   on file.
 - 124 tests (+2).
+
+## 2026-09-12 (last one, I think) — item status + more sources
+- Two new sources: secondhand, idk. Quick.
+- Bigger one: status tags (clean/dirty/loaned/lost/broken). Asked Beck
+  whether "clothing items" auto-dirty on wear meant literally just
+  clothing or everything including jewelry/shoes/accessories/belts —
+  he confirmed clothing only, matching what he actually said.
+- Kept status completely separate from the edit form on purpose:
+  save_item() never lists status/status_note in its INSERT/UPDATE
+  columns, so editing an item's name or color can never accidentally
+  reset its status. It's its own route, its own quick-set pills on the
+  item page, same spirit as the existing "Worn today" button.
+- Auto-dirty hooks into the three places a wear_log row actually gets
+  created (log_items_worn, log_outfit_worn, save_day_layout's newly-
+  placed set) rather than one central place, since there isn't one —
+  wrote a test specifically for the subtle case: resaving a board with
+  the same items already on it should NOT re-dirty something you'd
+  manually cleaned in the meantime, since it's not "newly placed".
+- 141 tests (+17). Verified in the browser against a DB copy end to end:
+  set an item to loaned with a note, watched it persist and the grid
+  badge appear; "Worn today" dirtied a t-shirt but left jewelry clean.
 - 113 tests. Verified in browser: click save -> landed on /calendar/2026/9.

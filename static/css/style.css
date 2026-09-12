@@ -213,6 +213,25 @@ a:hover { color: #a61e4d; }
   position: relative;
 }
 .pg-closet .swatch img { max-width: 84%; max-height: 84%; object-fit: contain; }
+.pg-closet .cardstatus {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 10.5px;
+  text-transform: capitalize;
+  color: #2b2140;
+  background: #fff;
+  border: 2px solid #2b2140;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.pg-closet .cardstatus.status-dirty { background: #d8c39a; }
+.pg-closet .cardstatus.status-loaned { background: #c9a6ff; }
+.pg-closet .cardstatus.status-lost { background: #b3acc0; color: #fff; }
+.pg-closet .cardstatus.status-broken { background: #e0393e; color: #fff; }
 .pg-closet .cardname {
   font-family: 'Baloo 2', cursive;
   font-weight: 700;
@@ -308,6 +327,47 @@ a:hover { color: #a61e4d; }
   letter-spacing: 0.5px;
   color: #2b2140;
   margin: 0 0 10px;
+}
+.pg-item .statuspills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pg-item .statuspill {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: capitalize;
+  color: #2b2140;
+  background: #fff;
+  border: 2.5px solid #2b2140;
+  border-radius: 999px;
+  padding: 7px 16px;
+  cursor: pointer;
+}
+.pg-item .statuspill:hover { background: #f3ece0; }
+.pg-item .statuspill.active.status-clean { background: #dff5fb; }
+.pg-item .statuspill.active.status-dirty { background: #d8c39a; }
+.pg-item .statuspill.active.status-loaned { background: #c9a6ff; }
+.pg-item .statuspill.active.status-lost { background: #b3acc0; color: #fff; }
+.pg-item .statuspill.active.status-broken { background: #e0393e; color: #fff; }
+.pg-item .loanednote { display: flex; gap: 8px; margin-top: 10px; }
+.pg-item .loanednote input {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  border: 2.5px solid #2b2140;
+  border-radius: 999px;
+  padding: 8px 14px;
+  flex: 1;
+  min-width: 160px;
+}
+.pg-item .loanednote button {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #2b2140;
+  background: #fffdf7;
+  border: 2.5px solid #2b2140;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
 }
 .pg-item .colorrow { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .pg-item .colorswatch { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid #2b2140; }

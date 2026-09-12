@@ -40,6 +40,7 @@ from pipeline.metadata_schema import (
     RATING_MIN,
     SEASON_SUGGESTIONS,
     SOURCES,
+    STATUSES,
 )
 
 # Month options for the "date acquired" picker: [("1", "January"), ...].
@@ -241,6 +242,7 @@ def item_view(item_id):
         color_hex=COLOR_HEX,
         cost_per_wear=cost_per_wear(item),
         last_worn=_pretty_day(db.last_worn(item_id)),
+        statuses=STATUSES,
     )
 
 
@@ -259,6 +261,18 @@ def mark_worn(item_id):
     if db.get_item(item_id) is None:
         abort(404)
     db.log_items_worn(datetime.date.today().isoformat(), [item_id])
+    return redirect(url_for("item_view", item_id=item_id))
+
+
+@app.route("/item/<item_id>/status", methods=["POST"])
+def set_item_status(item_id):
+    if db.get_item(item_id) is None:
+        abort(404)
+    status = request.form.get("status") or "clean"
+    if status not in STATUSES:
+        abort(400)
+    note = (request.form.get("note") or "").strip()
+    db.set_item_status(item_id, status, note if status == "loaned" else None)
     return redirect(url_for("item_view", item_id=item_id))
 
 

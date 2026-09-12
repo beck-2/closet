@@ -12,6 +12,9 @@
      data-season="{{ item.season | join('|') }}"
      data-source="{{ item.source or '' }}"
      data-vibes="{{ item.vibes | join(' ') | lower }}">
+    {% if item.status and item.status != 'clean' %}
+    <span class="cardstatus status-{{ item.status }}">{{ item.status }}</span>
+    {% endif %}
     <div class="swatch">
       {% if item.images %}
         <img src="{{ url_for('thumbs', filename=item.images[0].split('/')[-1]) }}" alt="{{ item.item_type or 'item' }}" loading="lazy">

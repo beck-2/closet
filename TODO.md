@@ -1,5 +1,23 @@
 # TODO
 
+## Batch 11 — item status tags + more sources (requested 2026-09-12)  ✅ DONE
+- [x] Two new Source options: "secondhand", "idk".
+- [x] New item status: clean (default) / dirty / loaned / lost / broken.
+      New `items.status` + `status_note` columns. Quick-set pills on the
+      item page (`POST /item/<id>/status`), separate from the edit form —
+      save_item() never touches status, so editing other fields can't
+      clobber it. Loaned reveals a "loaned to…" note field.
+- [x] Clothing auto-flips to dirty the moment it's logged as worn (Worn
+      today, an outfit, or the day board) — asked Beck, jewelry/shoes/
+      accessories/belts are excluded per his answer. Every other
+      transition is manual.
+- [x] Closet grid shows a small badge for any non-clean status; nothing
+      shown for clean (the default) to avoid cluttering the whole grid.
+- [x] tests/test_status.py (17). 141 tests. Verified in the browser
+      against a DB copy: set an item to loaned with a note, saw it
+      persist and the grid badge appear; "Worn today" dirtied a t-shirt
+      but left a jewelry piece clean.
+
 ## Batch 10 — touch-up: a real full restore (requested 2026-09-12)  ✅ DONE
 - [x] When the auto-cutout removes too much, the old "Restore" brush only
       painted back small, individually-brushed patches — no quick way to

@@ -21,12 +21,20 @@ NON_CLOTHING_TYPES = ["jewelry", "shoes", "accessory", "belt"]
 JEWELRY_SUBTYPES = ["earrings", "bracelet", "rings", "piercing", "necklace", "pin", "other"]
 
 SOURCES = [
-    "thrifted", "new", "from mom", "gift", "from sat", "from bauer",
+    "thrifted", "new", "from mom", "gift", "from sat", "from bauer", "secondhand", "idk",
 ]
 
 # 1 (bad) - 3 (great) rating fields.
 RATING_FIELDS = ["comfort", "fit", "condition"]
 RATING_MIN, RATING_MAX = 1, 3
+
+# Single-select. "clean" is the default every item starts at. Clothing items
+# (i.e. not in NON_CLOTHING_TYPES) flip to "dirty" automatically the moment
+# they're logged as worn — see db._dirty_clothing_items. Every other
+# transition (dirty -> clean, or any -> loaned/lost/broken) is manual, set
+# from the item page. "loaned" pairs with an optional free-text note saying
+# who it's loaned to.
+STATUSES = ["clean", "dirty", "loaned", "lost", "broken"]
 
 # "Date acquired" is stored as "YYYY" or "YYYY-MM" (day is never known). The
 # Add/Edit form's year dropdown starts here and runs to the current year.

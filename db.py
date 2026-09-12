@@ -58,7 +58,9 @@ CREATE TABLE IF NOT EXISTS items (
     wear_count    INTEGER NOT NULL DEFAULT 0,
     notes         TEXT NOT NULL DEFAULT '',
     sort_order    INTEGER,
-    jewelry_subtype TEXT
+    jewelry_subtype TEXT,
+    status        TEXT NOT NULL DEFAULT 'clean',
+    status_note   TEXT
 );
 
 CREATE TABLE IF NOT EXISTS item_images (
@@ -201,6 +203,10 @@ def init_db(db_path: Path | None = None) -> None:
             db.execute("ALTER TABLE items ADD COLUMN sort_order INTEGER")
         if "jewelry_subtype" not in have:
             db.execute("ALTER TABLE items ADD COLUMN jewelry_subtype TEXT")
+        if "status" not in have:
+            db.execute("ALTER TABLE items ADD COLUMN status TEXT NOT NULL DEFAULT 'clean'")
+        if "status_note" not in have:
+            db.execute("ALTER TABLE items ADD COLUMN status_note TEXT")
         if is_new:
             if items_json.exists():
                 n = _migrate_items_json(db, items_json)
@@ -257,6 +263,8 @@ def _item_from_row(db: sqlite3.Connection, row: sqlite3.Row) -> dict:
         "notes": row["notes"],
         "sort_order": row["sort_order"],
         "jewelry_subtype": row["jewelry_subtype"],
+        "status": row["status"] or "clean",
+        "status_note": row["status_note"],
         "images": images,
         "raw_images": raw_images,
     }
@@ -290,6 +298,17 @@ def count_items() -> int:
 
 def existing_item_ids() -> list[str]:
     return [row["id"] for row in get_db().execute("SELECT id FROM items")]
+
+
+def set_item_status(item_id: str, status: str, note: str | None) -> None:
+    """Set an item's status tag directly — a quick action from the item
+    page, independent of the edit form (save_item never touches status)."""
+    db = get_db()
+    db.execute(
+        "UPDATE items SET status = ?, status_note = ? WHERE id = ?",
+        (status, note, item_id),
+    )
+    db.commit()
 
 
 def save_item(item_id: str, item: dict) -> None:
@@ -348,9 +367,27 @@ def _now() -> str:
     return datetime.datetime.now().isoformat(timespec="seconds")
 
 
+def _dirty_clothing_items(db: sqlite3.Connection, item_ids) -> None:
+    """Flip these items to status "dirty" — but only the ones that are
+    actual clothing. Jewelry/shoes/accessories/belts don't get dirtied just
+    from being worn. Doesn't commit; callers already do."""
+    item_ids = list(item_ids)
+    if not item_ids:
+        return
+    id_placeholders = ", ".join("?" for _ in item_ids)
+    type_placeholders = ", ".join("?" for _ in NON_CLOTHING_TYPES)
+    db.execute(
+        f"""UPDATE items SET status = 'dirty'
+            WHERE id IN ({id_placeholders})
+              AND (item_type IS NULL OR item_type NOT IN ({type_placeholders}))""",
+        (*item_ids, *NON_CLOTHING_TYPES),
+    )
+
+
 def log_items_worn(worn_on: str, item_ids: list[str]) -> None:
     db = get_db()
     known = {row["id"] for row in db.execute("SELECT id FROM items")}
+    newly_logged = []
     for item_id in item_ids:
         if item_id not in known:
             continue
@@ -364,6 +401,8 @@ def log_items_worn(worn_on: str, item_ids: list[str]) -> None:
             "INSERT INTO wear_log (worn_on, item_id, outfit_id, created_at) VALUES (?, ?, NULL, ?)",
             (worn_on, item_id, _now()),
         )
+        newly_logged.append(item_id)
+    _dirty_clothing_items(db, newly_logged)
     db.commit()
 
 
@@ -374,13 +413,17 @@ def log_outfit_worn(worn_on: str, outfit_id: str) -> None:
     db.execute(
         "DELETE FROM wear_log WHERE worn_on = ? AND outfit_id = ?", (worn_on, outfit_id)
     )
-    for r in db.execute(
-        "SELECT DISTINCT item_id FROM outfit_items WHERE outfit_id = ?", (outfit_id,)
-    ):
+    piece_ids = [
+        r["item_id"] for r in db.execute(
+            "SELECT DISTINCT item_id FROM outfit_items WHERE outfit_id = ?", (outfit_id,)
+        )
+    ]
+    for item_id in piece_ids:
         db.execute(
             "INSERT INTO wear_log (worn_on, item_id, outfit_id, created_at) VALUES (?, ?, ?, ?)",
-            (worn_on, r["item_id"], outfit_id, _now()),
+            (worn_on, item_id, outfit_id, _now()),
         )
+    _dirty_clothing_items(db, piece_ids)
     db.commit()
 
 
@@ -431,11 +474,13 @@ def save_day_layout(worn_on: str, placements: list[dict]) -> None:
             "DELETE FROM wear_log WHERE worn_on = ? AND item_id = ? AND outfit_id IS NULL",
             (worn_on, item_id),
         )
-    for item_id in keep_ids - currently_loose:
+    newly_placed = keep_ids - currently_loose
+    for item_id in newly_placed:
         db.execute(
             "INSERT INTO wear_log (worn_on, item_id, outfit_id, created_at) VALUES (?, ?, NULL, ?)",
             (worn_on, item_id, _now()),
         )
+    _dirty_clothing_items(db, newly_placed)
 
     db.execute("DELETE FROM day_layout WHERE worn_on = ?", (worn_on,))
     for pos, p in enumerate(cleaned):
