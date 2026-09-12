@@ -98,6 +98,13 @@ def test_logging_a_loose_jewelry_item_does_not_mark_it_dirty(client, flask_app, 
         assert db_module.get_item("001")["status"] == "clean"
 
 
+def test_logging_a_loose_scarf_does_not_mark_it_dirty(client, flask_app, add_item):
+    add_item("001", item_type="scarf")
+    with flask_app.app_context():
+        db_module.log_items_worn("2026-09-05", ["001"])
+        assert db_module.get_item("001")["status"] == "clean"
+
+
 def test_logging_an_outfit_dirties_its_clothing_pieces_only(client, flask_app, add_item):
     add_item("001", item_type="top")
     add_item("002", item_type="shoes")

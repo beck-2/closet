@@ -75,12 +75,14 @@ def test_non_clothing_types_sort_after_clothes_by_default(client, flask_app, add
     add_item("005", item_type="accessory")
     add_item("006", item_type="belt")
     add_item("007", item_type="swimsuit")
+    add_item("008", item_type="scarf")
     with flask_app.app_context():
         # ids interleaved on purpose — clothes (002, 004, 007) first in id
-        # order, then the non-clothing types (001, 003, 005, 006) in id
-        # order. Swimsuit is clothing, so it stays with the clothes; belt
-        # joins jewelry/shoes/accessory since it's an accessory too.
-        assert list(db_module.load_items()) == ["002", "004", "007", "001", "003", "005", "006"]
+        # order, then the non-clothing types (001, 003, 005, 006, 008) in
+        # id order. Swimsuit is clothing, so it stays with the clothes;
+        # belt and scarf join jewelry/shoes/accessory since they're
+        # accessories too.
+        assert list(db_module.load_items()) == ["002", "004", "007", "001", "003", "005", "006", "008"]
 
 
 def test_non_clothing_types_still_sort_after_clothes_even_when_dragged_first(client, flask_app, add_item):

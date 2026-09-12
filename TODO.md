@@ -1,5 +1,38 @@
 # TODO
 
+## Batch 15 — rotate photos in touch-up (requested 2026-09-12)  ✅ DONE
+- [x] New "Rotate" button on the touch-up page — 90° clockwise per click,
+      click again for 180/270. Rotates whatever's currently on the canvas
+      (cutout + any edits so far), swapping width/height.
+- [x] Undo/Reset now restore canvas *dimensions* too, not just pixels —
+      needed since a rotation changes them and getImageData/putImageData
+      alone can't. Paint-back and Restore-original both stay correctly
+      aligned after a rotation (tracked via a separate rotationDeg, since
+      the raw/processed source images never rotate themselves).
+- [x] Verified in the browser: a test marker moved corner-to-corner on
+      rotate and back on undo; a non-square (768×1024) photo's Restore
+      original filled the whole rotated canvas with no gaps at any
+      corner; a full rotate-then-save round-trip persisted correctly
+      (400×600 → 600×400 swapped file on disk).
+- [x] **Mistake made and fixed during testing:** the first save-round-trip
+      check ran against a real item (041) instead of a disposable test
+      photo — touch-up's save route writes to the real
+      `data/processed/<file>` regardless of which DB copy is active, so
+      that item's photo really did get rotated on disk. Caught it
+      immediately, regenerated the cutout from its untouched raw photo
+      (data/raw/041.jpeg) through the same pipeline, back to the correct
+      768×1024 orientation. If item 041 had any manual touch-up edits
+      from before, those are lost — the regenerated cutout is a fresh
+      rembg pass, not a restore of prior edits. Told Beck plainly.
+- [x] 147 tests (unaffected — this is JS/template only, no server change).
+
+## Batch 14 — scarf category (requested 2026-09-12)  ✅ DONE
+- [x] New "scarf" item type. Asked Beck whether it should sort as regular
+      clothing or join the jewelry/shoes/accessory/belt group — he said
+      group with accessories, so it's in NON_CLOTHING_TYPES too: sorts
+      after all clothes, doesn't auto-dirty when worn.
+- [x] 147 tests.
+
 ## Batch 13 — remove the touch-up gray instructions (requested 2026-09-12)  ✅ DONE
 - [x] The Batch 10 touch-up work added a gray `.subhint` paragraph
       explaining Erase/Paint back/Restore original — exactly the

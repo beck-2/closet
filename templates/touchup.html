@@ -13,6 +13,7 @@
       brush size
       <input type="range" id="brushSize" min="8" max="140" value="40">
     </label>
+    <button type="button" class="toolbtn" id="rotateBtn">Rotate</button>
     <button type="button" class="toolbtn" id="undoBtn">Undo</button>
     <button type="button" class="toolbtn" id="restoreOriginalBtn" {{ 'disabled' if not raw_url }}>Restore original</button>
     <button type="button" class="toolbtn" id="resetBtn">Reset</button>
@@ -51,6 +52,44 @@
   var initDone = false;
   var initialSnapshot = null;   // the canvas exactly as the page opened
   var mode = 'erase';
+  // How far the canvas has been rotated (clockwise degrees) relative to
+  // the processed/raw source images, which never rotate themselves — only
+  // matters for drawing FROM those sources (paint-back, restore original);
+  // ordinary brush strokes just edit whatever's already on the canvas, so
+  // they don't care about this.
+  var rotationDeg = 0;
+
+  // Undo/Reset need to restore the canvas's *size* too, not just its
+  // pixels — a rotation swaps width/height, and getImageData/putImageData
+  // alone can't do that.
+  function snapshot() {
+    return {
+      data: ctx.getImageData(0, 0, canvas.width, canvas.height),
+      width: canvas.width,
+      height: canvas.height,
+      rotationDeg: rotationDeg,
+    };
+  }
+
+  function restoreSnapshot(snap) {
+    canvas.width = snap.width;
+    canvas.height = snap.height;
+    ctx.putImageData(snap.data, 0, 0);
+    rotationDeg = snap.rotationDeg;
+    fitCanvas();
+  }
+
+  // Draws a source image (the original processed cutout, or the raw photo)
+  // rotated to match the canvas's current orientation. Needed because
+  // those source <img> elements never rotate themselves — only the canvas
+  // (and whatever's already drawn on it) does.
+  function drawSourceRotated(image, targetCtx, targetW, targetH) {
+    targetCtx.save();
+    targetCtx.translate(targetW / 2, targetH / 2);
+    targetCtx.rotate(rotationDeg * Math.PI / 180);
+    targetCtx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+    targetCtx.restore();
+  }
 
   function init() {
     if (initDone) return;
@@ -59,7 +98,7 @@
     canvas.width = processedImg.naturalWidth;
     canvas.height = processedImg.naturalHeight;
     ctx.drawImage(processedImg, 0, 0, canvas.width, canvas.height);
-    initialSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    initialSnapshot = snapshot();
     fitCanvas();
     canvas.classList.add('jsready');
   }
@@ -104,7 +143,7 @@
       // paint the matching patch of the original photo back into the brush
       ctx.clip();
       ctx.globalCompositeOperation = 'source-over';
-      ctx.drawImage(rawImg, 0, 0, canvas.width, canvas.height);
+      drawSourceRotated(rawImg, ctx, canvas.width, canvas.height);
     } else {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fill();
@@ -127,7 +166,7 @@
   }
 
   function pushUndo() {
-    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    undoStack.push(snapshot());
     if (undoStack.length > MAX_UNDO) undoStack.shift();
   }
 
@@ -154,13 +193,37 @@
 
   document.getElementById('undoBtn').addEventListener('click', function () {
     var prev = undoStack.pop();
-    if (prev) ctx.putImageData(prev, 0, 0);
+    if (prev) restoreSnapshot(prev);
   });
 
   document.getElementById('resetBtn').addEventListener('click', function () {
     if (!initDone || !initialSnapshot) return;
     pushUndo();
-    ctx.putImageData(initialSnapshot, 0, 0);
+    restoreSnapshot(initialSnapshot);
+  });
+
+  // Rotates whatever's currently on the canvas 90° clockwise — click again
+  // for 180/270. A fresh copy of the current pixels gets redrawn into a
+  // width/height-swapped canvas; rotationDeg (tracked separately) is what
+  // keeps paint-back/restore-original correctly oriented afterward, since
+  // the source <img> elements themselves never rotate.
+  document.getElementById('rotateBtn').addEventListener('click', function () {
+    if (!initDone) return;
+    pushUndo();
+    var oldW = canvas.width, oldH = canvas.height;
+    var copy = document.createElement('canvas');
+    copy.width = oldW;
+    copy.height = oldH;
+    copy.getContext('2d').drawImage(canvas, 0, 0);
+    canvas.width = oldH;
+    canvas.height = oldW;
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(copy, -oldW / 2, -oldH / 2);
+    ctx.restore();
+    rotationDeg = (rotationDeg + 90) % 360;
+    fitCanvas();
   });
 
   // For when the auto-cutout removed too much to fix with the paint-back
@@ -173,13 +236,20 @@
     restoreOriginalBtn.addEventListener('click', function () {
       if (!initDone || !rawImg || !rawImg.naturalWidth) return;
       pushUndo();
+      // Keep whatever rotation is already dialed in — if the photo needed
+      // rotating to look right, the restored original should come back
+      // the same way round, not flip back to how the raw file sits.
+      var swapped = rotationDeg === 90 || rotationDeg === 270;
+      canvas.width = swapped ? rawImg.naturalHeight : rawImg.naturalWidth;
+      canvas.height = swapped ? rawImg.naturalWidth : rawImg.naturalHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(rawImg, 0, 0, canvas.width, canvas.height);
+      drawSourceRotated(rawImg, ctx, canvas.width, canvas.height);
       mode = 'erase';
       document.querySelectorAll('.modebtn').forEach(function (b) {
         b.classList.toggle('active', b.dataset.mode === 'erase');
       });
       canvas.classList.remove('restoring');
+      fitCanvas();
     });
   }
 

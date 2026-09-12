@@ -365,4 +365,38 @@
 - Removed the paragraph + its now-unused CSS, restored the title's spacing.
   Updated the memory file with a concrete recurrence note instead of just
   trusting I'll remember next time.
+
+## 2026-09-12 (one more) — scarf
+- New "scarf" item type. Same ambiguity as belt before it — asked Beck
+  whether it sorts as regular clothing or joins the accessories group;
+  he picked the accessories group, so it's in NON_CLOTHING_TYPES.
+- 147 tests (+2).
+
+## 2026-09-12 (rotate) — photo rotation in touch-up, and a mistake
+- New Rotate button: 90° clockwise per click, rotates whatever's on the
+  canvas so far (not just the original cutout). Reused the same
+  undo/reset machinery, but had to extend it — a rotation changes canvas
+  *dimensions*, and getImageData/putImageData snapshots only ever
+  captured pixels, not width/height. Now snapshot() bundles both, plus
+  the rotation state itself, so undo/reset put everything back together.
+- Paint-back and Restore-original both draw from the raw/processed
+  *source* images, which never rotate themselves — only the canvas does.
+  Tracked a separate rotationDeg and route every draw-from-source through
+  one drawSourceRotated() helper so those two tools stay visually aligned
+  no matter how many times you've rotated.
+- **Mistake:** verifying the save round-trip, I ran it against a real
+  item (041) instead of a scratch file — touch-up's save route always
+  writes to the real data/processed/ path regardless of which DB copy a
+  test server points at (only the DB is swappable, not the photo
+  storage). Item 041's actual photo got rotated on disk for real.
+  Caught it within the same check, regenerated the cutout from its
+  untouched raw photo through the same rembg pipeline, restored to the
+  correct 768x1024 orientation. Any manual touch-up Beck had done to that
+  specific photo before, if any, is not recoverable this way — told him
+  directly rather than quietly patching it and moving on.
+- Lesson for next time: for anything hitting a route that writes to
+  BASE_DIR-resolved paths (not just the DB), use a disposable file under
+  data/processed/ with a fake id, never a real item — the DB-copy safety
+  net doesn't cover the filesystem.
+- 147 tests (unaffected, no server-side change).
 - 113 tests. Verified in browser: click save -> landed on /calendar/2026/9.

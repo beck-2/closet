@@ -2,6 +2,23 @@
 
 Why things are built the way they are. Newest first.
 
+## Rotate tracks its own state instead of re-deriving it from the canvas (2026-09-12)
+
+Rotating the touch-up canvas is one line of canvas math (copy, resize,
+rotate, redraw) — the fiddly part is that Paint-back and Restore-original
+both draw pixels from the *original* raw/processed `<img>` elements, which
+never rotate themselves. Only the on-screen canvas does. Without tracking
+that gap somewhere, those two tools would draw the source photo in its
+original orientation onto a canvas that's since been turned 90°, producing
+a visibly misaligned result.
+
+The fix is a single `rotationDeg` variable, separate from the canvas's own
+width/height, that every source-image draw goes through
+(`drawSourceRotated()`). It has to survive Undo and Reset too — a rotation
+is just another edit on the undo stack, so `snapshot()`/`restoreSnapshot()`
+bundle pixels, canvas dimensions, *and* rotationDeg together as one unit
+rather than trying to keep three separate pieces of state in sync by hand.
+
 ## Status lives outside the edit form, on purpose (2026-09-12)
 
 Item status (clean/dirty/loaned/lost/broken) could have been just another
