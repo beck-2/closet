@@ -5,20 +5,22 @@
   <h2 class="formtitle">touch up this photo</h2>
   <p class="subhint">
     <strong>Erase</strong> leftover background the auto-cutout missed, or switch to
-    <strong>Restore</strong> to paint back anything it wrongly cut off (a sleeve, a hem…)
-    straight from your original photo.
+    <strong>Paint back</strong> to restore small mistakes (a sleeve, a hem…) straight from
+    your original photo. If the auto-cutout removed too much of the piece, hit
+    <strong>Restore original</strong> to bring back the whole photo and erase the background yourself.
   </p>
 
   <div class="touchup-toolbar">
     <div class="modeswitch" id="mode-switch">
       <button type="button" class="modebtn active" data-mode="erase">Erase</button>
-      <button type="button" class="modebtn" data-mode="restore" {{ 'disabled' if not raw_url }}>Restore</button>
+      <button type="button" class="modebtn" data-mode="restore" {{ 'disabled' if not raw_url }}>Paint back</button>
     </div>
     <label class="brushctl">
       brush size
       <input type="range" id="brushSize" min="8" max="140" value="40">
     </label>
     <button type="button" class="toolbtn" id="undoBtn">Undo</button>
+    <button type="button" class="toolbtn" id="restoreOriginalBtn" {{ 'disabled' if not raw_url }}>Restore original</button>
     <button type="button" class="toolbtn" id="resetBtn">Reset</button>
   </div>
 
@@ -166,6 +168,26 @@
     pushUndo();
     ctx.putImageData(initialSnapshot, 0, 0);
   });
+
+  // For when the auto-cutout removed too much to fix with the paint-back
+  // brush: replace the whole canvas with the untouched original photo
+  // (background and all), then leave the user in Erase mode to cut it out
+  // by hand. Distinct from Reset, which only reverts to the AI's cutout as
+  // it looked when this page opened — not the original underlying photo.
+  var restoreOriginalBtn = document.getElementById('restoreOriginalBtn');
+  if (restoreOriginalBtn) {
+    restoreOriginalBtn.addEventListener('click', function () {
+      if (!initDone || !rawImg || !rawImg.naturalWidth) return;
+      pushUndo();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(rawImg, 0, 0, canvas.width, canvas.height);
+      mode = 'erase';
+      document.querySelectorAll('.modebtn').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.mode === 'erase');
+      });
+      canvas.classList.remove('restoring');
+    });
+  }
 
   document.getElementById('saveBtn').addEventListener('click', function () {
     var btn = this;

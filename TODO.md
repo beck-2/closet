@@ -1,5 +1,30 @@
 # TODO
 
+## Batch 10 — touch-up: a real full restore (requested 2026-09-12)  ✅ DONE
+- [x] When the auto-cutout removes too much, the old "Restore" brush only
+      painted back small, individually-brushed patches — no quick way to
+      undo a badly-mangled cutout. New **Restore original** button loads
+      the whole untouched raw photo onto the canvas in one click (distinct
+      from Reset, which only reverts to the AI cutout as it looked when
+      the page opened), then leaves you in Erase mode to cut it out by
+      hand. Disabled when no raw photo is on file, same as before.
+- [x] Renamed the brush-mode button's label from "Restore" to "Paint
+      back" so it reads distinctly from the new one-click button — same
+      underlying `data-mode="restore"`, still for small localized fixes
+      (a sleeve, a hem).
+- [x] tests/test_touchup.py +2. 124 tests. Verified in the browser against
+      a DB copy: corner pixel went from transparent (AI cutout) to the
+      real background pixel after one click, mode auto-switched to
+      Erase, Undo reverted it, both buttons correctly disable with no
+      raw photo on file.
+
+## Batch 9 — swimsuit + belt (requested 2026-09-12)  ✅ DONE
+- [x] New `swimsuit` item type — ordinary clothing, sorts normally.
+- [x] `belt` already existed as a type but predates the "sorts after
+      clothes" grouping from Batch 8 — asked Beck, he wants it grouped
+      with jewelry/shoes/accessory, so added it to `NON_CLOTHING_TYPES`.
+- [x] 122 tests.
+
 ## Batch 8 — jewelry, shoes, accessories (requested 2026-09-12)  ✅ DONE
 - [x] `jewelry`, `shoes`, `accessory` were already valid item types but
       behaved just like clothing. Now they always sort after every clothing

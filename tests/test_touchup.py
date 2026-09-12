@@ -60,3 +60,25 @@ def test_touchup_page_disables_restore_without_a_raw(client, photo_on_disk, add_
     body = client.get("/item/001/photo/0/touchup").data.decode()
     assert 'data-mode="restore"' in body and "disabled" in body
     assert 'id="rawSrc"' not in body
+
+
+def test_touchup_page_offers_restore_original_when_a_raw_exists(client, photo_on_disk, add_item):
+    photo_on_disk()
+    add_item("001", images=["data/processed/001.png"], raw_images=["data/raw/001.jpeg"])
+    body = client.get("/item/001/photo/0/touchup").data.decode()
+    assert 'id="restoreOriginalBtn"' in body
+    # The button itself shouldn't carry a "disabled" attribute when a raw
+    # photo is on file — check the tag, not just page-wide text, since the
+    # word "disabled" also appears (legitimately) on the paint-back button
+    # in the no-raw case tested above.
+    tag_start = body.index('id="restoreOriginalBtn"')
+    tag = body[body.rindex("<button", 0, tag_start):body.index(">", tag_start)]
+    assert "disabled" not in tag
+
+
+def test_touchup_page_disables_restore_original_without_a_raw(client, photo_on_disk, add_item):
+    add_item("001", images=["data/processed/001.png"], raw_images=[None])
+    body = client.get("/item/001/photo/0/touchup").data.decode()
+    tag_start = body.index('id="restoreOriginalBtn"')
+    tag = body[body.rindex("<button", 0, tag_start):body.index(">", tag_start)]
+    assert "disabled" in tag

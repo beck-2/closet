@@ -2,6 +2,23 @@
 
 Why things are built the way they are. Newest first.
 
+## Touch-up: a one-click full restore, kept separate from Reset and Paint back (2026-09-12)
+
+The touch-up page already had two ways to "undo" the AI's cutout mistakes —
+Reset (back to the cutout as it looked when the page opened) and a "Restore"
+brush (paints back small raw patches under the cursor). Neither actually
+brings back the whole original photo, which is what Beck needed when rembg
+mangles a piece badly rather than just missing a sleeve.
+
+Added a third, distinct action — **Restore original** — that drops the whole
+raw photo onto the canvas in one click and switches to Erase mode, rather
+than folding this into Reset or the brush. Reset and Restore original answer
+different questions ("undo what *I* just did" vs. "undo what the *AI* did"),
+and collapsing them would mean losing one or the other. The old brush stays
+too, since a small mis-cut is still faster to patch by hand than to redo the
+whole photo — it's just relabeled "Paint back" so it doesn't share a name
+with the new button while doing something completely different.
+
 ## Jewelry/shoes/accessories sort last, enforced in the query (2026-09-12)
 
 Beck wants jewelry/shoes/accessories to always display after the clothes.

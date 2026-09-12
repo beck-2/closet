@@ -9,13 +9,13 @@ Edit the *_OPTIONS lists as your closet reveals categories you didn't expect
 
 # Single-select — pick exactly one.
 ITEM_TYPES = [
-    "top", "bottom", "shorts", "pants", "skirt", "dress",
+    "top", "bottom", "shorts", "pants", "skirt", "dress", "swimsuit",
     "longsleeve", "tshirt", "tanktop", "jacket", "hoodie", "shoes", "accessory", "belt", "bag", "hat", "jewelry", "other",
 ]
 
 # These always sort after every clothing item in the closet grid (and
 # anywhere else load_items() feeds a list) — see db._ITEM_ORDER.
-NON_CLOTHING_TYPES = ["jewelry", "shoes", "accessory"]
+NON_CLOTHING_TYPES = ["jewelry", "shoes", "accessory", "belt"]
 
 # Single-select, only shown/used when item_type == "jewelry".
 JEWELRY_SUBTYPES = ["earrings", "bracelet", "rings", "piercing", "necklace", "pin", "other"]

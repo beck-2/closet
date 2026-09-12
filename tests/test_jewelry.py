@@ -49,6 +49,11 @@ def test_add_form_offers_jewelry_subtypes(client):
     assert "earrings" in body and "necklace" in body
 
 
+def test_add_form_offers_swimsuit_and_belt(client):
+    body = client.get("/add").data.decode()
+    assert ">swimsuit<" in body and ">belt<" in body
+
+
 def test_item_view_shows_only_condition_for_jewelry(client, add_item):
     add_item("001", item_type="jewelry", jewelry_subtype="pin", comfort=None, fit=None, condition=2)
     body = client.get("/item/001").data.decode()

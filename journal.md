@@ -285,4 +285,31 @@
   jewelry item through the actual add form (real upload, real rembg),
   confirmed condition-only + subtype saved correctly and it landed last
   on the closet grid.
+
+## 2026-09-12 (even later) — swimsuit + belt
+- Quick add: `swimsuit` as a plain clothing type. `belt` turned out to
+  already exist (predates today's jewelry/shoes/accessory sort-after-
+  clothes work) — asked Beck whether it should join that group now that
+  it exists; he said yes, so it's in NON_CLOTHING_TYPES too. Neither
+  existed in Beck's real closet.db yet, so no existing items reshuffled.
+- 122 tests.
+
+## 2026-09-12 (yet later) — touch-up: an actual full restore
+- Beck's complaint: when rembg removes too much, the existing "Restore"
+  brush only paints back whatever you manually brush over — tedious and
+  not really "restore" when the cutout is badly mangled. He wants a
+  button that fully brings back the original photo, then he erases the
+  background himself by hand.
+- Added a one-click "Restore original" button: replaces the whole canvas
+  with the untouched raw photo (background and all) and drops you into
+  Erase mode automatically. Kept the existing brush-mode "paint back a
+  small patch" behavior too (still useful for a sleeve/hem-sized mistake)
+  but renamed its button label to "Paint back" so two things both called
+  "Restore" don't sit side by side in the same toolbar.
+- Verified in the browser against a DB copy rather than trust it by
+  reading: sampled a corner pixel before/after — transparent (the AI
+  cutout) to the real background color — confirmed Undo reverses it, and
+  both raw-dependent buttons disable correctly when there's no raw photo
+  on file.
+- 124 tests (+2).
 - 113 tests. Verified in browser: click save -> landed on /calendar/2026/9.
