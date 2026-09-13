@@ -87,7 +87,8 @@ with app.app_context():
 # shows as text without one.
 COLOR_HEX = {
     "black": "#2b2140", "white": "#ffffff", "gray": "#9a94a6", "brown": "#7b5a3e",
-    "beige": "#e4d3ae", "cream": "#f7efe0", "red": "#e0393e", "orange": "#f2884b",
+    "beige": "#e4d3ae", "cream": "#f7efe0", "silver": "#c0c0c0", "gold": "#c9a227",
+    "red": "#e0393e", "orange": "#f2884b",
     "yellow": "#ffd447", "green": "#5c9a63", "blue": "#5ec8e8", "navy": "#1b2a4a",
     "purple": "#7c3aa0",
     "pink": "#ff6fa5", "multicolor": "conic-gradient(#e0393e,#ffd447,#5c9a63,#5ec8e8,#7c3aa0,#ff6fa5,#e0393e)",

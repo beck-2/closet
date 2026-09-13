@@ -44,7 +44,7 @@ ACQUIRED_MIN_YEAR = 2010
 # points, not hard limits; feel free to use values outside them, the
 # validator below only warns, it doesn't block.
 COLOR_SUGGESTIONS = [
-    "black", "white", "gray", "brown", "beige", "cream",
+    "black", "white", "gray", "brown", "beige", "cream", "silver", "gold",
     "red", "orange", "yellow", "green", "blue", "navy", "purple", "pink", "multicolor",
 ]
 

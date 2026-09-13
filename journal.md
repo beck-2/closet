@@ -422,4 +422,15 @@
   item 002's red jersey → "red" — and the client-side checkbox-checking
   wiring separately with a mocked fetch, so that check doesn't need a
   live multi-second rembg pass just to confirm the JS is correct.
+
+## 2026-09-13 (later) — silver, gold, and another gray-text removal
+- Silver and gold as color options (navy landed last batch). Both flow
+  straight into the color-suggestion matcher too — it just reads
+  COLOR_HEX, no separate list to keep in sync.
+- Removed the upload zone's "background gets removed automatically once
+  you save" subhint + its now-dead CSS rule. Same standing rule as the
+  touch-up one from a couple batches back — didn't add this one myself
+  this time, it already existed, but same principle: gray instructional
+  text doesn't belong here even when it feels informative.
+- 160 tests (+2).
 - 113 tests. Verified in browser: click save -> landed on /calendar/2026/9.

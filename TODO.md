@@ -1,5 +1,15 @@
 # TODO
 
+## Batch 17 — silver + gold; drop the upload-zone gray text (requested 2026-09-13)  ✅ DONE
+- [x] Added "silver" and "gold" as color options (navy was already added
+      last batch). Both feed the color-suggestion matcher automatically
+      too, since it just reads whatever's in COLOR_HEX.
+- [x] Removed the "background gets removed automatically once you save"
+      gray subhint under the add-item upload zone, plus its now-dead CSS
+      rule.
+- [x] 160 tests (+2). Verified in the browser: silver/gold/navy all
+      render as color checkboxes; the removed text is gone from the page.
+
 ## Batch 16 — navy + auto-suggest colors on upload (requested 2026-09-12)  ✅ DONE
 - [x] Added "navy" as a color option (Beck had been typing it into "other
       colors" by hand).

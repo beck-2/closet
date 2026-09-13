@@ -51,6 +51,16 @@ def test_add_form_renders(client):
     assert client.get("/add").status_code == 200
 
 
+def test_add_form_offers_silver_gold_and_navy(client):
+    body = client.get("/add").data.decode()
+    assert 'value="silver"' in body and 'value="gold"' in body and 'value="navy"' in body
+
+
+def test_add_form_has_no_background_removal_hint_text(client):
+    body = client.get("/add").data.decode()
+    assert "background gets removed automatically" not in body
+
+
 def test_add_without_photo_is_400(client):
     resp = client.post("/add", data={"item_type": "top"})
     assert resp.status_code == 400
