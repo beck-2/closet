@@ -71,8 +71,8 @@
       </div>
 
       <div class="field full">
-        <span class="label">Color (pick any)</span>
-        <div class="chiprow">
+        <span class="label">Color (pick any)<span class="colorsuggeststatus" id="color-suggest-status"></span></span>
+        <div class="chiprow" id="color-chiprow">
           {% for c in color_suggestions %}
           <label class="chip {{ 'selected' if item.color and c in item.color }}">
             <input type="checkbox" name="color" value="{{ c }}" {{ 'checked' if item.color and c in item.color }}> {{ c }}
@@ -202,6 +202,29 @@
         input.files = files;
         input.dispatchEvent(new Event('change'));
       }
+    });
+
+    // First cut at auto-tagging: guess this piece's color(s) from the
+    // photo itself, the moment it's chosen — before you've touched
+    // anything else on the form. Runs the same background-removal step
+    // as the real save, but nothing gets written to disk for a photo you
+    // might still swap out.
+    var colorStatus = document.getElementById('color-suggest-status');
+    input.addEventListener('change', function () {
+      if (!(input.files && input.files[0])) return;
+      colorStatus.textContent = 'detecting colors…';
+      var form = new FormData();
+      form.append('photo', input.files[0]);
+      fetch({{ url_for('suggest_colors') | tojson }}, { method: 'POST', body: form })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          (data.colors || []).forEach(function (name) {
+            var cb = document.querySelector('#color-chiprow input[value="' + name + '"]');
+            if (cb) cb.checked = true;
+          });
+          colorStatus.textContent = '';
+        })
+        .catch(function () { colorStatus.textContent = ''; });
     });
   }
 

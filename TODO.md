@@ -1,5 +1,30 @@
 # TODO
 
+## Batch 16 — navy + auto-suggest colors on upload (requested 2026-09-12)  ✅ DONE
+- [x] Added "navy" as a color option (Beck had been typing it into "other
+      colors" by hand).
+- [x] Add-item form now guesses this piece's color(s) from its photo the
+      moment you choose it — new `POST /add/suggest-colors`: runs the same
+      background-removal step a real save does, but writes nothing to
+      disk (so swapping photos before saving leaves no orphaned files),
+      then nearest-swatch-matches the cutout's non-transparent pixels
+      against COLOR_HEX and pre-checks the matching checkbox(es). A
+      second color only gets suggested if it covers a real share of the
+      piece, not a stray edge pixel.
+- [x] Extracted `cutout_from_image()` out of `pipeline/process_images.py`'s
+      `process_one()` so the live preview and the real save share the
+      exact same EXIF-orient + background-removal step.
+- [x] Noted the obvious next step — auto-tagging item type and vibes from
+      the photo too — as a future roadmap item, not started. Beck's open
+      question for when that's picked up: off-the-shelf open-source model
+      vs. training one on this closet's own data.
+- [x] tests/test_color_suggest.py (11). 158 tests. Verified against real
+      closet photos (not synthetic ones) via the actual route: item 001's
+      "grey" longsleeve correctly detected as "gray", item 002's red
+      jersey as "red"; also checked the client-side wiring (checkbox
+      auto-check, "detecting colors…" status, graceful failure) with a
+      mocked fetch so the browser check doesn't need a live rembg pass.
+
 ## Batch 15 — rotate photos in touch-up (requested 2026-09-12)  ✅ DONE
 - [x] New "Rotate" button on the touch-up page — 90° clockwise per click,
       click again for 180/270. Rotates whatever's currently on the canvas
@@ -331,6 +356,21 @@
 - [x] Tests in tests/test_outfits.py (7). Verified end-to-end: built an
       outfit in the browser, saved, saw the arrangement in the list,
       clicked it back open.
+
+## Future automations (Beck's roadmap, noted 2026-09-12 — not started)
+Color-suggestion-on-upload (Batch 16, done) is the first of a planned
+series of "auto-tag this piece from its photo" features. Explicitly out of
+scope for now, but on the list for later:
+- Auto-tag **item type** (top/dress/jeans/etc.) from the photo.
+- Auto-tag **vibes** (grunge, daytime, going out, ...) from the photo.
+- Beck's open question to resolve when we get there: use an existing
+  open-source image-classification model (e.g. a pretrained CNN/CLIP-style
+  model — fast to try, no training data needed, may not fit this specific
+  closet's categories well) vs. training something on Beck's own labeled
+  closet data (fits better long-term, but needs enough labeled items first
+  and real training/eval work). Color-suggestion sidesteps this entirely
+  by not being a classifier at all — just nearest-swatch distance on the
+  cutout's own pixels — so it doesn't settle the question either way.
 
 ## Found along the way (not requested — for later)
 - Editing an item drops any color not in the checkbox suggestions: the

@@ -45,7 +45,7 @@ ACQUIRED_MIN_YEAR = 2010
 # validator below only warns, it doesn't block.
 COLOR_SUGGESTIONS = [
     "black", "white", "gray", "brown", "beige", "cream",
-    "red", "orange", "yellow", "green", "blue", "purple", "pink", "multicolor",
+    "red", "orange", "yellow", "green", "blue", "navy", "purple", "pink", "multicolor",
 ]
 
 SEASON_SUGGESTIONS = [

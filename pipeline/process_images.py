@@ -111,6 +111,17 @@ def resize_preserving_aspect(img: Image.Image, target_long_edge: int) -> Image.I
     return img.resize(new_size, Image.LANCZOS)
 
 
+def cutout_from_image(raw: Image.Image, session) -> Image.Image:
+    """EXIF-orient, convert to RGBA, and remove the background — the same
+    transform process_one() applies to a file on disk, exposed separately
+    so an in-memory caller (e.g. a live color-suggestion preview that never
+    writes anything to disk) can reuse it without going through a file."""
+    from rembg import remove
+
+    oriented = ImageOps.exif_transpose(raw).convert("RGBA")
+    return remove(oriented, session=session)  # background -> transparent
+
+
 def process_one(
     source: Path,
     input_dir: Path,
@@ -118,8 +129,6 @@ def process_one(
     session,
     overwrite: bool,
 ) -> ProcessResult:
-    from rembg import remove
-
     out_path = output_path_for(source, input_dir, output_dir)
 
     if out_path.exists() and not overwrite:
@@ -127,9 +136,7 @@ def process_one(
 
     try:
         with Image.open(source) as raw:
-            raw = ImageOps.exif_transpose(raw)  # fix phone rotation
-            raw = raw.convert("RGBA")
-            cutout = remove(raw, session=session)  # background -> transparent
+            cutout = cutout_from_image(raw, session)
             resized = resize_preserving_aspect(cutout, TARGET_LONG_EDGE)
 
             out_path.parent.mkdir(parents=True, exist_ok=True)

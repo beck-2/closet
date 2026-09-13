@@ -399,4 +399,27 @@
   data/processed/ with a fake id, never a real item — the DB-copy safety
   net doesn't cover the filesystem.
 - 147 tests (unaffected, no server-side change).
+
+## 2026-09-13 — navy, and the first auto-tagging feature
+- Quick one: navy as a color option (Beck had been hand-typing it into
+  "other colors" every time).
+- Bigger one: Beck wants a whole series of "guess it from the photo"
+  automations eventually — item type and vibes tagging via a CNN, maybe
+  pretrained, maybe trained on his own closet, explicitly undecided and
+  explicitly out of scope for now. Color-suggestion-on-upload is the first
+  of that series, but a much simpler technique than a real classifier:
+  nearest-swatch RGB distance on the cutout's own non-transparent pixels,
+  no model involved. Noted the real automation work as a roadmap item in
+  TODO.md rather than starting it.
+- New POST /add/suggest-colors: runs the real background-removal step but
+  never writes to disk, so choosing a photo, seeing suggestions, then
+  picking a different one before saving doesn't litter data/processed/
+  with orphans. Extracted cutout_from_image() out of process_one() so
+  both paths share the identical EXIF-orient + rembg step rather than
+  drifting apart.
+- 158 tests (+11). Verified against real closet photos through the actual
+  route (not synthetic squares) — item 001's "grey" longsleeve → "gray",
+  item 002's red jersey → "red" — and the client-side checkbox-checking
+  wiring separately with a mocked fetch, so that check doesn't need a
+  live multi-second rembg pass just to confirm the JS is correct.
 - 113 tests. Verified in browser: click save -> landed on /calendar/2026/9.

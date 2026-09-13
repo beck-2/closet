@@ -727,6 +727,7 @@ a:hover { color: #a61e4d; }
 .pg-add .field.full { grid-column: 1 / -1; }
 .pg-add .field[hidden] { display: none; }
 .pg-add .label { font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.4px; color: #2b2140; }
+.pg-add .colorsuggeststatus { font-family: 'Nunito', sans-serif; font-weight: 800; text-transform: none; letter-spacing: normal; color: #2b2140; margin-left: 8px; }
 .pg-add select.select, .pg-add input.textinput, .pg-add input[type="month"], .pg-add input[type="number"] {
   font-family: 'Nunito', sans-serif;
   font-weight: 700;

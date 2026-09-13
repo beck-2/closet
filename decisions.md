@@ -2,6 +2,30 @@
 
 Why things are built the way they are. Newest first.
 
+## Color suggestion is nearest-swatch distance, not a classifier (2026-09-13)
+
+Beck's ask was explicitly framed as the first of a series of automations,
+with real image classification (item type, vibes) called out as later work
+via an open-source or self-trained CNN. Color-suggestion doesn't need that
+machinery: the app already removes the background and already has a fixed
+palette (COLOR_HEX) with real hex values behind every swatch a person can
+pick. So "guess the color" is just: downsample the cutout, throw out the
+transparent (background) pixels, and match what's left to its nearest
+swatch by plain RGB distance — no model, no training data, no dependency
+beyond Pillow. It's also a meaningfully different problem than type/vibes
+tagging (a closed, small, already-defined palette vs. open-ended
+classification), so solving it this way now doesn't presuppose which way
+the CNN question gets answered later.
+
+**Why the preview never writes to disk:** the real save (`process_upload`)
+writes a raw file and a processed cutout to `data/raw/` and
+`data/processed/`. If the color-suggestion preview did the same, choosing
+a photo, seeing suggestions, then swapping to a different photo before
+hitting save would leave an orphaned raw+processed pair behind for every
+photo that was ever previewed but not used. The preview route keeps
+everything in memory and returns just the suggested names — the real
+files only get written once, on the actual save, exactly as before.
+
 ## Rotate tracks its own state instead of re-deriving it from the canvas (2026-09-12)
 
 Rotating the touch-up canvas is one line of canvas math (copy, resize,

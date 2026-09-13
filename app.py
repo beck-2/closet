@@ -88,9 +88,84 @@ with app.app_context():
 COLOR_HEX = {
     "black": "#2b2140", "white": "#ffffff", "gray": "#9a94a6", "brown": "#7b5a3e",
     "beige": "#e4d3ae", "cream": "#f7efe0", "red": "#e0393e", "orange": "#f2884b",
-    "yellow": "#ffd447", "green": "#5c9a63", "blue": "#5ec8e8", "purple": "#7c3aa0",
+    "yellow": "#ffd447", "green": "#5c9a63", "blue": "#5ec8e8", "navy": "#1b2a4a",
+    "purple": "#7c3aa0",
     "pink": "#ff6fa5", "multicolor": "conic-gradient(#e0393e,#ffd447,#5c9a63,#5ec8e8,#7c3aa0,#ff6fa5,#e0393e)",
 }
+
+
+def _hex_to_rgb(hexval: str) -> tuple[int, int, int]:
+    h = hexval.lstrip("#")
+    return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+
+
+# Nearest-swatch matching only makes sense against an actual color, so
+# "multicolor" (a CSS gradient, not a hex) is left out here — a piece that's
+# genuinely multicolor will just get its most prominent single color
+# suggested instead, which is still a reasonable starting point to edit from.
+_SWATCH_RGB = [(name, _hex_to_rgb(h)) for name, h in COLOR_HEX.items() if name != "multicolor"]
+
+
+def suggest_colors_from_cutout(cutout, max_colors: int = 2, min_share: float = 0.15) -> list[str]:
+    """Best-guess color names for a background-removed cutout: downsample
+    it, match each non-transparent pixel to its nearest COLOR_HEX swatch by
+    plain RGB distance, and return the most common match(es) — a second
+    color only makes the list if it covers a real share of the piece (not
+    just an edge/shadow pixel here and there), most common first."""
+    from PIL import Image
+
+    small = cutout.convert("RGBA").resize((80, 80), Image.LANCZOS)
+    tally: dict[str, int] = {}
+    total = 0
+    for r, g, b, a in small.get_flattened_data():
+        if a < 64:  # skip background / near-transparent pixels
+            continue
+        total += 1
+        best_name, best_dist = None, None
+        for name, (sr, sg, sb) in _SWATCH_RGB:
+            dist = (r - sr) ** 2 + (g - sg) ** 2 + (b - sb) ** 2
+            if best_dist is None or dist < best_dist:
+                best_dist, best_name = dist, name
+        tally[best_name] = tally.get(best_name, 0) + 1
+
+    if not total:
+        return []
+    ranked = sorted(tally.items(), key=lambda kv: -kv[1])
+    return [name for name, count in ranked[:max_colors] if count / total >= min_share]
+
+
+@app.route("/add/suggest-colors", methods=["POST"])
+def suggest_colors():
+    """Best-guess colors for a photo that hasn't been saved yet — run
+    through the same background-removal step a real upload gets, but never
+    written to disk, so picking a different photo before saving doesn't
+    leave anything behind. Used to pre-check likely color checkboxes while
+    the add form is still open; anything that goes wrong here just means
+    no suggestion, not a failed add."""
+    photo = request.files.get("photo")
+    if not photo or not photo.filename:
+        return jsonify({"colors": []})
+
+    import io
+
+    from PIL import Image as PILImage
+
+    from pipeline.process_images import cutout_from_image, get_session
+
+    data = photo.read()
+    try:
+        with PILImage.open(io.BytesIO(data)) as check:
+            check.verify()
+        raw = PILImage.open(io.BytesIO(data))
+    except Exception:
+        return jsonify({"colors": []})
+
+    try:
+        cutout = cutout_from_image(raw, get_session())
+    except Exception:
+        return jsonify({"colors": []})
+
+    return jsonify({"colors": suggest_colors_from_cutout(cutout)})
 
 
 # ------------------------------------------------------------- filesystem --
